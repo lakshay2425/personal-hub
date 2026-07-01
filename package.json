@@ -1,5 +1,5 @@
 {
-  "name": "nextjs_boilerplate",
+  "name": "questionHub",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,14 +12,11 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@react-oauth/google": "^0.13.5",
-    "@tanstack/react-query": "^5.101.0",
-    "axios": "^1.18.0",
+    "@hookform/resolvers": "^5.4.0",
     "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.45.2",
+    "idb": "^8.0.3",
     "jose": "^6.2.3",
     "next": "16.2.9",
-    "postgres": "^3.4.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.79.0",
@@ -29,11 +26,9 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@tanstack/eslint-plugin-query": "^5.101.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "husky": "^9.1.7",
