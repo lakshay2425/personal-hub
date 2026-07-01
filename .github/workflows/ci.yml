@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 10.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Build
+        run: pnpm run build
+      #   env:
+      #     NEXT_PUBLIC_AUTH_URL: ${{ secrets.NEXT_PUBLIC_AUTH_URL }}
+      #     NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+      #     NEXT_PUBLIC_BUSINESS_NAME: ${{ secrets.NEXT_PUBLIC_BUSINESS_NAME }}
+      #     NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      #     JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
+
+      # - name: Trigger Coolify Deployment
+      #   if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      #   run: |
+      #     curl --fail -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}"

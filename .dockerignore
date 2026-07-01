@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+.cursor
+*.md
+.env
+.env.*
+!.env.example
+npm-debug.log*
+pnpm-debug.log*
+Dockerfile
+.dockerignore
+drizzle/meta
