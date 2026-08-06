@@ -2,21 +2,35 @@
 
 import { format } from "date-fns";
 
-import type { ContentIdea } from "../types";
-import { ContentIdeaActions } from "./ContentIdeaActions";
+import type { ContentIdea, ContentIdeaTreeNode } from "../types";
+import { ContentIdeaOverflowMenu } from "./ContentIdeaOverflowMenu";
 import { PublishedLinksSummary } from "./PublishedLinksSummary";
 import { StatusBadge } from "./StatusBadge";
 
+const DEPTH_PADDING = {
+  0: "",
+  1: "pl-4",
+  2: "pl-8",
+} as const;
+
 interface ContentIdeasTableProps {
   ideas: ContentIdea[];
+  allIdeas: ContentIdea[];
   onEdit: (idea: ContentIdea) => void;
   onDelete: (idea: ContentIdea) => void;
+  onAddSubIdea: (parent: ContentIdeaTreeNode) => void;
+  onMoveToParent: (ideaId: number, parentId: number | null) => Promise<void>;
+  movingUnderId?: number | null;
 }
 
 export function ContentIdeasTable({
   ideas,
+  allIdeas,
   onEdit,
   onDelete,
+  onAddSubIdea,
+  onMoveToParent,
+  movingUnderId,
 }: ContentIdeasTableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
@@ -43,7 +57,9 @@ export function ContentIdeasTable({
         <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-900">
           {ideas.map((idea) => (
             <tr key={idea.id}>
-              <td className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-50">
+              <td
+                className={`px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-50 ${DEPTH_PADDING[idea.depth]}`}
+              >
                 {idea.title}
               </td>
               <td className="px-4 py-3">
@@ -55,10 +71,20 @@ export function ContentIdeasTable({
               <td className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
                 {format(idea.createdAt, "MMM d, yyyy")}
               </td>
-              <td className="px-4 py-3">
-                <ContentIdeaActions
+              <td className="px-4 py-3 text-right">
+                <ContentIdeaOverflowMenu
+                  idea={idea}
+                  allIdeas={allIdeas}
+                  canAddSubIdea={idea.depth < 2}
+                  onAddSubIdea={() =>
+                    onAddSubIdea({ ...idea, children: [] })
+                  }
                   onEdit={() => onEdit(idea)}
                   onDelete={() => onDelete(idea)}
+                  onMoveToParent={(parentId) =>
+                    onMoveToParent(idea.id!, parentId)
+                  }
+                  isMoving={movingUnderId === idea.id}
                 />
               </td>
             </tr>

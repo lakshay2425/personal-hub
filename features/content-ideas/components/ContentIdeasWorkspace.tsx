@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -11,12 +11,12 @@ import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { CONTENT_IDEA_STATUSES } from "../constants";
 import { useContentIdeas } from "../hooks/useContentIdeas";
 import { useContentIdeasViewMode } from "../hooks/useContentIdeasViewMode";
-import type { ContentIdea, ContentIdeaStatus } from "../types";
+import { countDescendantsInList } from "../lib/contentIdeaTree";
+import type { ContentIdea, ContentIdeaStatus, ContentIdeaTreeNode } from "../types";
 import { ContentIdeasCards } from "./ContentIdeasCards";
 import { ContentIdeasTable } from "./ContentIdeasTable";
-import {
-  ContentIdeasViewToggle,
-} from "./ContentIdeasViewToggle";
+import { ContentIdeasViewToggle } from "./ContentIdeasViewToggle";
+import { SortableContentIdeaList } from "./SortableContentIdeaList";
 import { ContentIdeaFormModal } from "./forms/ContentIdeaFormModal";
 
 interface ContentIdeasWorkspaceProps {
@@ -38,16 +38,27 @@ export function ContentIdeasWorkspace({
   emptyDescription = "Capture your first content idea to get started.",
   embedded = false,
 }: ContentIdeasWorkspaceProps) {
-  const { ideas, isLoading, error, addIdea, editIdea, removeIdea } =
-    useContentIdeas({ projectId });
+  const {
+    ideas,
+    isLoading,
+    error,
+    addIdea,
+    editIdea,
+    removeIdea,
+    moveToParent,
+    reorderIdeas,
+  } = useContentIdeas({ projectId });
   const { viewMode, setViewMode } = useContentIdeasViewMode();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContentIdeaStatus | "">("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<ContentIdea | null>(null);
+  const [subIdeaParent, setSubIdeaParent] = useState<ContentIdeaTreeNode | null>(null);
   const [deletingIdea, setDeletingIdea] = useState<ContentIdea | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [collapsedIdeaIds, setCollapsedIdeaIds] = useState<Set<number>>(new Set());
+  const [movingUnderId, setMovingUnderId] = useState<number | null>(null);
 
   const filtered = useMemo(() => {
     let result = [...ideas];
@@ -66,14 +77,31 @@ export function ContentIdeasWorkspace({
     return result;
   }, [ideas, search, statusFilter]);
 
+  const hasActiveFilter = Boolean(search.trim() || statusFilter);
+  const showEmpty = viewMode === "list" ? ideas.length === 0 : filtered.length === 0;
+
   const openCreateForm = () => {
     setEditingIdea(null);
+    setSubIdeaParent(null);
     setIsFormOpen(true);
   };
 
   const handleEdit = (idea: ContentIdea) => {
     setEditingIdea(idea);
+    setSubIdeaParent(null);
     setIsFormOpen(true);
+  };
+
+  const handleAddSubIdea = (parent: ContentIdeaTreeNode) => {
+    setEditingIdea(null);
+    setSubIdeaParent(parent);
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingIdea(null);
+    setSubIdeaParent(null);
   };
 
   const handleSubmit = async (
@@ -84,14 +112,62 @@ export function ContentIdeasWorkspace({
       if (editingIdea?.id) {
         await editIdea(editingIdea.id, input, previousStatus);
         toast.success("Content idea updated");
+      } else if (subIdeaParent?.id) {
+        await addIdea(input, subIdeaParent.id);
+        setCollapsedIdeaIds((current) => {
+          const next = new Set(current);
+          next.delete(subIdeaParent.id!);
+          return next;
+        });
+        toast.success("Sub-idea created");
       } else {
         await addIdea(input);
         toast.success("Content idea created");
       }
+      handleCloseForm();
     } catch {
-      toast.error("Failed to save content idea");
+      toast.error(
+        editingIdea
+          ? "Failed to update content idea"
+          : subIdeaParent
+            ? "Failed to create sub-idea"
+            : "Failed to create content idea",
+      );
       throw new Error("save failed");
     }
+  };
+
+  const handleMoveToParent = async (ideaId: number, parentId: number | null) => {
+    setMovingUnderId(ideaId);
+    try {
+      await moveToParent(ideaId, parentId);
+      if (parentId) {
+        setCollapsedIdeaIds((current) => {
+          const next = new Set(current);
+          next.delete(parentId);
+          return next;
+        });
+      }
+      toast.success("Content idea moved");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to move content idea",
+      );
+    } finally {
+      setMovingUnderId(null);
+    }
+  };
+
+  const handleToggleChildrenCollapse = (ideaId: number) => {
+    setCollapsedIdeaIds((current) => {
+      const next = new Set(current);
+      if (next.has(ideaId)) {
+        next.delete(ideaId);
+      } else {
+        next.add(ideaId);
+      }
+      return next;
+    });
   };
 
   const handleDelete = async () => {
@@ -100,6 +176,11 @@ export function ContentIdeasWorkspace({
     setIsDeleting(true);
     try {
       await removeIdea(deletingIdea.id);
+      setCollapsedIdeaIds((current) => {
+        const next = new Set(current);
+        next.delete(deletingIdea.id!);
+        return next;
+      });
       toast.success("Content idea deleted");
       setDeletingIdea(null);
     } catch {
@@ -108,6 +189,21 @@ export function ContentIdeasWorkspace({
       setIsDeleting(false);
     }
   };
+
+  const deleteSubCount = deletingIdea?.id
+    ? countDescendantsInList(deletingIdea.id, ideas)
+    : 0;
+
+  const deleteMessage =
+    deleteSubCount > 0
+      ? `This content idea will be permanently removed. This will also delete ${deleteSubCount} sub-idea${deleteSubCount === 1 ? "" : "s"}.`
+      : "This content idea will be permanently removed.";
+
+  const formTitle = editingIdea
+    ? "Edit Content Idea"
+    : subIdeaParent
+      ? "New Sub-idea"
+      : "Add Content Idea";
 
   if (isLoading) {
     return <LoadingState message="Loading content ideas..." />;
@@ -171,13 +267,16 @@ export function ContentIdeasWorkspace({
             </option>
           ))}
         </select>
-        <ContentIdeasViewToggle
-          value={viewMode}
-          onChange={setViewMode}
-        />
+        <ContentIdeasViewToggle value={viewMode} onChange={setViewMode} />
       </div>
 
-      {filtered.length === 0 ? (
+      {viewMode === "list" && hasActiveFilter ? (
+        <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
+          Search and status filters apply to table and card views. List view shows all ideas.
+        </p>
+      ) : null}
+
+      {showEmpty ? (
         <EmptyState
           title={emptyTitle}
           description={emptyDescription}
@@ -191,29 +290,48 @@ export function ContentIdeasWorkspace({
             </button>
           }
         />
+      ) : viewMode === "list" ? (
+        <SortableContentIdeaList
+          ideas={ideas}
+          collapsedIdeaIds={collapsedIdeaIds}
+          onToggleChildrenCollapse={handleToggleChildrenCollapse}
+          onEdit={handleEdit}
+          onDelete={setDeletingIdea}
+          onAddSubIdea={handleAddSubIdea}
+          onMoveToParent={handleMoveToParent}
+          onReorder={reorderIdeas}
+          allIdeas={ideas}
+          movingUnderId={movingUnderId}
+        />
       ) : viewMode === "cards" ? (
         <ContentIdeasCards
           ideas={filtered}
+          allIdeas={ideas}
           onEdit={handleEdit}
           onDelete={setDeletingIdea}
+          onAddSubIdea={handleAddSubIdea}
+          onMoveToParent={handleMoveToParent}
+          movingUnderId={movingUnderId}
         />
       ) : (
         <ContentIdeasTable
           ideas={filtered}
+          allIdeas={ideas}
           onEdit={handleEdit}
           onDelete={setDeletingIdea}
+          onAddSubIdea={handleAddSubIdea}
+          onMoveToParent={handleMoveToParent}
+          movingUnderId={movingUnderId}
         />
       )}
 
       <ContentIdeaFormModal
         isOpen={isFormOpen}
-        onClose={() => {
-          setIsFormOpen(false);
-          setEditingIdea(null);
-        }}
+        onClose={handleCloseForm}
         onSubmit={handleSubmit}
         idea={editingIdea}
         projectId={projectId}
+        title={formTitle}
       />
 
       <ConfirmDialog
@@ -222,7 +340,7 @@ export function ContentIdeasWorkspace({
         onConfirm={handleDelete}
         isLoading={isDeleting}
         title="Delete content idea?"
-        message="This content idea will be permanently removed."
+        message={deleteMessage}
       />
     </div>
   );

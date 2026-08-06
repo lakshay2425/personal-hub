@@ -22,6 +22,7 @@ interface ContentIdeaFormModalProps {
   onSubmit: (input: ContentIdeaInput, previousStatus?: ContentIdeaStatus) => Promise<void>;
   idea?: ContentIdea | null;
   projectId: string | null;
+  title?: string;
 }
 
 function ContentIdeaFormFields({
@@ -169,12 +170,13 @@ export function ContentIdeaFormModal({
   onSubmit,
   idea,
   projectId,
+  title,
 }: ContentIdeaFormModalProps) {
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={idea ? "Edit Content Idea" : "Add Content Idea"}
+      title={title ?? (idea ? "Edit Content Idea" : "Add Content Idea")}
       size="lg"
     >
       <ContentIdeaFormFields

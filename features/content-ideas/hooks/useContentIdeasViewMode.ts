@@ -17,7 +17,9 @@ function subscribe(callback: () => void) {
 
 function getSnapshot(): ContentIdeasViewMode {
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === "cards" ? "cards" : "table";
+  if (stored === "cards") return "cards";
+  if (stored === "list") return "list";
+  return "table";
 }
 
 function getServerSnapshot(): ContentIdeasViewMode {

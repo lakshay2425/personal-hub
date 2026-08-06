@@ -47,7 +47,31 @@ function CardsIcon() {
   );
 }
 
-const OPTIONS: { mode: ContentIdeasViewMode; label: string; icon: typeof TableIcon }[] = [
+function ListIcon() {
+  return (
+    <svg
+      className="h-4 w-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 6h16M4 12h16M4 18h16M8 6h.01M8 12h.01M8 18h.01"
+      />
+    </svg>
+  );
+}
+
+const OPTIONS: {
+  mode: ContentIdeasViewMode;
+  label: string;
+  icon: typeof TableIcon;
+}[] = [
+  { mode: "list", label: "List", icon: ListIcon },
   { mode: "table", label: "Table", icon: TableIcon },
   { mode: "cards", label: "Cards", icon: CardsIcon },
 ];

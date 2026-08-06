@@ -83,6 +83,47 @@ class QuestionHubDatabase extends Dexie {
       contentIdeas: "++id, projectId, title, status, createdAt",
       activityLogs: "++id, entityType, entityId, action, timestamp",
     });
+
+    this.version(6)
+      .stores({
+        projects: "id",
+        questions: "id, projectId, parentId",
+        answers: "id, questionId, projectId",
+        contentIdeas: "++id, projectId, parentId, title, status, createdAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("contentIdeas")
+          .toCollection()
+          .modify((idea: ContentIdea) => {
+            if (idea.parentId === undefined) {
+              idea.parentId = null;
+            }
+            if (idea.depth === undefined) {
+              idea.depth = 0;
+            }
+          });
+
+        const ideas = await tx.table("contentIdeas").toArray();
+        const byParent = new Map<number | null, ContentIdea[]>();
+
+        for (const idea of ideas) {
+          const parentId = idea.parentId ?? null;
+          const siblings = byParent.get(parentId) ?? [];
+          siblings.push(idea);
+          byParent.set(parentId, siblings);
+        }
+
+        for (const siblings of byParent.values()) {
+          siblings.sort((a, b) => b.createdAt - a.createdAt);
+          await Promise.all(
+            siblings.map((idea, index) =>
+              tx.table("contentIdeas").update(idea.id!, { sortOrder: index }),
+            ),
+          );
+        }
+      });
   }
 }
 
