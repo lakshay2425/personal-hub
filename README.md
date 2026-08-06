@@ -1,25 +1,38 @@
-# Question Hub
+# Personal Hub
 
-A local-first Next.js app for capturing questions and tracking answered vs unanswered status. All question data lives in the browser via IndexedDB — there is no centralized database.
+A **local-first** personal toolkit for learning and career work. Capture project questions, log what you did, and track your job search — all stored in your browser. Nothing is sent to a server.
 
-The app is a Progressive Web App (PWA): it can be installed to a device and used offline after the app shell has been cached.
+Installable as a Progressive Web App (PWA) and usable offline after the app shell has been cached.
+
+**Live idea:** open it, use it, share the repo. No accounts, no analytics pipeline for your data.
+
+## Features
+
+| Tool | What it does |
+|------|----------------|
+| **Projects** | Inbox for questions; organize them into projects with titled answers |
+| **Logger** | Timestamped daily entries — log multiple times per day |
+| **Job Search Tracker** | Companies, leads, applications, cold emails, and a dashboard |
+
+All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Separate databases keep each tool isolated.
 
 ## Tech stack
 
 | Area | Details |
 |------|---------|
 | **Framework** | [Next.js 16](https://nextjs.org) (App Router) + [React 19](https://react.dev) |
-| **Language** | TypeScript (strict mode) |
+| **Language** | TypeScript (strict) |
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com) |
-| **Local storage** | IndexedDB via [`idb`](https://github.com/jakearchibald/idb) |
+| **Local storage** | IndexedDB via [Dexie](https://dexie.org) |
+| **Forms / validation** | [react-hook-form](https://react-hook-form.com) + [Zod](https://zod.dev) |
 | **PWA / offline** | [Serwist](https://serwist.pages.dev) (`@serwist/turbopack`) |
 | **Notifications** | [react-hot-toast](https://react-hot-toast.com) |
 | **Git hooks** | [Husky](https://typicode.github.io/husky/) — lint on commit, build on push |
-| **CI** | GitHub Actions — lint + build on every PR/push to `master` |
-| **Containerization** | Multi-stage Dockerfile with `output: "standalone"` |
+| **CI** | GitHub Actions — lint + build on PRs / pushes to `master` |
+| **Containerization** | Multi-stage Dockerfile with Next.js `output: "standalone"` |
 
-- **Runtime:** Node.js 24
-- **Package manager:** [pnpm](https://pnpm.io) 10.x
+- **Runtime:** Node.js 24  
+- **Package manager:** [pnpm](https://pnpm.io) 10.x  
 
 ## Getting started
 
@@ -30,7 +43,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-> Service worker registration is disabled in development to avoid stale caches. Test install/offline behavior with a production build (`pnpm build` then `pnpm start`). HTTPS (or `localhost`) is required for PWA features.
+> Service worker registration is disabled in development to avoid stale caches. Test install / offline behavior with a production build (`pnpm build` then `pnpm start`). HTTPS (or `localhost`) is required for PWA features.
 
 ## Available scripts
 
@@ -41,72 +54,68 @@ Open [http://localhost:3000](http://localhost:3000).
 | `pnpm start` | Start production server |
 | `pnpm lint` | Run ESLint |
 
+## Project structure
+
+```
+app/                       # App Router pages, layouts, PWA glue
+├── page.tsx               # Landing
+├── projects/              # Projects + inbox UI
+├── logger/                # Daily logger
+├── job-search/            # Job search tracker routes
+├── manifest.ts            # Web app manifest
+├── sw.ts                  # Service worker (runtime cache + offline fallback)
+├── serwist/[path]/        # Serves /serwist/sw.js
+└── ~offline/              # Offline navigation fallback
+components/                # App shell, sidebar, shared UI
+features/
+├── questions/             # Projects / questions / answers (Dexie)
+├── logger/                # Log entries (Dexie)
+└── job-search/            # Companies, leads, applications, emails (Dexie)
+lib/site.ts                # Site name, description, keywords
+public/icons/              # Install / maskable / Apple touch icons
+```
+
+## Privacy & data
+
+- Data never leaves the device for storage or sync.
+- Clearing site data / IndexedDB in the browser deletes your local records.
+- There is no background sync and no centralized database for user content.
+- The only server routes are app infrastructure (e.g. health check for Docker).
+
 ## PWA overview
 
-Three pieces make Question Hub installable and offline-capable:
-
-1. **HTTPS** — required by browsers for service workers (localhost counts for local testing).
-2. **Web app manifest** — [`app/manifest.ts`](app/manifest.ts) with `display: "standalone"` and install icons under [`public/icons/`](public/icons/).
+1. **HTTPS** — required for service workers (`localhost` is fine for local testing).
+2. **Web app manifest** — [`app/manifest.ts`](app/manifest.ts) with `display: "standalone"` and icons under [`public/icons/`](public/icons/).
 3. **Service worker** — Serwist builds and serves `/serwist/sw.js` from [`app/serwist/[path]/route.ts`](app/serwist/[path]/route.ts) + [`app/sw.ts`](app/sw.ts).
 
-There is **no background sync** and **no server database**. Question CRUD stays in IndexedDB only. The service worker caches the app shell and static assets so the UI can load offline; it does not sync data anywhere.
+The service worker caches the app shell and static assets so the UI can load offline. It does **not** sync IndexedDB data anywhere.
 
 ### Offline behavior
 
-- Visit `/` and `/questions` once while online so runtime caching can store them.
-- After that, reloads and navigation between those routes work offline.
+- Visit key routes once while online so runtime caching can store them.
+- After that, reloads and navigation between previously visited routes work offline.
 - Uncached navigations fall back to [`app/~offline/page.tsx`](app/~offline/page.tsx).
-- IndexedDB create/edit/toggle/delete continues to work offline once the JS app shell is available.
+- IndexedDB create / edit / delete continues to work offline once the JS shell is available.
 
-## Architecture decisions
+### Architecture notes
 
-### Runtime caching instead of full precaching
+**Runtime caching** (Serwist `defaultCache`) plus a small precache entry for `/~offline`, instead of full precaching of every hashed Next.js asset. Low install cost; routes become offline after first visit. A true cold start offline only guarantees the `/~offline` fallback.
 
-Question Hub uses Serwist’s recommended `defaultCache` **runtime caching**, plus a small **precache** entry only for `/~offline`.
+**Per-build `randomUUID()`** for the offline fallback revision (instead of `git rev-parse HEAD`) so Docker Alpine builds do not need `git` installed. Each deploy still cache-busts that entry.
 
-| Approach | What it does | Why we chose / skipped it |
-|----------|--------------|---------------------------|
-| **Runtime cache (chosen)** | Caches documents, RSC payloads, JS/CSS, fonts, and images as the user requests them | Fits a small App Router app well: low install cost, no need to enumerate every hashed `/_next/static` asset, and routes become offline after first visit |
-| **Full precache (not chosen)** | Downloads and stores the entire app shell (and usually every route) at service-worker install time | Heavier first install, more brittle with Next.js hashed assets and RSC payloads, and unnecessary when IndexedDB already owns the data layer |
-
-**Tradeoff:** a true cold start while offline (never visited before, or cache cleared) only guarantees the `/~offline` fallback. That is expected with runtime caching, not a bug. After one online session, previously visited pages and assets remain available offline.
-
-### Per-build `randomUUID()` instead of git commit hash for precache revision
-
-Serwist’s docs often version extra precache entries with `git rev-parse HEAD`. We use `randomUUID()` in [`app/serwist/[path]/route.ts`](app/serwist/[path]/route.ts) instead.
-
-| Approach | Pros | Cons |
-|----------|------|------|
-| **`randomUUID()` (chosen)** | Works in Docker Alpine without installing `git`; still cache-busts `/~offline` on every build | Revision is not tied to a commit SHA; two builds of the same commit get different revisions |
-| **Git commit hash (not chosen)** | Deterministic per commit; easier to correlate cache versions with deploys | Requires `git` in the Docker builder image (`node:24-alpine` does not include it by default) |
-
-**Tradeoff:** accepting a random revision keeps the Docker image lean and avoids silent/fallback git failures in CI. Functionally, each deploy still invalidates the offline fallback precache entry, which is what matters for this single-instance app.
-
-## Docker deployment
+## Docker
 
 ```bash
-docker build -t question-hub .
-docker run -p 3000:3000 question-hub
+docker build -t personal-hub .
+docker run -p 3000:3000 personal-hub
 ```
 
-Serve the container behind HTTPS in production so install prompts and the service worker work on real devices.
+The image includes a health check against `/api/health`. Serve behind HTTPS in production so install prompts and the service worker work on real devices.
 
-## Project structure (PWA-relevant)
+## Contributing
 
-```
-app/
-├── layout.tsx                 # Metadata, theme colors, Serwist provider
-├── manifest.ts                # Web app manifest (standalone)
-├── sw.ts                      # Service worker (runtime cache + offline fallback)
-├── serwist/[path]/route.ts    # Builds/serves /serwist/sw.js
-├── ~offline/page.tsx          # Offline navigation fallback
-├── providers/serwist-provider.tsx
-├── page.tsx                   # Landing
-└── questions/page.tsx         # Main IndexedDB-backed UI
-public/icons/                  # Install / maskable / Apple touch icons
-features/questions/            # IndexedDB repository + UI
-```
+Contributions are welcome — bug reports, docs, and pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, guidelines, and the PR process.
 
 ## License
 
-Private — use and modify freely for your own projects.
+This project is licensed under the [MIT License](LICENSE.txt).
