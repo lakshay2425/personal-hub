@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { MicButton } from "./MicButton";
+import { VoiceInputNote } from "./VoiceInputNote";
 
 const inputClass =
   "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500";
@@ -36,16 +37,19 @@ export function CreatableSelectInput({
   if (isCreating) {
     return (
       <div className="space-y-2">
-        <div className="relative">
-          <input
-            type="text"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            placeholder={newValuePlaceholder}
-            autoFocus
-            className={voice ? `${inputClass} pr-10` : inputClass}
-          />
-          {voice ? <MicButton value={value} onChange={onChange} /> : null}
+        <div>
+          <div className="relative">
+            <input
+              type="text"
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              placeholder={newValuePlaceholder}
+              autoFocus
+              className={voice ? `${inputClass} pr-10` : inputClass}
+            />
+            {voice ? <MicButton value={value} onChange={onChange} /> : null}
+          </div>
+          {voice ? <VoiceInputNote /> : null}
         </div>
         {selectOptions.length > 0 ? (
           <button

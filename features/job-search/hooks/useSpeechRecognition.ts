@@ -1,22 +1,13 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+
+import { useSpeechRecognitionSupport } from "../lib/speechRecognitionSupport";
 
 function getSpeechRecognition(): SpeechRecognitionConstructor | null {
   if (typeof window === "undefined") return null;
   return window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null;
-}
-
-// Empty subscribe: support never changes at runtime, so no updates to emit.
-function subscribe() {
-  return () => {};
 }
 
 interface UseSpeechRecognitionOptions {
@@ -38,11 +29,8 @@ export function useSpeechRecognition({
   onResult,
   lang = "en-IN",
 }: UseSpeechRecognitionOptions): UseSpeechRecognitionResult {
-  const isSupported = useSyncExternalStore(
-    subscribe,
-    () => getSpeechRecognition() !== null,
-    () => false,
-  );
+  const support = useSpeechRecognitionSupport();
+  const isSupported = support === "supported";
   const [isListening, setIsListening] = useState(false);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -53,6 +41,8 @@ export function useSpeechRecognition({
   });
 
   useEffect(() => {
+    if (!isSupported) return;
+
     const SpeechRecognitionImpl = getSpeechRecognition();
     if (!SpeechRecognitionImpl) return;
 
@@ -97,7 +87,7 @@ export function useSpeechRecognition({
       recognition.abort();
       recognitionRef.current = null;
     };
-  }, [lang]);
+  }, [isSupported, lang]);
 
   const start = useCallback(() => {
     const recognition = recognitionRef.current;

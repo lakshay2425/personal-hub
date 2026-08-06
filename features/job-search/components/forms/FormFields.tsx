@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { MicButton } from "./MicButton";
+import { VoiceInputNote } from "./VoiceInputNote";
 
 const inputClass =
   "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500";
@@ -46,16 +47,19 @@ export function TextInput({
 }) {
   const showMic = voice ?? type === "text";
   return (
-    <div className="relative">
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        required={required}
-        className={showMic ? `${inputClass} pr-10` : inputClass}
-      />
-      {showMic && <MicButton value={value} onChange={onChange} />}
+    <div>
+      <div className="relative">
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          required={required}
+          className={showMic ? `${inputClass} pr-10` : inputClass}
+        />
+        {showMic && <MicButton value={value} onChange={onChange} />}
+      </div>
+      {showMic && <VoiceInputNote />}
     </div>
   );
 }
@@ -75,15 +79,18 @@ export function TextArea({
   voice?: boolean;
 }) {
   return (
-    <div className="relative">
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={rows}
-        className={voice ? `${inputClass} pr-10` : inputClass}
-      />
-      {voice && <MicButton value={value} onChange={onChange} align="top" />}
+    <div>
+      <div className="relative">
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={rows}
+          className={voice ? `${inputClass} pr-10` : inputClass}
+        />
+        {voice && <MicButton value={value} onChange={onChange} align="top" />}
+      </div>
+      {voice && <VoiceInputNote />}
     </div>
   );
 }

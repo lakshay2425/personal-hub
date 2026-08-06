@@ -54,8 +54,18 @@ interface SpeechRecognition extends EventTarget {
   onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
 }
 
+type SpeechRecognitionAvailability = "available" | "unavailable" | "downloading";
+
+interface SpeechRecognitionAvailableOptions {
+  langs?: string[];
+  processLocally?: boolean;
+}
+
 interface SpeechRecognitionConstructor {
   new (): SpeechRecognition;
+  available?(
+    options?: SpeechRecognitionAvailableOptions,
+  ): Promise<SpeechRecognitionAvailability>;
 }
 
 interface Window {
