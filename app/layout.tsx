@@ -7,9 +7,12 @@ import { ThemeProvider } from "@/app/providers/theme-provider";
 import { AppShell } from "@/components/AppShell";
 import {
   SITE_DESCRIPTION,
+  SITE_LOGO_IMAGE,
+  SITE_OG_IMAGE,
   SITE_KEYWORDS,
   SITE_NAME,
   SITE_TITLE_TEMPLATE,
+  SITE_URL,
 } from "@/lib/site";
 
 import "./globals.css";
@@ -25,6 +28,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   applicationName: SITE_NAME,
   title: {
     default: SITE_NAME,
@@ -34,6 +38,22 @@ export const metadata: Metadata = {
   keywords: SITE_KEYWORDS,
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
+  publisher: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
+  category: "productivity",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -48,14 +68,31 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
+    url: "/",
+    images: [
+      {
+        url: SITE_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} app preview`,
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: SITE_OG_IMAGE,
+        alt: `${SITE_NAME} app preview`,
+      },
+    ],
   },
   icons: {
+    shortcut: [{ url: SITE_LOGO_IMAGE, sizes: "512x512", type: "image/png" }],
     icon: [
+      { url: SITE_LOGO_IMAGE, sizes: "512x512", type: "image/png" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],

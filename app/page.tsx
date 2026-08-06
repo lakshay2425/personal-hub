@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AppLogo } from "@/components/AppLogo";
 import { SITE_GITHUB_URL, SITE_NAME } from "@/lib/site";
 
 const NAV_LINKS = [
@@ -204,9 +205,10 @@ export default function Home() {
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-4">
           <Link
             href="/"
-            className="truncate text-base font-semibold text-zinc-900 dark:text-zinc-50"
+            className="flex min-w-0 items-center gap-2.5 text-base font-semibold text-zinc-900 dark:text-zinc-50"
           >
-            {SITE_NAME}
+            <AppLogo className="h-8 w-8" priority />
+            <span className="truncate">{SITE_NAME}</span>
           </Link>
 
           <nav

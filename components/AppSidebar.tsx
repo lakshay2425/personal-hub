@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { AppLogo } from "@/components/AppLogo";
 import { SITE_NAME } from "@/lib/site";
 
 const NAV_ITEMS = [
@@ -89,10 +90,11 @@ export function AppSidebar({ isOpen, onOpen, onClose }: AppSidebarProps) {
         <div className="flex h-16 items-center justify-between gap-3 border-b border-zinc-200 px-4 dark:border-zinc-800">
           <Link
             href="/"
-            className="truncate text-lg font-semibold text-zinc-900 dark:text-zinc-50"
+            className="flex min-w-0 items-center gap-2.5 text-lg font-semibold text-zinc-900 dark:text-zinc-50"
             onClick={onClose}
           >
-            {SITE_NAME}
+            <AppLogo className="h-8 w-8" />
+            <span className="truncate">{SITE_NAME}</span>
           </Link>
           <button
             type="button"
