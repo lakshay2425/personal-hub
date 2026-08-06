@@ -4,7 +4,7 @@ Thanks for wanting to contribute. This project is a local-first personal toolkit
 
 ## Ways to help
 
-- Report bugs or suggest features via [GitHub Issues](https://github.com/lakshay2425/question-hub/issues)
+- Report bugs or suggest features via [GitHub Issues](https://github.com/lakshay2425/personal-hub/issues)
 - Improve docs (README, comments, this guide)
 - Fix bugs or add features via pull requests
 

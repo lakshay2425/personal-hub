@@ -11,6 +11,7 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 | Tool | What it does |
 |------|----------------|
 | **Projects** | Inbox for questions; organize them into projects with titled answers |
+| **Content Ideas** | Capture content ideas (standalone or per-project) with status and publish links |
 | **Logger** | Timestamped daily entries — log multiple times per day |
 | **Job Search Tracker** | Companies, leads, applications, cold emails, and a dashboard |
 
@@ -69,6 +70,7 @@ app/                       # App Router pages, layouts, PWA glue
 components/                # App shell, sidebar, shared UI
 features/
 ├── questions/             # Projects / questions / answers (Dexie)
+├── content-ideas/         # Content ideas (shared question-hub-db)
 ├── logger/                # Log entries (Dexie)
 └── job-search/            # Companies, leads, applications, emails (Dexie)
 lib/site.ts                # Site name, description, keywords
@@ -81,6 +83,7 @@ public/icons/              # Install / maskable / Apple touch icons
 - Clearing site data / IndexedDB in the browser deletes your local records.
 - There is no background sync and no centralized database for user content.
 - The only server routes are app infrastructure (e.g. health check for Docker).
+- For IndexedDB schemas, field types, and export formats, see [DATA.md](DATA.md).
 
 ## PWA overview
 
