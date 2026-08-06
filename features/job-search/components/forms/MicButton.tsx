@@ -35,7 +35,7 @@ export function MicButton({ value, onChange, align = "center" }: MicButtonProps)
     <>
       {isListening && (
         <span
-          className={`pointer-events-none absolute right-10 flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-950 dark:text-red-400 ${verticalClass}`}
+          className={`pointer-events-none absolute right-10 hidden items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 sm:flex dark:bg-red-950 dark:text-red-400 ${verticalClass}`}
         >
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
           Listening…

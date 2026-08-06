@@ -68,7 +68,7 @@ export default function DashboardPage() {
           />
         ) : (
           <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <tr>
                   <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
@@ -144,12 +144,12 @@ export default function DashboardPage() {
                 <li key={c.id}>
                   <Link
                     href={`/job-search/companies/${c.id}`}
-                    className="flex items-center justify-between px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                    className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                   >
-                    <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                    <span className="min-w-0 flex-1 truncate font-medium text-zinc-900 dark:text-zinc-50">
                       {c.companyName}
                     </span>
-                    <span className="text-xs text-zinc-500">
+                    <span className="shrink-0 text-xs text-zinc-500">
                       {formatTimestamp(c.createdAt)}
                     </span>
                   </Link>
@@ -170,13 +170,13 @@ export default function DashboardPage() {
               {recentLeads.map((l) => (
                 <li
                   key={l.id}
-                  className="flex items-center justify-between px-4 py-3"
+                  className="flex items-center justify-between gap-3 px-4 py-3"
                 >
-                  <div>
-                    <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-zinc-900 dark:text-zinc-50">
                       {l.name}
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="truncate text-xs text-zinc-500">
                       {getCompanyName(l.companyId, companies)}
                     </p>
                   </div>
@@ -198,13 +198,13 @@ export default function DashboardPage() {
               {recentApplications.map((a) => (
                 <li
                   key={a.id}
-                  className="flex items-center justify-between px-4 py-3"
+                  className="flex items-center justify-between gap-3 px-4 py-3"
                 >
-                  <div>
-                    <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-zinc-900 dark:text-zinc-50">
                       {a.role}
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="truncate text-xs text-zinc-500">
                       {getCompanyName(a.companyId, companies)} ·{" "}
                       {formatDate(a.appliedDate)}
                     </p>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
           />
         ) : (
           <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <tr>
                   <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">

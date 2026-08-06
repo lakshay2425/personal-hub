@@ -2,6 +2,18 @@ import Link from "next/link";
 
 import { SITE_GITHUB_URL, SITE_NAME } from "@/lib/site";
 
+const NAV_LINKS = [
+  { href: "/projects", label: "Projects" },
+  { href: "/logger", label: "Logger" },
+  { href: "/job-search", label: "Job Search" },
+] as const;
+
+const buttonPrimaryClassName =
+  "inline-flex w-full items-center justify-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200";
+
+const buttonSecondaryClassName =
+  "inline-flex w-full items-center justify-center rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:w-auto dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800";
+
 const FEATURES = [
   {
     href: "/projects",
@@ -164,8 +176,98 @@ const BENEFITS = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
+      <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md dark:border-zinc-800/80 dark:bg-black/90">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-4">
+          <Link
+            href="/"
+            className="truncate text-base font-semibold text-zinc-900 dark:text-zinc-50"
+          >
+            {SITE_NAME}
+          </Link>
+
+          <nav
+            aria-label="Main"
+            className="hidden items-center gap-1 sm:flex"
+          >
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <a
+              href={SITE_GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+            >
+              GitHub
+            </a>
+          </nav>
+
+          <details className="group relative sm:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-center rounded-lg border border-zinc-200 p-2 text-zinc-700 marker:content-none dark:border-zinc-700 dark:text-zinc-300">
+              <span className="sr-only">Open menu</span>
+              <svg
+                className="h-5 w-5 group-open:hidden"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+              <svg
+                className="hidden h-5 w-5 group-open:block"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </summary>
+            <nav
+              aria-label="Mobile"
+              className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="block rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <a
+                href={SITE_GITHUB_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                GitHub
+              </a>
+            </nav>
+          </details>
+        </div>
+      </header>
+
       {/* Hero */}
-      <section className="relative overflow-hidden px-4 pt-24 pb-16 sm:pt-28">
+      <section className="relative overflow-hidden px-4 pt-12 pb-12 sm:pt-16 sm:pb-16">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 top-0 -z-10 flex justify-center"
@@ -174,29 +276,33 @@ export default function Home() {
         </div>
 
         <div className="mx-auto w-full max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Local-first · No account · Free
+          <span className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+            <span className="inline-flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+              Local-first
+            </span>
+            <span className="hidden text-zinc-300 sm:inline dark:text-zinc-600">
+              ·
+            </span>
+            <span>No account</span>
+            <span className="hidden text-zinc-300 sm:inline dark:text-zinc-600">
+              ·
+            </span>
+            <span>Free</span>
           </span>
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-6xl">
+          <h1 className="mt-6 text-3xl font-semibold tracking-tight text-balance text-zinc-900 dark:text-zinc-50 sm:text-5xl lg:text-6xl">
             {SITE_NAME}
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-pretty text-zinc-600 sm:text-lg sm:leading-8 dark:text-zinc-400">
             A calm, local-first toolkit for your learning and career. Capture
             questions, log your progress, and track your job search — all stored
             entirely in your browser.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/projects"
-              className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
+          <div className="mx-auto mt-8 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+            <Link href="/projects" className={buttonPrimaryClassName}>
               Get started
             </Link>
-            <Link
-              href="#features"
-              className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
+            <Link href="#features" className={buttonSecondaryClassName}>
               Explore the tools
             </Link>
           </div>
@@ -204,14 +310,14 @@ export default function Home() {
       </section>
 
       {/* Feature cards */}
-      <section id="features" className="px-4 py-8 scroll-mt-20">
+      <section id="features" className="scroll-mt-16 px-4 py-8 sm:py-10">
         <div className="mx-auto w-full max-w-5xl">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((feature) => (
               <Link
                 key={feature.href}
                 href={feature.href}
-                className="group flex flex-col items-start rounded-2xl border border-zinc-200 bg-white p-6 text-left transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+                className="group flex min-w-0 flex-col items-start rounded-2xl border border-zinc-200 bg-white p-5 text-left transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md sm:p-6 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
               >
                 <span className="inline-flex rounded-xl border border-zinc-200 bg-zinc-50 p-2.5 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                   {feature.icon}
@@ -232,22 +338,22 @@ export default function Home() {
       </section>
 
       {/* Benefits */}
-      <section className="px-4 py-16">
+      <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto w-full max-w-5xl">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
+            <h2 className="text-xl font-semibold tracking-tight text-balance text-zinc-900 sm:text-2xl lg:text-3xl dark:text-zinc-50">
               Yours, and only yours
             </h2>
-            <p className="mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-400">
+            <p className="mt-3 text-sm leading-6 text-pretty text-zinc-600 sm:text-base sm:leading-7 dark:text-zinc-400">
               No backend, no analytics, no strings attached. Everything runs and
               stays on your device.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2">
             {BENEFITS.map((benefit) => (
               <div
                 key={benefit.title}
-                className="flex items-start gap-4 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
+                className="flex min-w-0 items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 sm:gap-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900"
               >
                 <span className="mt-0.5 inline-flex shrink-0 rounded-lg bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
                   {benefit.icon}
@@ -267,27 +373,21 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 pb-20">
+      <section className="px-4 pb-16 sm:pb-20">
         <div className="mx-auto w-full max-w-5xl">
-          <div className="rounded-3xl border border-zinc-200 bg-white px-6 py-12 text-center dark:border-zinc-800 dark:bg-zinc-900 sm:px-12">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
+          <div className="rounded-2xl border border-zinc-200 bg-white px-5 py-10 text-center sm:rounded-3xl sm:px-12 sm:py-12 dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="text-xl font-semibold tracking-tight text-balance text-zinc-900 sm:text-2xl lg:text-3xl dark:text-zinc-50">
               Ready when you are
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-zinc-600 dark:text-zinc-400">
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-pretty text-zinc-600 sm:text-base sm:leading-7 dark:text-zinc-400">
               Open a tool and start right away — there is nothing to set up and
               nothing to sign into.
             </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link
-                href="/projects"
-                className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
+            <div className="mx-auto mt-8 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+              <Link href="/projects" className={buttonPrimaryClassName}>
                 Open Projects
               </Link>
-              <Link
-                href="/logger"
-                className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              >
+              <Link href="/logger" className={buttonSecondaryClassName}>
                 Open Logger
               </Link>
             </div>
@@ -297,12 +397,12 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-zinc-200 px-4 py-8 dark:border-zinc-800">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-4 text-sm text-zinc-500 dark:text-zinc-500">
-          <div className="flex flex-col items-center justify-between gap-3 sm:w-full sm:flex-row">
-            <span>
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-4 text-center text-xs text-zinc-500 sm:text-sm dark:text-zinc-500">
+          <div className="flex w-full flex-col items-center justify-between gap-3 sm:flex-row sm:text-left">
+            <span className="max-w-sm text-pretty sm:max-w-none">
               {SITE_NAME} · Local-first, stored in your browser via IndexedDB.
             </span>
-            <span>No data ever leaves this device.</span>
+            <span className="shrink-0">No data ever leaves this device.</span>
           </div>
           <a
             href={SITE_GITHUB_URL}

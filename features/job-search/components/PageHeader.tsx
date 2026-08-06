@@ -21,7 +21,11 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
           </p>
         )}
       </div>
-      {action}
+      {action ? (
+        <div className="w-full shrink-0 sm:w-auto [&_button]:w-full [&_button]:sm:w-auto [&_a]:block [&_a]:w-full [&_a]:sm:w-auto">
+          {action}
+        </div>
+      ) : null}
     </div>
   );
 }

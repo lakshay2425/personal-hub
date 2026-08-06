@@ -2,19 +2,27 @@
 
 import type { ReactNode } from "react";
 
+import { useSidebar } from "@/components/SidebarContext";
+
 import { GlobalSearch } from "../components/GlobalSearch";
 import { JobSearchSubNav } from "../components/JobSearchSubNav";
 
 export function JobSearchShell({ children }: { children: ReactNode }) {
+  const { isOpen: sidebarOpen } = useSidebar();
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/80 px-4 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/80 sm:px-6 lg:pl-6">
-        <div className="ml-12 flex h-16 items-center lg:ml-0">
-          <div className="flex-1">
+      <header
+        className={`sticky z-20 border-b border-zinc-200 bg-white/80 px-4 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/80 sm:px-6 ${
+          sidebarOpen ? "top-0" : "top-14 lg:top-0"
+        }`}
+      >
+        <div className="flex h-14 items-center sm:h-16">
+          <div className="min-w-0 flex-1">
             <GlobalSearch />
           </div>
         </div>
-        <div className="ml-12 pb-4 lg:ml-0">
+        <div className="pb-4">
           <JobSearchSubNav />
         </div>
       </header>

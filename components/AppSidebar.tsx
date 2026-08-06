@@ -81,7 +81,7 @@ export function AppSidebar({ isOpen, onOpen, onClose }: AppSidebarProps) {
       ) : null}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-zinc-200 bg-white transition-transform duration-200 dark:border-zinc-800 dark:bg-zinc-900 lg:static ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 max-w-[85vw] flex-col border-r border-zinc-200 bg-white transition-transform duration-200 dark:border-zinc-800 dark:bg-zinc-900 lg:static lg:max-w-none ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:hidden"
         }`}
       >
@@ -96,7 +96,7 @@ export function AppSidebar({ isOpen, onOpen, onClose }: AppSidebarProps) {
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-lg border border-zinc-200 p-2 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            className="shrink-0 rounded-lg border border-zinc-200 p-2 transition-colors hover:bg-zinc-50 lg:hidden dark:border-zinc-700 dark:hover:bg-zinc-800"
             aria-label="Close navigation"
           >
             <CloseIcon />

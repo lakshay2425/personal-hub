@@ -52,7 +52,7 @@ export function AnswerList({
           key={answer.id}
           className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50"
         >
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
                 {answer.title}

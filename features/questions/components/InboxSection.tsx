@@ -120,7 +120,7 @@ export function InboxSection({ projects }: InboxSectionProps) {
         </p>
       </div>
 
-      <form onSubmit={handleCapture} className="mb-4 flex gap-2">
+      <form onSubmit={handleCapture} className="mb-4 flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           value={draft}
@@ -131,7 +131,7 @@ export function InboxSection({ projects }: InboxSectionProps) {
         <button
           type="submit"
           disabled={isSubmitting || !draft.trim()}
-          className="shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="w-full shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
           {isSubmitting ? "Adding..." : "Add"}
         </button>
@@ -167,7 +167,7 @@ export function InboxSection({ projects }: InboxSectionProps) {
                 <p className="min-w-0 flex-1 text-sm text-zinc-900 dark:text-zinc-50">
                   {question.questionText}
                 </p>
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <StatusToggle
                     status={question.status}
                     onToggle={() => handleToggleStatus(question.id)}
@@ -183,7 +183,7 @@ export function InboxSection({ projects }: InboxSectionProps) {
                             [question.id]: event.target.value,
                           }))
                         }
-                        className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-xs text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                        className="min-w-0 max-w-full rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-xs text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
                       >
                         <option value="">Move to...</option>
                         {projects.map((project) => (

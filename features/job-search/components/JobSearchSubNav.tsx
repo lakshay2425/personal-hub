@@ -9,7 +9,7 @@ export function JobSearchSubNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b border-zinc-200 pb-3 dark:border-zinc-800">
+    <nav className="-mx-4 flex gap-1 overflow-x-auto border-b border-zinc-200 px-4 pb-3 sm:mx-0 sm:px-0 dark:border-zinc-800">
       {NAV_ITEMS.map((item) => {
         const isActive = item.exact
           ? pathname === item.href

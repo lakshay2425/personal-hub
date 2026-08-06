@@ -108,18 +108,18 @@ export default function CompaniesPage() {
         }
       />
 
-      <div className="mb-6 flex flex-wrap gap-3">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name..."
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:min-w-[200px] sm:flex-1 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
         />
         <select
           value={sectorFilter}
           onChange={(e) => setSectorFilter(e.target.value)}
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
         >
           <option value="">All Sectors</option>
           {sectors.map((s) => (
@@ -131,7 +131,7 @@ export default function CompaniesPage() {
         <select
           value={sortField}
           onChange={(e) => setSortField(e.target.value as SortField)}
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
         >
           <option value="companyName">Sort by Name</option>
           <option value="createdAt">Sort by Created</option>
@@ -139,7 +139,7 @@ export default function CompaniesPage() {
         <button
           type="button"
           onClick={() => setSortAsc(!sortAsc)}
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:text-zinc-300"
+          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm sm:w-auto dark:border-zinc-600 dark:text-zinc-300"
         >
           {sortAsc ? "↑ Asc" : "↓ Desc"}
         </button>
@@ -161,7 +161,7 @@ export default function CompaniesPage() {
         />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
               <tr>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">

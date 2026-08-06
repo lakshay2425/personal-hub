@@ -14,7 +14,7 @@ export function GlobalSearch() {
   const showResults = isFocused && query.trim().length > 0;
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-md">
+    <div ref={containerRef} className="relative w-full max-w-none sm:max-w-md">
       <input
         type="search"
         value={query}

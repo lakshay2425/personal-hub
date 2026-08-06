@@ -1,16 +1,29 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { AppSidebar } from "./AppSidebar";
+import { SidebarProvider } from "./SidebarContext";
 
 const FULL_WIDTH_ROUTES = ["/", "/~offline"];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const showSidebar = !FULL_WIDTH_ROUTES.includes(pathname);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+
+    const syncSidebar = () => {
+      setSidebarOpen(mediaQuery.matches);
+    };
+
+    syncSidebar();
+    mediaQuery.addEventListener("change", syncSidebar);
+    return () => mediaQuery.removeEventListener("change", syncSidebar);
+  }, []);
 
   if (!showSidebar) {
     return <>{children}</>;
@@ -24,9 +37,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         onClose={() => setSidebarOpen(false)}
       />
       <div
-        className={`flex min-w-0 flex-1 flex-col ${sidebarOpen ? "lg:pt-0" : "pt-14"}`}
+        className={`flex min-w-0 flex-1 flex-col ${sidebarOpen ? "" : "pt-14 pl-14"}`}
       >
-        {children}
+        <SidebarProvider isOpen={sidebarOpen}>{children}</SidebarProvider>
       </div>
     </div>
   );
