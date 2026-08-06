@@ -8,6 +8,8 @@ import type {
   Lead,
 } from "./types";
 
+import { LEGACY_LEAD_CHANNEL } from "./constants";
+
 class JobSearchDatabase extends Dexie {
   companies!: EntityTable<Company, "id">;
   leads!: EntityTable<Lead, "id">;
@@ -29,6 +31,29 @@ class JobSearchDatabase extends Dexie {
         "++id, companyId, leadId, role, status, sentDate, firstFollowUpDate, secondFollowUpDate, createdAt",
       activityLogs: "++id, entityType, entityId, action, timestamp",
     });
+
+    this.version(2)
+      .stores({
+        companies:
+          "++id, companyName, sector, createdAt",
+        leads:
+          "++id, companyId, name, role, type, channel, status, firstFollowUpDate, secondFollowUpDate, createdAt",
+        applications:
+          "++id, companyId, role, portal, status, appliedDate, createdAt",
+        coldEmails:
+          "++id, companyId, leadId, role, status, sentDate, firstFollowUpDate, secondFollowUpDate, createdAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+      })
+      .upgrade(async (transaction) => {
+        await transaction
+          .table("leads")
+          .toCollection()
+          .modify((lead) => {
+            if (!lead.channel) {
+              lead.channel = LEGACY_LEAD_CHANNEL;
+            }
+          });
+      });
   }
 }
 

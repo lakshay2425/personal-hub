@@ -2,7 +2,22 @@ import { getDB } from "../db";
 import { getUniqueStringValues } from "../lib/uniqueValues";
 import { logActivity } from "../lib/activityLog";
 import { deleteLeadWithLogs } from "../lib/cascade";
+import { DEFAULT_LEAD_CHANNEL } from "../constants";
 import type { Lead } from "../types";
+
+function clearNonEmailFollowUps<T extends Partial<Omit<Lead, "id" | "createdAt">>>(
+  data: T,
+): T {
+  if (data.channel !== undefined && data.channel !== "Email") {
+    return {
+      ...data,
+      firstFollowUpDate: null,
+      secondFollowUpDate: null,
+    };
+  }
+
+  return data;
+}
 
 export async function getAllLeads(): Promise<Lead[]> {
   const database = getDB();
@@ -27,8 +42,13 @@ export async function createLead(
   data: Omit<Lead, "id" | "createdAt">,
 ): Promise<number> {
   const database = getDB();
-  const id = await database.leads.add({
+  const channel = data.channel ?? DEFAULT_LEAD_CHANNEL;
+  const normalizedData = clearNonEmailFollowUps({
     ...data,
+    channel,
+  });
+  const id = await database.leads.add({
+    ...normalizedData,
     createdAt: Date.now(),
   });
   await logActivity("lead", id as number, "Lead Added");
@@ -40,7 +60,7 @@ export async function updateLead(
   data: Partial<Omit<Lead, "id" | "createdAt">>,
 ): Promise<void> {
   const database = getDB();
-  await database.leads.update(id, data);
+  await database.leads.update(id, clearNonEmailFollowUps(data));
   await logActivity("lead", id, "Lead Updated");
 }
 
@@ -64,7 +84,8 @@ export async function getTodayFollowUpLeads(today: string): Promise<Lead[]> {
   const all = await database.leads.toArray();
   return all.filter(
     (l: Lead) =>
-      l.firstFollowUpDate === today || l.secondFollowUpDate === today,
+      l.channel === "Email" &&
+      (l.firstFollowUpDate === today || l.secondFollowUpDate === today),
   );
 }
 

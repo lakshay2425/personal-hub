@@ -6,7 +6,7 @@ export function getTodayDateString(): string {
   return format(new Date(), "yyyy-MM-dd");
 }
 
-export function formatDate(dateStr: string | number | undefined): string {
+export function formatDate(dateStr: string | number | null | undefined): string {
   if (!dateStr) return "—";
   if (typeof dateStr === "number") {
     return format(new Date(dateStr), "MMM d, yyyy");

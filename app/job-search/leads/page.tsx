@@ -9,11 +9,53 @@ import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormMo
 import { LoadingState } from "@/features/job-search/components/LoadingState";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
-import { LEAD_STATUSES } from "@/features/job-search/constants";
+import {
+  LEAD_CHANNELS,
+  LEAD_STATUSES,
+} from "@/features/job-search/constants";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
 import { formatDate } from "@/features/job-search/lib/dateUtils";
 import type { Lead } from "@/features/job-search/types";
+
+const CHANNEL_BADGE_CONFIG: Record<
+  Lead["channel"],
+  { icon: string; className: string }
+> = {
+  Email: {
+    icon: "@",
+    className:
+      "bg-zinc-100 text-zinc-700 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700",
+  },
+  LinkedIn: {
+    icon: "in",
+    className:
+      "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-800",
+  },
+  X: {
+    icon: "X",
+    className:
+      "bg-black text-white ring-black dark:bg-zinc-950 dark:text-zinc-50 dark:ring-zinc-700",
+  },
+  Other: {
+    icon: "•",
+    className:
+      "bg-zinc-50 text-zinc-500 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-400 dark:ring-zinc-700",
+  },
+};
+
+function ChannelBadge({ channel }: { channel: Lead["channel"] }) {
+  const config = CHANNEL_BADGE_CONFIG[channel];
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${config.className}`}
+    >
+      <span className="text-[10px] font-bold leading-none">{config.icon}</span>
+      {channel}
+    </span>
+  );
+}
 
 export default function LeadsPage() {
   const { companies, addCompany } = useCompanies();
@@ -22,6 +64,7 @@ export default function LeadsPage() {
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [channelFilter, setChannelFilter] = useState("");
   const [roleTypeFilter, setRoleTypeFilter] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -45,6 +88,9 @@ export default function LeadsPage() {
     if (statusFilter) {
       result = result.filter((l) => l.status === statusFilter);
     }
+    if (channelFilter) {
+      result = result.filter((l) => l.channel === channelFilter);
+    }
     if (roleTypeFilter) {
       const lower = roleTypeFilter.toLowerCase();
       result = result.filter(
@@ -54,7 +100,14 @@ export default function LeadsPage() {
       );
     }
     return result;
-  }, [leads, search, companyFilter, statusFilter, roleTypeFilter]);
+  }, [
+    leads,
+    search,
+    companyFilter,
+    statusFilter,
+    channelFilter,
+    roleTypeFilter,
+  ]);
 
   const handleCreateCompany = async (companyName: string) => {
     const company = await addCompany({
@@ -149,6 +202,18 @@ export default function LeadsPage() {
             </option>
           ))}
         </select>
+        <select
+          value={channelFilter}
+          onChange={(e) => setChannelFilter(e.target.value)}
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+        >
+          <option value="">All Channels</option>
+          {LEAD_CHANNELS.map((channel) => (
+            <option key={channel} value={channel}>
+              {channel}
+            </option>
+          ))}
+        </select>
         <input
           type="text"
           value={roleTypeFilter}
@@ -174,13 +239,14 @@ export default function LeadsPage() {
         />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[1000px] text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
               <tr>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Company</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Channel</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 1</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 2</th>
@@ -196,9 +262,20 @@ export default function LeadsPage() {
                   </td>
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.role || "—"}</td>
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.type || "—"}</td>
+                  <td className="px-4 py-3">
+                    <ChannelBadge channel={lead.channel} />
+                  </td>
                   <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(lead.firstFollowUpDate)}</td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(lead.secondFollowUpDate)}</td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                    {lead.channel === "Email"
+                      ? formatDate(lead.firstFollowUpDate)
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                    {lead.channel === "Email"
+                      ? formatDate(lead.secondFollowUpDate)
+                      : "—"}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button

@@ -1,5 +1,7 @@
 export type LeadStatus = "New" | "Contacted" | "Replied" | "Inactive";
 
+export type LeadChannel = "Email" | "LinkedIn" | "X" | "Other";
+
 export type ApplicationStatus =
   | "Applied"
   | "Interview"
@@ -39,9 +41,10 @@ export interface Lead {
   type: string;
   email: string;
   linkedin: string;
+  channel: LeadChannel;
   status: LeadStatus;
-  firstFollowUpDate: string;
-  secondFollowUpDate: string;
+  firstFollowUpDate: string | null;
+  secondFollowUpDate: string | null;
   notes: string;
   createdAt: number;
 }

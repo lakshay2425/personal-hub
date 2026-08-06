@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 
 import { Modal } from "@/components/ui/Modal";
 
-import { LEAD_STATUSES } from "../../constants";
+import {
+  DEFAULT_LEAD_CHANNEL,
+  LEAD_CHANNELS,
+  LEAD_STATUSES,
+} from "../../constants";
 import {
   getUniqueLeadRoles,
   getUniqueLeadTypes,
@@ -59,6 +63,9 @@ function LeadFormFields({
   const [type, setType] = useState(lead?.type ?? "");
   const [email, setEmail] = useState(lead?.email ?? "");
   const [linkedin, setLinkedin] = useState(lead?.linkedin ?? "");
+  const [channel, setChannel] = useState<Lead["channel"]>(
+    lead?.channel ?? DEFAULT_LEAD_CHANNEL,
+  );
   const [status, setStatus] = useState<Lead["status"]>(lead?.status ?? "New");
   const [firstFollowUpDate, setFirstFollowUpDate] = useState(
     lead?.firstFollowUpDate ?? "",
@@ -102,6 +109,7 @@ function LeadFormFields({
 
     setCompanyError(null);
     setIsSubmitting(true);
+    const isEmailChannel = channel === "Email";
     try {
       await onSubmit({
         companyId: Number(companyId),
@@ -110,9 +118,10 @@ function LeadFormFields({
         type,
         email,
         linkedin,
+        channel,
         status,
-        firstFollowUpDate,
-        secondFollowUpDate,
+        firstFollowUpDate: isEmailChannel ? firstFollowUpDate || null : null,
+        secondFollowUpDate: isEmailChannel ? secondFollowUpDate || null : null,
         notes,
       });
       onClose();
@@ -187,6 +196,14 @@ function LeadFormFields({
             type="url"
           />
         </FormField>
+        <FormField label="Channel" required>
+          <SelectInput
+            value={channel}
+            onChange={(v) => setChannel(v as Lead["channel"])}
+            options={LEAD_CHANNELS.map((c) => ({ value: c, label: c }))}
+            required
+          />
+        </FormField>
         <FormField label="Status">
           <SelectInput
             value={status}
@@ -194,20 +211,24 @@ function LeadFormFields({
             options={LEAD_STATUSES.map((s) => ({ value: s, label: s }))}
           />
         </FormField>
-        <FormField label="First Follow-up">
-          <TextInput
-            value={firstFollowUpDate}
-            onChange={setFirstFollowUpDate}
-            type="date"
-          />
-        </FormField>
-        <FormField label="Second Follow-up">
-          <TextInput
-            value={secondFollowUpDate}
-            onChange={setSecondFollowUpDate}
-            type="date"
-          />
-        </FormField>
+        {channel === "Email" ? (
+          <>
+            <FormField label="First Follow-up">
+              <TextInput
+                value={firstFollowUpDate}
+                onChange={setFirstFollowUpDate}
+                type="date"
+              />
+            </FormField>
+            <FormField label="Second Follow-up">
+              <TextInput
+                value={secondFollowUpDate}
+                onChange={setSecondFollowUpDate}
+                type="date"
+              />
+            </FormField>
+          </>
+        ) : null}
         <div className="sm:col-span-2">
           <FormField label="Notes">
             <TextArea value={notes} onChange={setNotes} />

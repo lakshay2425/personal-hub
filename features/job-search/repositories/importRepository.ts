@@ -1,5 +1,6 @@
 import { assertBackupShape } from "@/lib/export/validateBackup";
 
+import { isLeadChannel, LEGACY_LEAD_CHANNEL } from "../constants";
 import { getDB } from "../db";
 import type {
   ActivityLog,
@@ -18,7 +19,7 @@ const REQUIRED_ARRAYS = [
 ] as const;
 
 export type JobSearchBackupPayload = {
-  version: 1;
+  version: 1 | 2;
   companies: Company[];
   leads: Lead[];
   applications: Application[];
@@ -30,9 +31,22 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
   const arrays = assertBackupShape(data, [...REQUIRED_ARRAYS]);
 
   return {
-    version: 1,
+    version: 2,
     companies: arrays.companies as Company[],
-    leads: arrays.leads as Lead[],
+    leads: (arrays.leads as Lead[]).map((lead) => {
+      const channel = isLeadChannel(lead.channel)
+        ? lead.channel
+        : LEGACY_LEAD_CHANNEL;
+
+      return {
+        ...lead,
+        channel,
+        firstFollowUpDate:
+          channel === "Email" ? lead.firstFollowUpDate || null : null,
+        secondFollowUpDate:
+          channel === "Email" ? lead.secondFollowUpDate || null : null,
+      };
+    }),
     applications: arrays.applications as Application[],
     coldEmails: arrays.coldEmails as ColdEmail[],
     activityLogs: arrays.activityLogs as ActivityLog[],

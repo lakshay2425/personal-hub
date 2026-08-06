@@ -1,6 +1,7 @@
 import type {
   ApplicationStatus,
   ColdEmailStatus,
+  LeadChannel,
   LeadStatus,
   TimeFilter,
 } from "./types";
@@ -11,6 +12,20 @@ export const LEAD_STATUSES: LeadStatus[] = [
   "Replied",
   "Inactive",
 ];
+
+export const LEAD_CHANNELS: LeadChannel[] = [
+  "Email",
+  "LinkedIn",
+  "X",
+  "Other",
+];
+
+export const DEFAULT_LEAD_CHANNEL: LeadChannel = "LinkedIn";
+export const LEGACY_LEAD_CHANNEL: LeadChannel = "Email";
+
+export function isLeadChannel(value: unknown): value is LeadChannel {
+  return LEAD_CHANNELS.includes(value as LeadChannel);
+}
 
 export const APPLICATION_STATUSES: ApplicationStatus[] = [
   "Applied",

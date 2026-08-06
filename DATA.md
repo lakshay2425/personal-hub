@@ -222,13 +222,14 @@ Import is full overwrite of `logEntries`.
 | `type` | `string` | |
 | `email` | `string` | |
 | `linkedin` | `string` | |
+| `channel` | `"Email" \| "LinkedIn" \| "X" \| "Other"` | Required; defaults to `"LinkedIn"` for new leads |
 | `status` | `"New" \| "Contacted" \| "Replied" \| "Inactive"` | |
-| `firstFollowUpDate` | `string` | Date string |
-| `secondFollowUpDate` | `string` | Date string |
+| `firstFollowUpDate` | `string \| null` | Date string for Email leads; `null` otherwise |
+| `secondFollowUpDate` | `string \| null` | Date string for Email leads; `null` otherwise |
 | `notes` | `string` | |
 | `createdAt` | `number` | Unix ms |
 
-**Indexes:** `id`, `companyId`, `name`, `role`, `type`, `status`, `firstFollowUpDate`, `secondFollowUpDate`, `createdAt`
+**Indexes:** `id`, `companyId`, `name`, `role`, `type`, `channel`, `status`, `firstFollowUpDate`, `secondFollowUpDate`, `createdAt`
 
 ---
 
@@ -288,7 +289,7 @@ Import is full overwrite of `logEntries`.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "exportedAt": "ISO-8601 string",
   "companies": [],
   "leads": [],
