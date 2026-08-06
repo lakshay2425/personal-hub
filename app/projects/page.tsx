@@ -5,12 +5,17 @@ import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ExportButton } from "@/components/ExportButton";
+import { ImportButton } from "@/components/ImportButton";
 import { ProjectDeleteDialog } from "@/features/content-ideas/components/ProjectDeleteDialog";
 import { countContentIdeasByProjectId } from "@/features/content-ideas/lib/contentIdeasRepository";
 import { InboxSection } from "@/features/questions/components/InboxSection";
 import { ProjectFormModal } from "@/features/questions/components/ProjectFormModal";
 import { useProjects } from "@/features/questions/hooks/useProjects";
 import { exportProjectsData } from "@/features/questions/lib/exportRepository";
+import {
+  importProjectsData,
+  validateProjectsBackup,
+} from "@/features/questions/lib/importRepository";
 import type { ProjectFormValues } from "@/features/questions/schema";
 import type { Project } from "@/features/questions/types";
 
@@ -22,6 +27,7 @@ export default function ProjectsPage() {
     createProject,
     updateProject,
     deleteProject,
+    refresh,
   } = useProjects();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -119,6 +125,11 @@ export default function ProjectsPage() {
           <ExportButton
             onExport={exportProjectsData}
             filenamePrefix="question-hub-projects"
+          />
+          <ImportButton
+            onValidate={validateProjectsBackup}
+            onImport={importProjectsData}
+            onImported={refresh}
           />
           <button
             type="button"

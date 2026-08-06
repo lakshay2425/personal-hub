@@ -3,11 +3,16 @@
 import type { ReactNode } from "react";
 
 import { ExportButton } from "@/components/ExportButton";
+import { ImportButton } from "@/components/ImportButton";
 import { useSidebar } from "@/components/SidebarContext";
 
 import { GlobalSearch } from "../components/GlobalSearch";
 import { JobSearchSubNav } from "../components/JobSearchSubNav";
 import { exportJobSearchData } from "../repositories/exportRepository";
+import {
+  importJobSearchData,
+  validateJobSearchBackup,
+} from "../repositories/importRepository";
 
 export function JobSearchShell({ children }: { children: ReactNode }) {
   const { isOpen: sidebarOpen } = useSidebar();
@@ -26,6 +31,12 @@ export function JobSearchShell({ children }: { children: ReactNode }) {
           <ExportButton
             onExport={exportJobSearchData}
             filenamePrefix="question-hub-job-search"
+            className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          />
+          <ImportButton
+            onValidate={validateJobSearchBackup}
+            onImport={importJobSearchData}
+            onImported={() => window.location.reload()}
             className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
           />
         </div>

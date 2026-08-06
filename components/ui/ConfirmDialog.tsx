@@ -11,6 +11,7 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   isLoading?: boolean;
+  loadingLabel?: string;
 }
 
 export function ConfirmDialog({
@@ -22,6 +23,7 @@ export function ConfirmDialog({
   confirmLabel = "Delete",
   cancelLabel = "Cancel",
   isLoading = false,
+  loadingLabel = "Deleting...",
 }: ConfirmDialogProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
@@ -41,7 +43,7 @@ export function ConfirmDialog({
           disabled={isLoading}
           className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50 sm:w-auto"
         >
-          {isLoading ? "Deleting..." : confirmLabel}
+          {isLoading ? loadingLabel : confirmLabel}
         </button>
       </div>
     </Modal>
