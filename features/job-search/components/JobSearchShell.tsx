@@ -2,10 +2,12 @@
 
 import type { ReactNode } from "react";
 
+import { ExportButton } from "@/components/ExportButton";
 import { useSidebar } from "@/components/SidebarContext";
 
 import { GlobalSearch } from "../components/GlobalSearch";
 import { JobSearchSubNav } from "../components/JobSearchSubNav";
+import { exportJobSearchData } from "../repositories/exportRepository";
 
 export function JobSearchShell({ children }: { children: ReactNode }) {
   const { isOpen: sidebarOpen } = useSidebar();
@@ -17,10 +19,15 @@ export function JobSearchShell({ children }: { children: ReactNode }) {
           sidebarOpen ? "top-0" : "top-14 lg:top-0"
         }`}
       >
-        <div className="flex h-14 items-center sm:h-16">
+        <div className="flex h-14 items-center gap-3 sm:h-16">
           <div className="min-w-0 flex-1">
             <GlobalSearch />
           </div>
+          <ExportButton
+            onExport={exportJobSearchData}
+            filenamePrefix="question-hub-job-search"
+            className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          />
         </div>
         <div className="pb-4">
           <JobSearchSubNav />

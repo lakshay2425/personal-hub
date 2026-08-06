@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
+import { ExportButton } from "@/components/ExportButton";
 import { ConfirmDialog } from "@/features/questions/components/ConfirmDialog";
 import { InboxSection } from "@/features/questions/components/InboxSection";
 import { ProjectFormModal } from "@/features/questions/components/ProjectFormModal";
 import { useProjects } from "@/features/questions/hooks/useProjects";
+import { exportProjectsData } from "@/features/questions/lib/exportRepository";
 import type { ProjectFormValues } from "@/features/questions/schema";
 import type { Project } from "@/features/questions/types";
 
@@ -93,13 +95,19 @@ export default function ProjectsPage() {
             Capture questions in the inbox, then organize them into projects.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="w-full shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
-          New Project
-        </button>
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+          <ExportButton
+            onExport={exportProjectsData}
+            filenamePrefix="question-hub-projects"
+          />
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            New Project
+          </button>
+        </div>
       </div>
 
       <InboxSection projects={projects} />
