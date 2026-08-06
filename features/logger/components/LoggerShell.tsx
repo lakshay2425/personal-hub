@@ -15,12 +15,6 @@ export function LoggerShell({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
       <div className="mb-8">
-        <Link
-          href="/"
-          className="mb-2 inline-block text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-300"
-        >
-          &larr; Home
-        </Link>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           Logger
         </h1>

@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 
 import { AppSerwistProvider } from "@/app/providers/serwist-provider";
 import { ThemeProvider } from "@/app/providers/theme-provider";
+import { AppShell } from "@/components/AppShell";
 
 import "./globals.css";
 
@@ -78,7 +79,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <AppSerwistProvider>
-            {children}
+            <AppShell>{children}</AppShell>
             <Toaster position="top-center" />
           </AppSerwistProvider>
         </ThemeProvider>
