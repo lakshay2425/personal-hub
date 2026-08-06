@@ -16,7 +16,7 @@ import { formatDate } from "@/features/job-search/lib/dateUtils";
 import type { Lead } from "@/features/job-search/types";
 
 export default function LeadsPage() {
-  const { companies } = useCompanies();
+  const { companies, addCompany } = useCompanies();
   const { leads, isLoading, addLead, editLead, removeLead } = useLeads();
 
   const [search, setSearch] = useState("");
@@ -55,6 +55,17 @@ export default function LeadsPage() {
     }
     return result;
   }, [leads, search, companyFilter, statusFilter, roleTypeFilter]);
+
+  const handleCreateCompany = async (companyName: string) => {
+    const company = await addCompany({
+      companyName: companyName.trim(),
+      sector: "",
+      website: "",
+      notes: "",
+    });
+    toast.success("Company created. You can fill in details later.");
+    return company;
+  };
 
   const handleSubmit = async (data: Omit<Lead, "id" | "createdAt">) => {
     try {
@@ -99,8 +110,7 @@ export default function LeadsPage() {
               setEditingLead(null);
               setIsFormOpen(true);
             }}
-            disabled={companies.length === 0}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Add Lead
           </button>
@@ -151,21 +161,15 @@ export default function LeadsPage() {
       {filtered.length === 0 ? (
         <EmptyState
           title="No leads found"
-          description={
-            companies.length === 0
-              ? "Add a company first, then add leads."
-              : "Add a lead to start building your network."
-          }
+          description="Add a lead to start building your network."
           action={
-            companies.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(true)}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-50 dark:text-zinc-900"
-              >
-                Add Lead
-              </button>
-            ) : undefined
+            <button
+              type="button"
+              onClick={() => setIsFormOpen(true)}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-50 dark:text-zinc-900"
+            >
+              Add Lead
+            </button>
           }
         />
       ) : (
@@ -232,6 +236,7 @@ export default function LeadsPage() {
         onSubmit={handleSubmit}
         lead={editingLead}
         companies={companies}
+        onCreateCompany={handleCreateCompany}
       />
 
       <ConfirmDialog

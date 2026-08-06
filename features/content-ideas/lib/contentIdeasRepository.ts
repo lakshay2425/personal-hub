@@ -9,7 +9,6 @@ import type {
 import { EMPTY_PUBLISHED_LINKS } from "../types";
 import {
   canMoveToRoot,
-  collectDescendantIds,
   compareContentIdeas,
   getMaxDepthInSubtree,
   getValidParentTargets,

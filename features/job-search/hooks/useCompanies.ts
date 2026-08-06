@@ -64,7 +64,11 @@ export function useCompanies() {
     async (data: Omit<Company, "id" | "createdAt" | "updatedAt">) => {
       const id = await createCompany(data);
       await refresh();
-      return id;
+      const created = await getCompanyById(id);
+      if (!created) {
+        throw new Error("Failed to create company");
+      }
+      return created;
     },
     [refresh],
   );

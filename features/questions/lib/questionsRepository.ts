@@ -3,7 +3,6 @@ import { deleteAnswersByQuestion } from "./answersRepository";
 import { getDB } from "./db";
 import {
   canMoveToRoot,
-  collectDescendantIds,
   compareQuestions,
   getMaxDepthInSubtree,
   getValidParentTargets,

@@ -10,6 +10,7 @@ import {
   getUniqueLeadTypes,
 } from "../../repositories/leadsRepository";
 import type { Company, Lead } from "../../types";
+import { CompanyCombobox } from "./CompanyCombobox";
 import { CreatableSelectInput } from "./CreatableSelectInput";
 import {
   FormActions,
@@ -26,6 +27,7 @@ interface LeadFormModalProps {
   lead?: Lead | null;
   companies: Company[];
   defaultCompanyId?: number;
+  onCreateCompany: (companyName: string) => Promise<Company>;
 }
 
 interface LeadFormFieldsProps {
@@ -34,6 +36,7 @@ interface LeadFormFieldsProps {
   defaultCompanyId?: number;
   onClose: () => void;
   onSubmit: (data: Omit<Lead, "id" | "createdAt">) => Promise<void>;
+  onCreateCompany: (companyName: string) => Promise<Company>;
 }
 
 function LeadFormFields({
@@ -42,6 +45,7 @@ function LeadFormFields({
   defaultCompanyId,
   onClose,
   onSubmit,
+  onCreateCompany,
 }: LeadFormFieldsProps) {
   const [companyId, setCompanyId] = useState(
     lead
@@ -66,6 +70,7 @@ function LeadFormFields({
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
   const [typeOptions, setTypeOptions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companyError, setCompanyError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,6 +95,12 @@ function LeadFormFields({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!companyId) {
+      setCompanyError("Select or create a company");
+      return;
+    }
+
+    setCompanyError(null);
     setIsSubmitting(true);
     try {
       await onSubmit({
@@ -114,16 +125,23 @@ function LeadFormFields({
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label="Company" required>
-          <SelectInput
+          <CompanyCombobox
             value={companyId}
-            onChange={setCompanyId}
-            placeholder="Select company"
-            required
-            options={companies.map((c) => ({
-              value: c.id!,
-              label: c.companyName,
-            }))}
+            onChange={(nextCompanyId) => {
+              setCompanyId(nextCompanyId);
+              if (nextCompanyId) {
+                setCompanyError(null);
+              }
+            }}
+            companies={companies}
+            onCreateCompany={onCreateCompany}
+            placeholder="Search or add company..."
           />
+          {companyError ? (
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+              {companyError}
+            </p>
+          ) : null}
         </FormField>
         <FormField label="Name" required>
           <TextInput
@@ -212,6 +230,7 @@ export function LeadFormModal({
   lead,
   companies,
   defaultCompanyId,
+  onCreateCompany,
 }: LeadFormModalProps) {
   return (
     <Modal
@@ -227,6 +246,7 @@ export function LeadFormModal({
         defaultCompanyId={defaultCompanyId}
         onClose={onClose}
         onSubmit={onSubmit}
+        onCreateCompany={onCreateCompany}
       />
     </Modal>
   );

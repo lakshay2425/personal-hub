@@ -1,6 +1,6 @@
 # Personal Hub
 
-A **local-first** personal toolkit for learning and career work. Capture project questions, log what you did, and track your job search — all stored in your browser. Nothing is sent to a server.
+A **local-first** personal toolkit for learning and career work. Capture project questions, content ideas, daily logs, and your job search — all stored in your browser. Nothing is sent to a server.
 
 Installable as a Progressive Web App (PWA) and usable offline after the app shell has been cached.
 
@@ -11,11 +11,11 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 | Tool | What it does |
 |------|----------------|
 | **Projects** | Inbox for questions; organize them into projects with titled answers |
-| **Content Ideas** | Capture content ideas (standalone or per-project) with status and publish links |
+| **Content Ideas** | Capture ideas standalone or per-project; sub-ideas, status, publish links, list/table/card views |
 | **Logger** | Timestamped daily entries — log multiple times per day |
 | **Job Search Tracker** | Companies, leads, applications, cold emails, and a dashboard |
 
-All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Separate databases keep each tool isolated.
+All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three databases: projects/content ideas share one; logger and job search each have their own. See [DATA.md](DATA.md) for schemas.
 
 ## Tech stack
 
@@ -60,7 +60,8 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 app/                       # App Router pages, layouts, PWA glue
 ├── page.tsx               # Landing
-├── projects/              # Projects + inbox UI
+├── projects/              # Projects + inbox UI (content ideas per project)
+├── content-ideas/         # Standalone content ideas
 ├── logger/                # Daily logger
 ├── job-search/            # Job search tracker routes
 ├── manifest.ts            # Web app manifest
@@ -70,7 +71,7 @@ app/                       # App Router pages, layouts, PWA glue
 components/                # App shell, sidebar, shared UI
 features/
 ├── questions/             # Projects / questions / answers (Dexie)
-├── content-ideas/         # Content ideas (shared question-hub-db)
+├── content-ideas/         # Content ideas UI + repo (shared personal-hub-db)
 ├── logger/                # Log entries (Dexie)
 └── job-search/            # Companies, leads, applications, emails (Dexie)
 lib/site.ts                # Site name, description, keywords
