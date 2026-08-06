@@ -8,18 +8,39 @@ A **local-first** personal toolkit for learning and career work. Capture project
 
 Installable as a Progressive Web App (PWA) and usable offline after the app shell has been cached.
 
-**Live idea:** open it, use it, share the repo. No accounts, no analytics pipeline for your data.
+**Live:** [hub.lakshaymahajan.com](https://hub.lakshaymahajan.com) · **Source:** [github.com/lakshay2425/personal-hub](https://github.com/lakshay2425/personal-hub)
 
 ## Features
 
 | Tool | What it does |
 |------|----------------|
-| **Projects** | Inbox for questions; organize them into projects with titled answers |
-| **Content Ideas** | Capture ideas standalone or per-project; sub-ideas, status, publish links, list/table/card views |
-| **Logger** | Timestamped daily entries — log multiple times per day |
-| **Job Search Tracker** | Companies, leads, applications, cold emails, and a dashboard |
+| **Projects** | Inbox for questions; organize them into projects with titled answers. Sub-question hierarchy (up to 3 levels), drag-and-drop reorder, move between projects/inbox. JSON export/import. |
+| **Content Ideas** | Capture ideas standalone or per-project; sub-ideas (up to 3 levels), status (Draft / Ready / Published), publish links, list/table/card views. Drag-and-drop, reparent, activity log. Included in Projects export. |
+| **Logger** | Timestamped daily entries — log multiple times per day. Dashboard view to filter and review entries by date. JSON export/import. |
+| **Job Search Tracker** | Companies, leads, applications, cold emails, and a dashboard. Global search, voice-to-text on forms, company detail pages, lead channels (Email / LinkedIn / X / Other) with conditional follow-up dates. JSON export/import. |
 
-All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three databases: projects/content ideas share one; logger and job search each have their own. See [DATA.md](DATA.md) for schemas.
+Shared across tools: light/dark theme (system default, persisted in localStorage), toast notifications, and responsive sidebar layout.
+
+All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three databases: projects and content ideas share one; logger and job search each have their own. See [DATA.md](DATA.md) for schemas, migrations, and export formats.
+
+## Routes
+
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page |
+| `/projects` | Project list + question inbox |
+| `/projects/[projectId]` | Project detail — Questions and Content Ideas tabs |
+| `/content-ideas` | Standalone content ideas (not tied to a project) |
+| `/logger` | Log entries (chronological) |
+| `/logger/dashboard` | Filter and review entries by date |
+| `/job-search` | Dashboard — stats, recent activity, follow-ups |
+| `/job-search/companies` | Company list |
+| `/job-search/companies/[id]` | Company detail |
+| `/job-search/leads` | Leads |
+| `/job-search/applications` | Applications |
+| `/job-search/cold-emails` | Cold emails |
+
+Legacy redirect: `/questions` → `/projects`.
 
 ## Tech stack
 
@@ -29,6 +50,7 @@ All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three 
 | **Language** | TypeScript (strict) |
 | **Styling** | [Tailwind CSS v4](https://tailwindcss.com) |
 | **Local storage** | IndexedDB via [Dexie](https://dexie.org) |
+| **Drag-and-drop** | [@dnd-kit](https://dndkit.com) |
 | **Forms / validation** | [react-hook-form](https://react-hook-form.com) + [Zod](https://zod.dev) |
 | **PWA / offline** | [Serwist](https://serwist.pages.dev) (`@serwist/turbopack`) |
 | **Notifications** | [react-hot-toast](https://react-hot-toast.com) |
@@ -66,20 +88,30 @@ app/                       # App Router pages, layouts, PWA glue
 ├── page.tsx               # Landing
 ├── projects/              # Projects + inbox UI (content ideas per project)
 ├── content-ideas/         # Standalone content ideas
-├── logger/                # Daily logger
+├── logger/                # Daily logger + dashboard
 ├── job-search/            # Job search tracker routes
+├── providers/             # Theme + Serwist providers
 ├── manifest.ts            # Web app manifest
+├── robots.ts              # Crawler rules
+├── sitemap.ts             # Public route sitemap
 ├── sw.ts                  # Service worker (runtime cache + offline fallback)
 ├── serwist/[path]/        # Serves /serwist/sw.js
 └── ~offline/              # Offline navigation fallback
-components/                # App shell, sidebar, shared UI
+components/                # App shell, sidebar, shared UI (export/import buttons)
 features/
 ├── questions/             # Projects / questions / answers (Dexie)
-├── content-ideas/         # Content ideas UI + repo (shared personal-hub-db)
+├── content-ideas/         # Content ideas UI + repo (shared question-hub-db)
 ├── logger/                # Log entries (Dexie)
 └── job-search/            # Companies, leads, applications, emails (Dexie)
-lib/site.ts                # Site name, description, keywords
-public/icons/              # Install / maskable / Apple touch icons
+lib/
+├── site.ts                # Site name, description, keywords, URLs
+└── export/                # Shared JSON download / validation helpers
+public/
+├── icons/                 # Install / maskable / Apple touch icons
+├── llms.txt               # AI/crawler context (see /llms.txt in production)
+├── logo.png               # App logo
+└── opengraph-image.png    # Open Graph image
+scripts/generate-icons.mjs # PWA icon generation
 ```
 
 ## Privacy & data

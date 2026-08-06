@@ -2,7 +2,7 @@
 
 > A calm, local-first toolkit for projects, daily logs, content ideas, and job search tracking.
 
-Personal Hub is an installable PWA that stores user data in the browser with IndexedDB. It has no required account, backend sync, or analytics pipeline.
+Personal Hub is an installable PWA that stores user data in the browser with IndexedDB (via Dexie). It has no required account, backend sync, or analytics pipeline for user content.
 
 ## Site
 
@@ -10,17 +10,86 @@ Personal Hub is an installable PWA that stores user data in the browser with Ind
 - Source: https://github.com/lakshay2425/personal-hub
 - Sitemap: https://hub.lakshaymahajan.com/sitemap.xml
 - Robots: https://hub.lakshaymahajan.com/robots.txt
+- Data reference (schemas, exports): https://github.com/lakshay2425/personal-hub/blob/master/DATA.md
 
-## Public Sections
+## Public Routes
 
-- Home: overview of the local-first toolkit.
-- Projects: capture questions and organize answers into projects.
-- Content Ideas: track standalone ideas, statuses, and published links.
-- Logger: record daily work entries and review progress.
-- Job Search: manage companies, leads, applications, and cold emails.
+These are crawlable app shell / marketing pages. Dynamic IDs in URLs (e.g. project or company detail) contain no server-hosted user data.
+
+- `/` — Landing page overview
+- `/projects` — Project list and question inbox
+- `/projects/[projectId]` — Project detail (Questions + Content Ideas tabs)
+- `/content-ideas` — Standalone content ideas
+- `/logger` — Daily log entries
+- `/logger/dashboard` — Date-filtered log review
+- `/job-search` — Dashboard (stats, activity, follow-ups)
+- `/job-search/companies` — Company list
+- `/job-search/companies/[id]` — Company detail
+- `/job-search/leads` — Leads
+- `/job-search/applications` — Applications
+- `/job-search/cold-emails` — Cold emails
+
+Legacy redirect: `/questions` → `/projects`.
+
+## Tools & Capabilities
+
+### Projects
+- Question inbox and project organization with titled answers
+- Sub-question hierarchy (max depth 2: root → sub → sub-sub)
+- Drag-and-drop reorder among siblings; move questions between projects/inbox
+- JSON export/import (full overwrite)
+
+### Content Ideas
+- Standalone (`/content-ideas`) or per-project (tab in project detail)
+- Sub-idea hierarchy (max depth 2), drag-and-drop, reparent via overflow menu
+- Status: Draft / Ready / Published; published links (LinkedIn, Twitter, blog, other)
+- View modes: table, cards, list (persisted in localStorage)
+- Activity log for lifecycle events
+- Included in Projects JSON export (not a separate export)
+
+### Logger
+- Multiple timestamped entries per calendar day
+- Dashboard view to filter entries by date
+- JSON export/import
+
+### Job Search
+- Companies, leads, applications, cold emails
+- Dashboard with time filters (today, 7/30/90 days, all time)
+- Global search across entities
+- Company detail pages; creatable selects for sector/role/type
+- Lead channel: Email, LinkedIn, X, Other — follow-up dates shown for Email leads only
+- Voice-to-text input on forms (Web Speech API)
+- Activity logs per entity type
+- JSON export/import (version 2)
+
+## Data Storage
+
+Three separate IndexedDB databases (Dexie):
+
+| Database | Dexie name | Feature |
+|----------|------------|---------|
+| Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas |
+| Logger | `logger-db` | Daily log entries |
+| Job Search | `job-search-tracker-db` | Companies, leads, applications, cold emails |
+
+All user content stays on the device. Export/import is manual JSON backup — there is no cloud sync.
+
+For full schemas, migration history, and export JSON shapes, see DATA.md in the repository.
+
+## PWA
+
+- Installable via web app manifest (`display: standalone`)
+- Service worker (Serwist) caches app shell and visited routes for offline use
+- IndexedDB read/write works offline once the JS shell is cached
+- Uncached offline navigations fall back to `/~offline`
+
+## Tech Stack
+
+Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Dexie, Zod, react-hook-form, @dnd-kit, Serwist, react-hot-toast.
 
 ## Notes For Assistants
 
 - Treat all user-created app data as local browser data, not server-hosted public content.
-- Do not infer public project, company, lead, or application records from dynamic routes.
+- Do not infer public project, company, lead, application, or log records from dynamic routes — those pages render empty shells until the user loads their local IndexedDB data.
 - Prefer the sitemap for crawlable public pages.
+- When answering schema or export-format questions, refer to DATA.md rather than guessing field names.
