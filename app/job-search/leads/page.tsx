@@ -1,0 +1,246 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import toast from "react-hot-toast";
+
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { EmptyState } from "@/features/job-search/components/EmptyState";
+import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormModal";
+import { LoadingState } from "@/features/job-search/components/LoadingState";
+import { PageHeader } from "@/features/job-search/components/PageHeader";
+import { StatusBadge } from "@/features/job-search/components/StatusBadge";
+import { LEAD_STATUSES } from "@/features/job-search/constants";
+import { useCompanies } from "@/features/job-search/hooks/useCompanies";
+import { useLeads } from "@/features/job-search/hooks/useLeads";
+import { formatDate } from "@/features/job-search/lib/dateUtils";
+import type { Lead } from "@/features/job-search/types";
+
+export default function LeadsPage() {
+  const { companies } = useCompanies();
+  const { leads, isLoading, addLead, editLead, removeLead } = useLeads();
+
+  const [search, setSearch] = useState("");
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [roleTypeFilter, setRoleTypeFilter] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const companyMap = useMemo(
+    () => new Map(companies.map((c) => [c.id, c.companyName])),
+    [companies],
+  );
+
+  const filtered = useMemo(() => {
+    let result = [...leads];
+    if (search) {
+      const lower = search.toLowerCase();
+      result = result.filter((l) => l.name.toLowerCase().includes(lower));
+    }
+    if (companyFilter) {
+      result = result.filter((l) => l.companyId === Number(companyFilter));
+    }
+    if (statusFilter) {
+      result = result.filter((l) => l.status === statusFilter);
+    }
+    if (roleTypeFilter) {
+      const lower = roleTypeFilter.toLowerCase();
+      result = result.filter(
+        (l) =>
+          l.role.toLowerCase().includes(lower) ||
+          l.type.toLowerCase().includes(lower),
+      );
+    }
+    return result;
+  }, [leads, search, companyFilter, statusFilter, roleTypeFilter]);
+
+  const handleSubmit = async (data: Omit<Lead, "id" | "createdAt">) => {
+    try {
+      if (editingLead?.id) {
+        await editLead(editingLead.id, data);
+        toast.success("Lead updated");
+      } else {
+        await addLead(data);
+        toast.success("Lead added");
+      }
+    } catch {
+      toast.error("Failed to save lead");
+      throw new Error("save failed");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingLead?.id) return;
+    setIsDeleting(true);
+    try {
+      await removeLead(deletingLead.id);
+      toast.success("Lead deleted");
+      setDeletingLead(null);
+    } catch {
+      toast.error("Failed to delete lead");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) return <LoadingState message="Loading leads..." />;
+
+  return (
+    <div>
+      <PageHeader
+        title="Leads"
+        description="Track contacts at target companies"
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              setEditingLead(null);
+              setIsFormOpen(true);
+            }}
+            disabled={companies.length === 0}
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            Add Lead
+          </button>
+        }
+      />
+
+      <div className="mb-6 flex flex-wrap gap-3">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name..."
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+        />
+        <select
+          value={companyFilter}
+          onChange={(e) => setCompanyFilter(e.target.value)}
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+        >
+          <option value="">All Companies</option>
+          {companies.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.companyName}
+            </option>
+          ))}
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+        >
+          <option value="">All Statuses</option>
+          {LEAD_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <input
+          type="text"
+          value={roleTypeFilter}
+          onChange={(e) => setRoleTypeFilter(e.target.value)}
+          placeholder="Filter by role/type..."
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+        />
+      </div>
+
+      {filtered.length === 0 ? (
+        <EmptyState
+          title="No leads found"
+          description={
+            companies.length === 0
+              ? "Add a company first, then add leads."
+              : "Add a lead to start building your network."
+          }
+          action={
+            companies.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setIsFormOpen(true)}
+                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-50 dark:text-zinc-900"
+              >
+                Add Lead
+              </button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+              <tr>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Company</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 1</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 2</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              {filtered.map((lead) => (
+                <tr key={lead.id}>
+                  <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{lead.name}</td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                    {companyMap.get(lead.companyId) ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.role || "—"}</td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.type || "—"}</td>
+                  <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(lead.firstFollowUpDate)}</td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(lead.secondFollowUpDate)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingLead(lead);
+                          setIsFormOpen(true);
+                        }}
+                        className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingLead(lead)}
+                        className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <LeadFormModal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingLead(null);
+        }}
+        onSubmit={handleSubmit}
+        lead={editingLead}
+        companies={companies}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(deletingLead)}
+        onClose={() => setDeletingLead(null)}
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        message="Are you sure you want to delete this lead?"
+      />
+    </div>
+  );
+}

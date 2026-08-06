@@ -7,20 +7,34 @@ interface QuestionListProps {
   questions: Question[];
   isLoading: boolean;
   error: string | null;
+  answerCounts: Record<string, number>;
+  expandedQuestionId: string | null;
+  projectId: string | null;
+  onToggleExpand: (questionId: string) => void;
   onToggleStatus: (id: string) => void;
   onEdit: (question: Question) => void;
   onDelete: (question: Question) => void;
+  onAnswerCountChange?: (questionId: string, count: number) => void;
   togglingId?: string | null;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export function QuestionList({
   questions,
   isLoading,
   error,
+  answerCounts,
+  expandedQuestionId,
+  projectId,
+  onToggleExpand,
   onToggleStatus,
   onEdit,
   onDelete,
+  onAnswerCountChange,
   togglingId,
+  emptyTitle = "No questions yet",
+  emptyDescription = 'Click "New Question" to capture your first question.',
 }: QuestionListProps) {
   if (isLoading) {
     return (
@@ -47,10 +61,10 @@ export function QuestionList({
     return (
       <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-12 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
         <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-          No questions yet
+          {emptyTitle}
         </p>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Click &quot;New Question&quot; to capture your first question.
+          {emptyDescription}
         </p>
       </div>
     );
@@ -61,12 +75,16 @@ export function QuestionList({
       {questions.map((question) => (
         <QuestionListItem
           key={question.id}
-          questionText={question.questionText}
-          status={question.status}
+          question={question}
+          answerCount={answerCounts[question.id] ?? 0}
+          isExpanded={expandedQuestionId === question.id}
+          onToggleExpand={() => onToggleExpand(question.id)}
           onToggleStatus={() => onToggleStatus(question.id)}
           onEdit={() => onEdit(question)}
           onDelete={() => onDelete(question)}
           isToggling={togglingId === question.id}
+          projectId={projectId}
+          onAnswerCountChange={onAnswerCountChange}
         />
       ))}
     </ul>

@@ -3,24 +3,77 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-4 py-20 dark:bg-black">
-      <main className="w-full max-w-2xl text-center">
+      <main className="w-full max-w-3xl text-center">
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl">
           Question Hub
         </h1>
         <p className="mt-4 text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-          Capture questions, track what&apos;s answered and what&apos;s still
-          open — all stored locally in your browser.
+          Local-first tools for your learning and career — stored entirely in
+          your browser.
         </p>
         <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-500">
           Your data stays on this device using IndexedDB. Nothing is sent to a
           server.
         </p>
-        <div className="mt-10">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
           <Link
             href="/questions"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-zinc-900 px-8 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="group flex flex-col items-start rounded-xl border border-zinc-200 bg-white p-6 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/80"
           >
-            Go to Questions
+            <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Journal
+            </span>
+            <span className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Capture general questions and track what&apos;s answered and
+              what&apos;s still open.
+            </span>
+            <span className="mt-4 text-sm font-medium text-zinc-900 group-hover:underline dark:text-zinc-50">
+              Open Journal →
+            </span>
+          </Link>
+          <Link
+            href="/projects"
+            className="group flex flex-col items-start rounded-xl border border-zinc-200 bg-white p-6 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/80"
+          >
+            <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Projects
+            </span>
+            <span className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Group related questions into collections with multiple titled
+              answers.
+            </span>
+            <span className="mt-4 text-sm font-medium text-zinc-900 group-hover:underline dark:text-zinc-50">
+              Open Projects →
+            </span>
+          </Link>
+          <Link
+            href="/logger"
+            className="group flex flex-col items-start rounded-xl border border-zinc-200 bg-white p-6 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/80"
+          >
+            <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Logger
+            </span>
+            <span className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Log what you did as separate entries — multiple times per day.
+            </span>
+            <span className="mt-4 text-sm font-medium text-zinc-900 group-hover:underline dark:text-zinc-50">
+              Open Logger →
+            </span>
+          </Link>
+          <Link
+            href="/job-search"
+            className="group flex flex-col items-start rounded-xl border border-zinc-200 bg-white p-6 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/80"
+          >
+            <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              Job Search Tracker
+            </span>
+            <span className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Track companies, leads, applications, and cold emails in one
+              place.
+            </span>
+            <span className="mt-4 text-sm font-medium text-zinc-900 group-hover:underline dark:text-zinc-50">
+              Open Tracker →
+            </span>
           </Link>
         </div>
       </main>

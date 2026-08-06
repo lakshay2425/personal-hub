@@ -6,20 +6,33 @@ import type { Question } from "../types";
 import {
   createQuestion as createQuestionRepo,
   deleteQuestion as deleteQuestionRepo,
-  getAllQuestions,
+  getJournalQuestions,
+  getQuestionsByProjectId,
   toggleQuestionStatus as toggleQuestionStatusRepo,
   updateQuestionText as updateQuestionTextRepo,
 } from "../lib/questionsRepository";
 
-export function useQuestions() {
+type UseQuestionsOptions = {
+  projectId?: string | null;
+};
+
+export function useQuestions(options: UseQuestionsOptions = {}) {
+  const projectId = options.projectId ?? null;
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadQuestions = useCallback(async () => {
+    if (projectId) {
+      return getQuestionsByProjectId(projectId);
+    }
+    return getJournalQuestions();
+  }, [projectId]);
+
   const refresh = useCallback(async () => {
     try {
       setError(null);
-      const data = await getAllQuestions();
+      const data = await loadQuestions();
       setQuestions(data);
     } catch (err) {
       setError(
@@ -28,14 +41,15 @@ export function useQuestions() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [loadQuestions]);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadQuestions() {
+    async function load() {
       try {
-        const data = await getAllQuestions();
+        setIsLoading(true);
+        const data = await loadQuestions();
         if (!cancelled) {
           setQuestions(data);
           setError(null);
@@ -53,26 +67,29 @@ export function useQuestions() {
       }
     }
 
-    void loadQuestions();
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadQuestions]);
 
-  const createQuestion = useCallback(async (questionText: string) => {
-    const created = await createQuestionRepo(questionText);
-    setQuestions((prev) =>
-      [created, ...prev].sort((a, b) => b.createdAt - a.createdAt),
-    );
-    return created;
-  }, []);
+  const createQuestion = useCallback(
+    async (questionText: string) => {
+      const created = await createQuestionRepo(questionText, projectId);
+      setQuestions((prev) =>
+        [created, ...prev].sort((a, b) => b.createdAt - a.createdAt),
+      );
+      return created;
+    },
+    [projectId],
+  );
 
   const updateQuestion = useCallback(
     async (id: string, questionText: string) => {
       const updated = await updateQuestionTextRepo(id, questionText);
       setQuestions((prev) =>
-        prev.map((q) => (q.id === id ? updated : q)),
+        prev.map((question) => (question.id === id ? updated : question)),
       );
       return updated;
     },
@@ -81,13 +98,15 @@ export function useQuestions() {
 
   const toggleStatus = useCallback(async (id: string) => {
     const updated = await toggleQuestionStatusRepo(id);
-    setQuestions((prev) => prev.map((q) => (q.id === id ? updated : q)));
+    setQuestions((prev) =>
+      prev.map((question) => (question.id === id ? updated : question)),
+    );
     return updated;
   }, []);
 
   const deleteQuestion = useCallback(async (id: string) => {
     await deleteQuestionRepo(id);
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
+    setQuestions((prev) => prev.filter((question) => question.id !== id));
   }, []);
 
   return {
