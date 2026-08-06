@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Modal } from "@/components/ui/Modal";
 
+import { getUniqueSectors } from "../../repositories/companiesRepository";
+import type { Company } from "../../types";
+import { CreatableSelectInput } from "./CreatableSelectInput";
 import {
   FormActions,
   FormField,
   TextArea,
   TextInput,
 } from "./FormFields";
-import type { Company } from "../../types";
 
 interface CompanyFormModalProps {
   isOpen: boolean;
@@ -38,7 +40,25 @@ function CompanyFormFields({
   const [sector, setSector] = useState(company?.sector ?? "");
   const [website, setWebsite] = useState(company?.website ?? "");
   const [notes, setNotes] = useState(company?.notes ?? "");
+  const [sectorOptions, setSectorOptions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSectors() {
+      const sectors = await getUniqueSectors();
+      if (!cancelled) {
+        setSectorOptions(sectors);
+      }
+    }
+
+    void loadSectors();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,10 +83,13 @@ function CompanyFormFields({
           />
         </FormField>
         <FormField label="Sector">
-          <TextInput
+          <CreatableSelectInput
             value={sector}
             onChange={setSector}
-            placeholder="Technology, Finance..."
+            options={sectorOptions}
+            placeholder="Select sector..."
+            createLabel="Add new sector..."
+            newValuePlaceholder="Enter sector name"
           />
         </FormField>
         <FormField label="Website">

@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Modal } from "@/components/ui/Modal";
 
 import { LEAD_STATUSES } from "../../constants";
+import {
+  getUniqueLeadRoles,
+  getUniqueLeadTypes,
+} from "../../repositories/leadsRepository";
 import type { Company, Lead } from "../../types";
+import { CreatableSelectInput } from "./CreatableSelectInput";
 import {
   FormActions,
   FormField,
@@ -58,7 +63,30 @@ function LeadFormFields({
     lead?.secondFollowUpDate ?? "",
   );
   const [notes, setNotes] = useState(lead?.notes ?? "");
+  const [roleOptions, setRoleOptions] = useState<string[]>([]);
+  const [typeOptions, setTypeOptions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOptions() {
+      const [roles, types] = await Promise.all([
+        getUniqueLeadRoles(),
+        getUniqueLeadTypes(),
+      ]);
+      if (!cancelled) {
+        setRoleOptions(roles);
+        setTypeOptions(types);
+      }
+    }
+
+    void loadOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,17 +134,23 @@ function LeadFormFields({
           />
         </FormField>
         <FormField label="Role">
-          <TextInput
+          <CreatableSelectInput
             value={role}
             onChange={setRole}
-            placeholder="Head of Engineering"
+            options={roleOptions}
+            placeholder="Select role..."
+            createLabel="Add new role..."
+            newValuePlaceholder="Enter role title"
           />
         </FormField>
         <FormField label="Type">
-          <TextInput
+          <CreatableSelectInput
             value={type}
             onChange={setType}
-            placeholder="Founder, HR, Recruiter..."
+            options={typeOptions}
+            placeholder="Select type..."
+            createLabel="Add new type..."
+            newValuePlaceholder="Founder, HR, Recruiter..."
           />
         </FormField>
         <FormField label="Email">

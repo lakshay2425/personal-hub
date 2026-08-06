@@ -1,4 +1,5 @@
 import { getDB } from "../db";
+import { getUniqueStringValues } from "../lib/uniqueValues";
 import { logActivity } from "../lib/activityLog";
 import { deleteCompanyCascade } from "../lib/cascade";
 import type { Company, CompanyWithCounts } from "../types";
@@ -91,12 +92,7 @@ export async function searchCompanies(query: string): Promise<Company[]> {
 export async function getUniqueSectors(): Promise<string[]> {
   const database = getDB();
   const companies = await database.companies.toArray();
-  const sectors = new Set(
-    companies
-      .map((c: Company) => c.sector)
-      .filter((s: string) => s.trim()),
-  );
-  return Array.from(sectors).sort();
+  return getUniqueStringValues(companies.map((company) => company.sector));
 }
 
 export async function getRecentCompanies(limit = 5): Promise<Company[]> {

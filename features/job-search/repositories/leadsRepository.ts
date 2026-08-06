@@ -1,4 +1,5 @@
 import { getDB } from "../db";
+import { getUniqueStringValues } from "../lib/uniqueValues";
 import { logActivity } from "../lib/activityLog";
 import { deleteLeadWithLogs } from "../lib/cascade";
 import type { Lead } from "../types";
@@ -72,4 +73,16 @@ export async function searchLeads(query: string): Promise<Lead[]> {
   const lower = query.toLowerCase();
   const all = await database.leads.toArray();
   return all.filter((l: Lead) => l.name.toLowerCase().includes(lower));
+}
+
+export async function getUniqueLeadRoles(): Promise<string[]> {
+  const database = getDB();
+  const leads = await database.leads.toArray();
+  return getUniqueStringValues(leads.map((lead) => lead.role));
+}
+
+export async function getUniqueLeadTypes(): Promise<string[]> {
+  const database = getDB();
+  const leads = await database.leads.toArray();
+  return getUniqueStringValues(leads.map((lead) => lead.type));
 }
