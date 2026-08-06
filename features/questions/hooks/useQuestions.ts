@@ -10,6 +10,7 @@ import {
   getInboxQuestions,
   getQuestionsByProjectId,
   moveQuestionToProject as moveQuestionToProjectRepo,
+  moveQuestionToParent as moveQuestionToParentRepo,
   toggleQuestionStatus as toggleQuestionStatusRepo,
   updateQuestionText as updateQuestionTextRepo,
 } from "../lib/questionsRepository";
@@ -139,6 +140,22 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
     [],
   );
 
+  const moveToParent = useCallback(
+    async (questionId: string, parentId: string | null) => {
+      const updated = await moveQuestionToParentRepo(questionId, parentId);
+      const updatedMap = new Map(updated.map((question) => [question.id, question]));
+
+      setQuestions((prev) =>
+        prev
+          .map((question) => updatedMap.get(question.id) ?? question)
+          .sort((a, b) => b.createdAt - a.createdAt),
+      );
+
+      return updated;
+    },
+    [],
+  );
+
   return {
     questions,
     isLoading,
@@ -148,6 +165,7 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
     toggleStatus,
     deleteQuestion,
     moveToProject,
+    moveToParent,
     refresh,
   };
 }

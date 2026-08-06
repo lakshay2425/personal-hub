@@ -1,6 +1,13 @@
 import type { Question, QuestionDepth, QuestionStatus } from "../types";
 import { deleteAnswersByQuestion } from "./answersRepository";
 import { getDB } from "./db";
+import {
+  canMoveToRoot,
+  collectDescendantIds,
+  getMaxDepthInSubtree,
+  getValidParentTargets,
+  isDescendantOf,
+} from "./questionTree";
 
 async function collectDescendantIdsFromDb(
   parentId: string,
@@ -202,4 +209,103 @@ export async function moveQuestionToProject(
   }
 
   return updated;
+}
+
+export async function moveQuestionToParent(
+  questionId: string,
+  parentId: string | null,
+): Promise<Question[]> {
+  const db = getDB();
+  const question = await db.questions.get(questionId);
+
+  if (!question) {
+    throw new Error("Question not found");
+  }
+
+  if (parentId === question.parentId) {
+    return [question];
+  }
+
+  if (parentId === questionId) {
+    throw new Error("A question cannot be moved under itself");
+  }
+
+  const allQuestions = await db.questions.toArray();
+
+  if (parentId) {
+    if (isDescendantOf(questionId, parentId, allQuestions)) {
+      throw new Error("A question cannot be moved under its own sub-question");
+    }
+
+    const parent = await db.questions.get(parentId);
+    if (!parent) {
+      throw new Error("Parent question not found");
+    }
+
+    if (parent.depth >= 2) {
+      throw new Error("Maximum sub-question depth reached");
+    }
+  } else if (!canMoveToRoot(questionId, allQuestions)) {
+    throw new Error("This move would exceed the maximum sub-question depth");
+  }
+
+  const validTargets = getValidParentTargets(questionId, allQuestions);
+  if (parentId && !validTargets.some((target) => target.id === parentId)) {
+    throw new Error("This move would exceed the maximum sub-question depth");
+  }
+
+  const newDepth: QuestionDepth = parentId
+    ? ((await db.questions.get(parentId))!.depth + 1) as QuestionDepth
+    : 0;
+  const depthDelta = newDepth - question.depth;
+  const maxDepthInSubtree = getMaxDepthInSubtree(questionId, allQuestions);
+
+  if (maxDepthInSubtree + depthDelta > 2) {
+    throw new Error("This move would exceed the maximum sub-question depth");
+  }
+
+  const descendantIds = await collectDescendantIdsFromDb(questionId);
+  const allIds = [questionId, ...descendantIds];
+  const newProjectId = parentId
+    ? (await db.questions.get(parentId))!.projectId
+    : question.projectId;
+
+  await db.transaction("rw", [db.questions, db.answers], async () => {
+    for (const id of allIds) {
+      const existing = await db.questions.get(id);
+      if (!existing) continue;
+
+      const updated: Question = {
+        ...existing,
+        depth: (existing.depth + depthDelta) as QuestionDepth,
+        projectId: newProjectId,
+        updatedAt: Date.now(),
+        ...(id === questionId ? { parentId } : {}),
+      };
+
+      await db.questions.put(updated);
+
+      const answers = await db.answers
+        .where("questionId")
+        .equals(id)
+        .toArray();
+      await Promise.all(
+        answers.map((answer) =>
+          db.answers.put({
+            ...answer,
+            projectId: newProjectId,
+            updatedAt: Date.now(),
+          }),
+        ),
+      );
+    }
+  });
+
+  const updatedQuestions = await Promise.all(
+    allIds.map((id) => db.questions.get(id)),
+  );
+
+  return updatedQuestions.filter(
+    (item): item is Question => item !== undefined,
+  );
 }

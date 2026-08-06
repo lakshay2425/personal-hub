@@ -1,8 +1,9 @@
 "use client";
 
-import type { QuestionTreeNode } from "../types";
+import type { Question, QuestionTreeNode } from "../types";
 import { countAllDescendants } from "../lib/questionTree";
 import { QuestionAnswersPanel } from "./QuestionAnswersPanel";
+import { QuestionOverflowMenu } from "./QuestionOverflowMenu";
 import { StatusToggle } from "./StatusToggle";
 
 const DEPTH_STYLES = {
@@ -28,6 +29,9 @@ interface QuestionListItemProps {
   onEdit: (question: QuestionTreeNode) => void;
   onDelete: (question: QuestionTreeNode) => void;
   onAddSubQuestion: (parent: QuestionTreeNode) => void;
+  onMoveToParent: (questionId: string, parentId: string | null) => Promise<void>;
+  allQuestions: Question[];
+  movingUnderId?: string | null;
   isToggling?: boolean;
   projectId: string | null;
   onAnswerCountChange?: (questionId: string, count: number) => void;
@@ -48,6 +52,9 @@ export function QuestionListItem({
   onEdit,
   onDelete,
   onAddSubQuestion,
+  onMoveToParent,
+  allQuestions,
+  movingUnderId = null,
   isToggling = false,
   projectId,
   onAnswerCountChange,
@@ -78,6 +85,13 @@ export function QuestionListItem({
               {questionText}
             </button>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <button
+                type="button"
+                onClick={() => onToggleExpand(id)}
+                className="text-xs text-zinc-500 transition-colors hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
+              >
+                {isExpanded ? "Hide answers" : "View answers"}
+              </button>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 {answerCount} {answerCount === 1 ? "answer" : "answers"}
               </p>
@@ -90,44 +104,22 @@ export function QuestionListItem({
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <StatusToggle
               status={node.status}
               onToggle={() => onToggleStatus(id)}
               disabled={isToggling}
             />
-            {canAddSubQuestion ? (
-              <button
-                type="button"
-                onClick={() => onAddSubQuestion(node)}
-                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              >
-                Add Sub-question
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => onToggleExpand(id)}
-              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              {isExpanded ? "Hide answers" : "View answers"}
-            </button>
-            <button
-              type="button"
-              onClick={() => onEdit(node)}
-              aria-label="Edit question"
-              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => onDelete(node)}
-              aria-label="Delete question"
-              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"
-            >
-              Delete
-            </button>
+            <QuestionOverflowMenu
+              question={node}
+              allQuestions={allQuestions}
+              canAddSubQuestion={canAddSubQuestion}
+              onAddSubQuestion={() => onAddSubQuestion(node)}
+              onEdit={() => onEdit(node)}
+              onDelete={() => onDelete(node)}
+              onMoveToParent={(parentId) => onMoveToParent(id, parentId)}
+              isMoving={movingUnderId === id}
+            />
           </div>
         </div>
 
@@ -155,6 +147,9 @@ export function QuestionListItem({
               onEdit={onEdit}
               onDelete={onDelete}
               onAddSubQuestion={onAddSubQuestion}
+              onMoveToParent={onMoveToParent}
+              allQuestions={allQuestions}
+              movingUnderId={movingUnderId}
               isToggling={togglingId === child.id}
               projectId={projectId}
               onAnswerCountChange={onAnswerCountChange}

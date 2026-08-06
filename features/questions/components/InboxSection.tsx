@@ -9,9 +9,10 @@ import {
   countDescendantsInList,
 } from "../lib/questionTree";
 import { useQuestions } from "../hooks/useQuestions";
-import type { Project, QuestionTreeNode } from "../types";
+import type { Project, Question, QuestionTreeNode } from "../types";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { QuestionFormModal } from "./QuestionFormModal";
+import { QuestionOverflowMenu } from "./QuestionOverflowMenu";
 import { StatusToggle } from "./StatusToggle";
 
 interface InboxSectionProps {
@@ -28,32 +29,32 @@ interface InboxQuestionItemProps {
   node: QuestionTreeNode;
   projects: Project[];
   collapsedQuestionIds: Set<string>;
-  moveTargets: Record<string, string>;
-  movingId: string | null;
   togglingId: string | null;
+  movingId: string | null;
   onToggleChildrenCollapse: (questionId: string) => void;
   onToggleStatus: (id: string) => void;
-  onMoveTargetChange: (questionId: string, projectId: string) => void;
-  onMove: (questionId: string) => void;
   onEdit: (question: QuestionTreeNode) => void;
   onDelete: (question: QuestionTreeNode) => void;
   onAddSubQuestion: (parent: QuestionTreeNode) => void;
+  onMoveToParent: (questionId: string, parentId: string | null) => Promise<void>;
+  onMoveToProject: (questionId: string, projectId: string) => Promise<void>;
+  allQuestions: Question[];
 }
 
 function InboxQuestionItem({
   node,
   projects,
   collapsedQuestionIds,
-  moveTargets,
-  movingId,
   togglingId,
+  movingId,
   onToggleChildrenCollapse,
   onToggleStatus,
-  onMoveTargetChange,
-  onMove,
   onEdit,
   onDelete,
   onAddSubQuestion,
+  onMoveToParent,
+  onMoveToProject,
+  allQuestions,
 }: InboxQuestionItemProps) {
   const descendantCount = countAllDescendants(node);
   const hasChildren = node.children.length > 0;
@@ -85,61 +86,26 @@ function InboxQuestionItem({
               </p>
             ) : null}
           </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <StatusToggle
               status={node.status}
               onToggle={() => onToggleStatus(node.id)}
               disabled={togglingId === node.id}
             />
-            {canAddSubQuestion ? (
-              <button
-                type="button"
-                onClick={() => onAddSubQuestion(node)}
-                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              >
-                Add Sub-question
-              </button>
-            ) : null}
-            {node.depth === 0 && projects.length > 0 ? (
-              <>
-                <select
-                  value={moveTargets[node.id] ?? ""}
-                  onChange={(event) =>
-                    onMoveTargetChange(node.id, event.target.value)
-                  }
-                  className="min-w-0 max-w-full rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-xs text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
-                >
-                  <option value="">Move to...</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => onMove(node.id)}
-                  disabled={!moveTargets[node.id] || movingId === node.id}
-                  className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  {movingId === node.id ? "Moving..." : "Move"}
-                </button>
-              </>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => onEdit(node)}
-              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => onDelete(node)}
-              className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"
-            >
-              Delete
-            </button>
+            <QuestionOverflowMenu
+              question={node}
+              allQuestions={allQuestions}
+              canAddSubQuestion={canAddSubQuestion}
+              onAddSubQuestion={() => onAddSubQuestion(node)}
+              onEdit={() => onEdit(node)}
+              onDelete={() => onDelete(node)}
+              onMoveToParent={(parentId) => onMoveToParent(node.id, parentId)}
+              projects={projects}
+              onMoveToProject={(projectId) =>
+                onMoveToProject(node.id, projectId)
+              }
+              isMoving={movingId === node.id}
+            />
           </div>
         </div>
       </div>
@@ -152,16 +118,16 @@ function InboxQuestionItem({
               node={child}
               projects={projects}
               collapsedQuestionIds={collapsedQuestionIds}
-              moveTargets={moveTargets}
-              movingId={movingId}
               togglingId={togglingId}
+              movingId={movingId}
               onToggleChildrenCollapse={onToggleChildrenCollapse}
               onToggleStatus={onToggleStatus}
-              onMoveTargetChange={onMoveTargetChange}
-              onMove={onMove}
               onEdit={onEdit}
               onDelete={onDelete}
               onAddSubQuestion={onAddSubQuestion}
+              onMoveToParent={onMoveToParent}
+              onMoveToProject={onMoveToProject}
+              allQuestions={allQuestions}
             />
           ))}
         </ul>
@@ -180,6 +146,7 @@ export function InboxSection({ projects }: InboxSectionProps) {
     toggleStatus,
     deleteQuestion,
     moveToProject,
+    moveToParent,
   } = useQuestions({ projectId: null });
 
   const [draft, setDraft] = useState("");
@@ -197,7 +164,6 @@ export function InboxSection({ projects }: InboxSectionProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [movingId, setMovingId] = useState<string | null>(null);
-  const [moveTargets, setMoveTargets] = useState<Record<string, string>>({});
 
   const tree = buildQuestionTree(questions);
 
@@ -247,37 +213,43 @@ export function InboxSection({ projects }: InboxSectionProps) {
     [toggleStatus],
   );
 
-  const handleMoveTargetChange = useCallback(
-    (questionId: string, projectId: string) => {
-      setMoveTargets((prev) => ({
-        ...prev,
-        [questionId]: projectId,
-      }));
-    },
-    [],
-  );
-
-  const handleMove = useCallback(
-    async (questionId: string) => {
-      const targetProjectId = moveTargets[questionId];
-      if (!targetProjectId) return;
-
+  const handleMoveToProject = useCallback(
+    async (questionId: string, targetProjectId: string) => {
       setMovingId(questionId);
       try {
         await moveToProject(questionId, targetProjectId);
         toast.success("Moved to project");
-        setMoveTargets((prev) => {
-          const next = { ...prev };
-          delete next[questionId];
-          return next;
-        });
       } catch {
         toast.error("Failed to move question");
       } finally {
         setMovingId(null);
       }
     },
-    [moveTargets, moveToProject],
+    [moveToProject],
+  );
+
+  const handleMoveToParent = useCallback(
+    async (questionId: string, parentId: string | null) => {
+      setMovingId(questionId);
+      try {
+        await moveToParent(questionId, parentId);
+        if (parentId) {
+          setCollapsedQuestionIds((current) => {
+            const next = new Set(current);
+            next.delete(parentId);
+            return next;
+          });
+        }
+        toast.success("Question moved");
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to move question",
+        );
+      } finally {
+        setMovingId(null);
+      }
+    },
+    [moveToParent],
   );
 
   const handleConfirmDelete = useCallback(async () => {
@@ -366,13 +338,10 @@ export function InboxSection({ projects }: InboxSectionProps) {
               node={node}
               projects={projects}
               collapsedQuestionIds={collapsedQuestionIds}
-              moveTargets={moveTargets}
-              movingId={movingId}
               togglingId={togglingId}
+              movingId={movingId}
               onToggleChildrenCollapse={handleToggleChildrenCollapse}
               onToggleStatus={handleToggleStatus}
-              onMoveTargetChange={handleMoveTargetChange}
-              onMove={handleMove}
               onEdit={(question) => {
                 setSubQuestionParent(null);
                 setEditingQuestion(question);
@@ -382,6 +351,9 @@ export function InboxSection({ projects }: InboxSectionProps) {
                 setEditingQuestion(null);
                 setSubQuestionParent(parent);
               }}
+              onMoveToParent={handleMoveToParent}
+              onMoveToProject={handleMoveToProject}
+              allQuestions={questions}
             />
           ))}
         </ul>

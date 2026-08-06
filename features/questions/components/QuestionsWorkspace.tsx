@@ -40,6 +40,7 @@ export function QuestionsWorkspace({
     updateQuestion,
     toggleStatus,
     deleteQuestion,
+    moveToParent,
   } = useQuestions({ projectId });
 
   const [answerCounts, setAnswerCounts] = useState<Record<string, number>>({});
@@ -57,6 +58,7 @@ export function QuestionsWorkspace({
     useState<QuestionTreeNode | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [movingUnderId, setMovingUnderId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -179,6 +181,30 @@ export function QuestionsWorkspace({
     [toggleStatus],
   );
 
+  const handleMoveToParent = useCallback(
+    async (questionId: string, parentId: string | null) => {
+      setMovingUnderId(questionId);
+      try {
+        await moveToParent(questionId, parentId);
+        if (parentId) {
+          setCollapsedQuestionIds((current) => {
+            const next = new Set(current);
+            next.delete(parentId);
+            return next;
+          });
+        }
+        toast.success("Question moved");
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to move question",
+        );
+      } finally {
+        setMovingUnderId(null);
+      }
+    },
+    [moveToParent],
+  );
+
   const handleConfirmDelete = useCallback(async () => {
     if (!deletingQuestion) return;
 
@@ -262,6 +288,9 @@ export function QuestionsWorkspace({
         onEdit={handleOpenEdit}
         onDelete={setDeletingQuestion}
         onAddSubQuestion={handleAddSubQuestion}
+        onMoveToParent={handleMoveToParent}
+        allQuestions={questions}
+        movingUnderId={movingUnderId}
         onAnswerCountChange={handleAnswerCountChange}
         togglingId={togglingId}
         emptyTitle={emptyTitle}

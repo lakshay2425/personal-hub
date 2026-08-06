@@ -1,6 +1,6 @@
 "use client";
 
-import type { QuestionTreeNode } from "../types";
+import type { Question, QuestionTreeNode } from "../types";
 import { buildQuestionTree } from "../lib/questionTree";
 import { QuestionListItem } from "./QuestionListItem";
 
@@ -18,6 +18,9 @@ interface QuestionListProps {
   onEdit: (question: QuestionTreeNode) => void;
   onDelete: (question: QuestionTreeNode) => void;
   onAddSubQuestion: (parent: QuestionTreeNode) => void;
+  onMoveToParent: (questionId: string, parentId: string | null) => Promise<void>;
+  allQuestions: Question[];
+  movingUnderId?: string | null;
   onAnswerCountChange?: (questionId: string, count: number) => void;
   togglingId?: string | null;
   emptyTitle?: string;
@@ -38,6 +41,9 @@ export function QuestionList({
   onEdit,
   onDelete,
   onAddSubQuestion,
+  onMoveToParent,
+  allQuestions,
+  movingUnderId,
   onAnswerCountChange,
   togglingId,
   emptyTitle = "No questions yet",
@@ -94,6 +100,9 @@ export function QuestionList({
           onEdit={onEdit}
           onDelete={onDelete}
           onAddSubQuestion={onAddSubQuestion}
+          onMoveToParent={onMoveToParent}
+          allQuestions={allQuestions}
+          movingUnderId={movingUnderId}
           isToggling={togglingId === node.id}
           projectId={projectId}
           onAnswerCountChange={onAnswerCountChange}
