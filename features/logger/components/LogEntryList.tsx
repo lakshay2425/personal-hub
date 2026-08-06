@@ -11,6 +11,7 @@ interface LogEntryListProps {
   error: string | null;
   onEdit: (entry: LogEntry) => void;
   onDelete: (entry: LogEntry) => void;
+  groupByDate?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
 }
@@ -43,6 +44,7 @@ export function LogEntryList({
   error,
   onEdit,
   onDelete,
+  groupByDate = true,
   emptyTitle = "No log entries yet",
   emptyDescription = 'Click "New Entry" to log what you did.',
 }: LogEntryListProps) {
@@ -82,6 +84,39 @@ export function LogEntryList({
     );
   }
 
+  const renderEntry = (entry: LogEntry) => (
+    <li
+      key={entry.id}
+      className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <p className="min-w-0 flex-1 text-sm text-zinc-900 dark:text-zinc-50">
+          {entry.text}
+        </p>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onEdit(entry)}
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete(entry)}
+            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </li>
+  );
+
+  if (!groupByDate) {
+    return <ul className="space-y-3">{entries.map(renderEntry)}</ul>;
+  }
+
   return (
     <div className="space-y-8">
       {groupedEntries.map((group) => (
@@ -90,34 +125,7 @@ export function LogEntryList({
             {formatLogDate(group.date)}
           </h2>
           <ul className="space-y-3">
-            {group.entries.map((entry) => (
-              <li
-                key={entry.id}
-                className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <p className="min-w-0 flex-1 text-sm text-zinc-900 dark:text-zinc-50">
-                    {entry.text}
-                  </p>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onEdit(entry)}
-                      className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(entry)}
-                      className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
+            {group.entries.map(renderEntry)}
           </ul>
         </section>
       ))}

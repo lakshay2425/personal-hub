@@ -43,5 +43,4 @@ export const NAV_ITEMS = [
   { href: "/job-search/leads", label: "Leads", exact: false },
   { href: "/job-search/applications", label: "Applications", exact: false },
   { href: "/job-search/cold-emails", label: "Cold Emails", exact: false },
-  { href: "/job-search/settings", label: "Settings", exact: false },
 ] as const;

@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         destination: "/projects",
         permanent: true,
       },
+      {
+        source: "/job-search/settings",
+        destination: "/job-search",
+        permanent: true,
+      },
     ];
   },
 };

@@ -49,6 +49,12 @@ export async function updateLogEntry(
   return updated;
 }
 
+export async function getLogEntriesByDate(date: string): Promise<LogEntry[]> {
+  const db = getDB();
+  const entries = await db.logEntries.where("date").equals(date).toArray();
+  return entries.sort((a, b) => b.createdAt - a.createdAt);
+}
+
 export async function deleteLogEntry(id: string): Promise<void> {
   const db = getDB();
   await db.logEntries.delete(id);

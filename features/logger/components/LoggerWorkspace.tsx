@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -23,11 +22,6 @@ export function LoggerWorkspace() {
 
   const handleOpenCreate = () => {
     setEditingEntry(null);
-    setIsFormOpen(true);
-  };
-
-  const handleOpenEdit = (entry: LogEntry) => {
-    setEditingEntry(entry);
     setIsFormOpen(true);
   };
 
@@ -72,23 +66,8 @@ export function LoggerWorkspace() {
   }, [deleteEntry, deletingEntry]);
 
   return (
-    <div className="mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <div>
-          <Link
-            href="/"
-            className="mb-2 inline-block text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-300"
-          >
-            &larr; Home
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Logger
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Log what you did — multiple entries per day, stored locally in
-            IndexedDB.
-          </p>
-        </div>
+    <>
+      <div className="mb-6 flex justify-end">
         <button
           type="button"
           onClick={handleOpenCreate}
@@ -102,14 +81,14 @@ export function LoggerWorkspace() {
         entries={entries}
         isLoading={isLoading}
         error={error}
-        onEdit={handleOpenEdit}
+        onEdit={setEditingEntry}
         onDelete={setDeletingEntry}
         emptyTitle="No log entries yet"
         emptyDescription='Click "New Entry" to log what you did today.'
       />
 
       <LogEntryFormModal
-        isOpen={isFormOpen}
+        isOpen={isFormOpen || Boolean(editingEntry)}
         onClose={handleCloseForm}
         onSubmit={handleFormSubmit}
         entry={editingEntry}
@@ -123,6 +102,6 @@ export function LoggerWorkspace() {
         title="Delete entry?"
         message="This log entry will be permanently removed."
       />
-    </div>
+    </>
   );
 }
