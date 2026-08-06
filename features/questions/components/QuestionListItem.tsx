@@ -5,6 +5,7 @@ import { countAllDescendants } from "../lib/questionTree";
 import { QuestionAnswersPanel } from "./QuestionAnswersPanel";
 import { QuestionOverflowMenu } from "./QuestionOverflowMenu";
 import { StatusToggle } from "./StatusToggle";
+import { SubQuestionHeader } from "./SubQuestionHeader";
 
 const DEPTH_STYLES = {
   0: "rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900",
@@ -72,37 +73,28 @@ export function QuestionListItem({
     <li>
       <div className={DEPTH_STYLES[depth]}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <button
-              type="button"
-              onClick={
-                hasChildren ? () => onToggleChildrenCollapse(id) : undefined
-              }
-              className={`text-left text-zinc-900 dark:text-zinc-50 ${
-                DEPTH_TEXT_STYLES[depth]
-              } ${hasChildren ? "cursor-pointer hover:underline" : "cursor-default"}`}
-            >
-              {questionText}
-            </button>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <button
-                type="button"
-                onClick={() => onToggleExpand(id)}
-                className="text-xs text-zinc-500 transition-colors hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
-              >
-                {isExpanded ? "Hide answers" : "View answers"}
-              </button>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {answerCount} {answerCount === 1 ? "answer" : "answers"}
-              </p>
-              {descendantCount > 0 ? (
+          <SubQuestionHeader
+            questionText={questionText}
+            textClassName={DEPTH_TEXT_STYLES[depth]}
+            hasChildren={hasChildren}
+            isChildrenCollapsed={isChildrenCollapsed}
+            descendantCount={descendantCount}
+            onToggleChildrenCollapse={() => onToggleChildrenCollapse(id)}
+            meta={
+              <>
+                <button
+                  type="button"
+                  onClick={() => onToggleExpand(id)}
+                  className="text-xs text-zinc-500 transition-colors hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
+                >
+                  {isExpanded ? "Hide answers" : "View answers"}
+                </button>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  {descendantCount}{" "}
-                  {descendantCount === 1 ? "sub-question" : "sub-questions"}
+                  {answerCount} {answerCount === 1 ? "answer" : "answers"}
                 </p>
-              ) : null}
-            </div>
-          </div>
+              </>
+            }
+          />
 
           <div className="flex shrink-0 items-center gap-2">
             <StatusToggle

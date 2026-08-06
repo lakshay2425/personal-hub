@@ -14,6 +14,7 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { QuestionFormModal } from "./QuestionFormModal";
 import { QuestionOverflowMenu } from "./QuestionOverflowMenu";
 import { StatusToggle } from "./StatusToggle";
+import { SubQuestionHeader } from "./SubQuestionHeader";
 
 interface InboxSectionProps {
   projects: Project[];
@@ -65,27 +66,14 @@ function InboxQuestionItem({
     <li>
       <div className={DEPTH_STYLES[node.depth]}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <button
-              type="button"
-              onClick={
-                hasChildren
-                  ? () => onToggleChildrenCollapse(node.id)
-                  : undefined
-              }
-              className={`text-left text-zinc-900 dark:text-zinc-50 ${
-                node.depth === 0 ? "text-sm" : "text-xs"
-              } ${hasChildren ? "cursor-pointer hover:underline" : "cursor-default"}`}
-            >
-              {node.questionText}
-            </button>
-            {descendantCount > 0 ? (
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                {descendantCount}{" "}
-                {descendantCount === 1 ? "sub-question" : "sub-questions"}
-              </p>
-            ) : null}
-          </div>
+          <SubQuestionHeader
+            questionText={node.questionText}
+            textClassName={node.depth === 0 ? "text-sm" : "text-xs"}
+            hasChildren={hasChildren}
+            isChildrenCollapsed={isChildrenCollapsed}
+            descendantCount={descendantCount}
+            onToggleChildrenCollapse={() => onToggleChildrenCollapse(node.id)}
+          />
           <div className="flex shrink-0 items-center gap-2">
             <StatusToggle
               status={node.status}
