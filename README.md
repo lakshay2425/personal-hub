@@ -1,5 +1,9 @@
 # Personal Hub
 
+<p align="center">
+  <img src="public/logo.png" alt="Personal Hub logo" width="96" height="96">
+</p>
+
 A **local-first** personal toolkit for learning and career work. Capture project questions, content ideas, daily logs, and your job search — all stored in your browser. Nothing is sent to a server.
 
 Installable as a Progressive Web App (PWA) and usable offline after the app shell has been cached.
