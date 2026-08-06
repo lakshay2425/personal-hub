@@ -13,10 +13,10 @@ export default function OfflinePage() {
         </p>
         <div className="mt-8">
           <Link
-            href="/questions"
+            href="/projects"
             className="inline-flex h-11 items-center justify-center rounded-lg bg-zinc-900 px-6 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            Go to Questions
+            Go to Projects
           </Link>
         </div>
       </main>

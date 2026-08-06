@@ -15,22 +15,7 @@ export default function Home() {
           Your data stays on this device using IndexedDB. Nothing is sent to a
           server.
         </p>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          <Link
-            href="/questions"
-            className="group flex flex-col items-start rounded-xl border border-zinc-200 bg-white p-6 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/80"
-          >
-            <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              Journal
-            </span>
-            <span className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Capture general questions and track what&apos;s answered and
-              what&apos;s still open.
-            </span>
-            <span className="mt-4 text-sm font-medium text-zinc-900 group-hover:underline dark:text-zinc-50">
-              Open Journal →
-            </span>
-          </Link>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/projects"
             className="group flex flex-col items-start rounded-xl border border-zinc-200 bg-white p-6 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/80"
@@ -39,8 +24,8 @@ export default function Home() {
               Projects
             </span>
             <span className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-              Group related questions into collections with multiple titled
-              answers.
+              Capture questions in an inbox and organize them into projects with
+              titled answers.
             </span>
             <span className="mt-4 text-sm font-medium text-zinc-900 group-hover:underline dark:text-zinc-50">
               Open Projects →
@@ -62,7 +47,7 @@ export default function Home() {
           </Link>
           <Link
             href="/job-search"
-            className="group flex flex-col items-start rounded-xl border border-zinc-200 bg-white p-6 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/80"
+            className="group flex flex-col items-start rounded-xl border border-zinc-200 bg-white p-6 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/80 sm:col-span-2 lg:col-span-1"
           >
             <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               Job Search Tracker

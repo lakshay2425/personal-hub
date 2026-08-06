@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/features/questions/components/ConfirmDialog";
+import { InboxSection } from "@/features/questions/components/InboxSection";
 import { ProjectFormModal } from "@/features/questions/components/ProjectFormModal";
 import { useProjects } from "@/features/questions/hooks/useProjects";
 import type { ProjectFormValues } from "@/features/questions/schema";
@@ -95,7 +96,7 @@ export default function ProjectsPage() {
             Projects
           </h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Organize related questions into collections with titled answers.
+            Capture questions in the inbox, then organize them into projects.
           </p>
         </div>
         <button
@@ -106,6 +107,12 @@ export default function ProjectsPage() {
           New Project
         </button>
       </div>
+
+      <InboxSection projects={projects} />
+
+      <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        Your Projects
+      </h2>
 
       {isLoading ? (
         <div className="space-y-3">

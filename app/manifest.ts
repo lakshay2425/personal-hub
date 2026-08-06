@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Question Hub",
     description:
       "Capture questions and track answered vs unanswered — stored locally in your browser.",
-    start_url: "/questions",
+    start_url: "/projects",
     scope: "/",
     display: "standalone",
     background_color: "#fafafa",

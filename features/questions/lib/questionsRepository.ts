@@ -29,7 +29,7 @@ export async function getAllQuestions(): Promise<Question[]> {
   return questions.sort((a, b) => b.createdAt - a.createdAt);
 }
 
-export async function getJournalQuestions(): Promise<Question[]> {
+export async function getInboxQuestions(): Promise<Question[]> {
   const db = getDB();
   const questions = await db.questions.toArray();
   return questions
@@ -102,4 +102,41 @@ export async function deleteQuestionsByProject(
 ): Promise<void> {
   const db = getDB();
   await db.questions.where("projectId").equals(projectId).delete();
+}
+
+export async function moveQuestionToProject(
+  questionId: string,
+  projectId: string,
+): Promise<Question> {
+  const db = getDB();
+  const existing = await db.questions.get(questionId);
+
+  if (!existing) {
+    throw new Error("Question not found");
+  }
+
+  const updated: Question = {
+    ...existing,
+    projectId,
+    updatedAt: Date.now(),
+  };
+
+  await db.transaction("rw", [db.questions, db.answers], async () => {
+    await db.questions.put(updated);
+    const answers = await db.answers
+      .where("questionId")
+      .equals(questionId)
+      .toArray();
+    await Promise.all(
+      answers.map((answer) =>
+        db.answers.put({
+          ...answer,
+          projectId,
+          updatedAt: Date.now(),
+        }),
+      ),
+    );
+  });
+
+  return updated;
 }

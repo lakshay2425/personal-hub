@@ -6,8 +6,9 @@ import type { Question } from "../types";
 import {
   createQuestion as createQuestionRepo,
   deleteQuestion as deleteQuestionRepo,
-  getJournalQuestions,
+  getInboxQuestions,
   getQuestionsByProjectId,
+  moveQuestionToProject as moveQuestionToProjectRepo,
   toggleQuestionStatus as toggleQuestionStatusRepo,
   updateQuestionText as updateQuestionTextRepo,
 } from "../lib/questionsRepository";
@@ -26,7 +27,7 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
     if (projectId) {
       return getQuestionsByProjectId(projectId);
     }
-    return getJournalQuestions();
+    return getInboxQuestions();
   }, [projectId]);
 
   const refresh = useCallback(async () => {
@@ -109,6 +110,14 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
     setQuestions((prev) => prev.filter((question) => question.id !== id));
   }, []);
 
+  const moveToProject = useCallback(
+    async (id: string, targetProjectId: string) => {
+      await moveQuestionToProjectRepo(id, targetProjectId);
+      setQuestions((prev) => prev.filter((question) => question.id !== id));
+    },
+    [],
+  );
+
   return {
     questions,
     isLoading,
@@ -117,6 +126,7 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
     updateQuestion,
     toggleStatus,
     deleteQuestion,
+    moveToProject,
     refresh,
   };
 }
