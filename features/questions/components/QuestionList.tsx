@@ -1,11 +1,10 @@
 "use client";
 
 import type { Question, QuestionTreeNode } from "../types";
-import { buildQuestionTree } from "../lib/questionTree";
-import { QuestionListItem } from "./QuestionListItem";
+import { SortableQuestionList } from "./SortableQuestionList";
 
 interface QuestionListProps {
-  questions: Parameters<typeof buildQuestionTree>[0];
+  questions: Question[];
   isLoading: boolean;
   error: string | null;
   answerCounts: Record<string, number>;
@@ -19,6 +18,7 @@ interface QuestionListProps {
   onDelete: (question: QuestionTreeNode) => void;
   onAddSubQuestion: (parent: QuestionTreeNode) => void;
   onMoveToParent: (questionId: string, parentId: string | null) => Promise<void>;
+  onReorder: (parentId: string | null, orderedIds: string[]) => Promise<void>;
   allQuestions: Question[];
   movingUnderId?: string | null;
   onAnswerCountChange?: (questionId: string, count: number) => void;
@@ -42,6 +42,7 @@ export function QuestionList({
   onDelete,
   onAddSubQuestion,
   onMoveToParent,
+  onReorder,
   allQuestions,
   movingUnderId,
   onAnswerCountChange,
@@ -70,9 +71,9 @@ export function QuestionList({
     );
   }
 
-  const tree = buildQuestionTree(questions);
+  const treeLength = questions.filter((question) => question.parentId === null).length;
 
-  if (tree.length === 0) {
+  if (treeLength === 0) {
     return (
       <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-12 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
         <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
@@ -86,32 +87,24 @@ export function QuestionList({
   }
 
   return (
-    <ul className="space-y-3">
-      {tree.map((node) => (
-        <QuestionListItem
-          key={node.id}
-          node={node}
-          answerCount={answerCounts[node.id] ?? 0}
-          isExpanded={expandedQuestionId === node.id}
-          isChildrenCollapsed={collapsedQuestionIds.has(node.id)}
-          onToggleExpand={onToggleExpand}
-          onToggleChildrenCollapse={onToggleChildrenCollapse}
-          onToggleStatus={onToggleStatus}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onAddSubQuestion={onAddSubQuestion}
-          onMoveToParent={onMoveToParent}
-          allQuestions={allQuestions}
-          movingUnderId={movingUnderId}
-          isToggling={togglingId === node.id}
-          projectId={projectId}
-          onAnswerCountChange={onAnswerCountChange}
-          collapsedQuestionIds={collapsedQuestionIds}
-          expandedQuestionId={expandedQuestionId}
-          answerCounts={answerCounts}
-          togglingId={togglingId}
-        />
-      ))}
-    </ul>
+    <SortableQuestionList
+      questions={questions}
+      answerCounts={answerCounts}
+      expandedQuestionId={expandedQuestionId}
+      collapsedQuestionIds={collapsedQuestionIds}
+      projectId={projectId}
+      onToggleExpand={onToggleExpand}
+      onToggleChildrenCollapse={onToggleChildrenCollapse}
+      onToggleStatus={onToggleStatus}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onAddSubQuestion={onAddSubQuestion}
+      onMoveToParent={onMoveToParent}
+      onReorder={onReorder}
+      allQuestions={allQuestions}
+      movingUnderId={movingUnderId}
+      onAnswerCountChange={onAnswerCountChange}
+      togglingId={togglingId}
+    />
   );
 }

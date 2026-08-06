@@ -41,6 +41,7 @@ export function QuestionsWorkspace({
     toggleStatus,
     deleteQuestion,
     moveToParent,
+    reorderQuestions,
   } = useQuestions({ projectId });
 
   const [answerCounts, setAnswerCounts] = useState<Record<string, number>>({});
@@ -289,6 +290,7 @@ export function QuestionsWorkspace({
         onDelete={setDeletingQuestion}
         onAddSubQuestion={handleAddSubQuestion}
         onMoveToParent={handleMoveToParent}
+        onReorder={reorderQuestions}
         allQuestions={questions}
         movingUnderId={movingUnderId}
         onAnswerCountChange={handleAnswerCountChange}

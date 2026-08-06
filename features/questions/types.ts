@@ -15,6 +15,7 @@ export interface Question {
   projectId: string | null;
   parentId: string | null;
   depth: QuestionDepth;
+  sortOrder: number;
   questionText: string;
   status: QuestionStatus;
   createdAt: number;

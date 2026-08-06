@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { Question } from "../types";
-import { collectDescendantIds } from "../lib/questionTree";
+import { collectDescendantIds, compareQuestions } from "../lib/questionTree";
 import {
   createQuestion as createQuestionRepo,
   deleteQuestion as deleteQuestionRepo,
@@ -11,6 +11,7 @@ import {
   getQuestionsByProjectId,
   moveQuestionToProject as moveQuestionToProjectRepo,
   moveQuestionToParent as moveQuestionToParentRepo,
+  reorderQuestions as reorderQuestionsRepo,
   toggleQuestionStatus as toggleQuestionStatusRepo,
   updateQuestionText as updateQuestionTextRepo,
 } from "../lib/questionsRepository";
@@ -83,11 +84,11 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
 
       if (parentId) {
         setQuestions((prev) =>
-          [...prev, created].sort((a, b) => b.createdAt - a.createdAt),
+          [...prev, created].sort(compareQuestions),
         );
       } else {
         setQuestions((prev) =>
-          [created, ...prev].sort((a, b) => b.createdAt - a.createdAt),
+          [created, ...prev].sort(compareQuestions),
         );
       }
 
@@ -148,10 +149,24 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
       setQuestions((prev) =>
         prev
           .map((question) => updatedMap.get(question.id) ?? question)
-          .sort((a, b) => b.createdAt - a.createdAt),
+          .sort(compareQuestions),
       );
 
       return updated;
+    },
+    [],
+  );
+
+  const reorderQuestions = useCallback(
+    async (parentId: string | null, orderedIds: string[]) => {
+      const updated = await reorderQuestionsRepo(parentId, orderedIds);
+      const updatedMap = new Map(updated.map((question) => [question.id, question]));
+
+      setQuestions((prev) =>
+        prev
+          .map((question) => updatedMap.get(question.id) ?? question)
+          .sort(compareQuestions),
+      );
     },
     [],
   );
@@ -166,6 +181,7 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
     deleteQuestion,
     moveToProject,
     moveToParent,
+    reorderQuestions,
     refresh,
   };
 }

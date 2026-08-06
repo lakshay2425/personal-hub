@@ -1,7 +1,16 @@
 import type { Question, QuestionTreeNode } from "../types";
 
-function sortByCreatedAtDesc(questions: Question[]): Question[] {
-  return [...questions].sort((a, b) => b.createdAt - a.createdAt);
+export function compareQuestions(a: Question, b: Question): number {
+  const orderA = a.sortOrder ?? 0;
+  const orderB = b.sortOrder ?? 0;
+  if (orderA !== orderB) {
+    return orderA - orderB;
+  }
+  return b.createdAt - a.createdAt;
+}
+
+function sortQuestions(questions: Question[]): Question[] {
+  return [...questions].sort(compareQuestions);
 }
 
 export function buildQuestionTree(questions: Question[]): QuestionTreeNode[] {
@@ -14,7 +23,7 @@ export function buildQuestionTree(questions: Question[]): QuestionTreeNode[] {
   }
 
   function buildNodes(parentId: string | null): QuestionTreeNode[] {
-    const siblings = sortByCreatedAtDesc(byParent.get(parentId) ?? []);
+    const siblings = sortQuestions(byParent.get(parentId) ?? []);
     return siblings.map((question) => ({
       ...question,
       children: buildNodes(question.id),

@@ -41,6 +41,33 @@ class QuestionHubDatabase extends Dexie {
             }
           });
       });
+
+    this.version(4)
+      .stores({
+        projects: "id",
+        questions: "id, projectId, parentId",
+        answers: "id, questionId, projectId",
+      })
+      .upgrade(async (tx) => {
+        const questions = await tx.table("questions").toArray();
+        const byParent = new Map<string | null, Question[]>();
+
+        for (const question of questions) {
+          const parentId = question.parentId ?? null;
+          const siblings = byParent.get(parentId) ?? [];
+          siblings.push(question);
+          byParent.set(parentId, siblings);
+        }
+
+        for (const siblings of byParent.values()) {
+          siblings.sort((a, b) => b.createdAt - a.createdAt);
+          await Promise.all(
+            siblings.map((question, index) =>
+              tx.table("questions").update(question.id, { sortOrder: index }),
+            ),
+          );
+        }
+      });
   }
 }
 

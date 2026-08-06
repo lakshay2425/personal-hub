@@ -4,6 +4,7 @@ import { getDB } from "./db";
 import {
   canMoveToRoot,
   collectDescendantIds,
+  compareQuestions,
   getMaxDepthInSubtree,
   getValidParentTargets,
   isDescendantOf,
@@ -22,6 +23,25 @@ async function collectDescendantIdsFromDb(
   }
 
   return ids;
+}
+
+async function getNextSortOrder(
+  parentId: string | null,
+  projectId: string | null,
+): Promise<number> {
+  const db = getDB();
+  const all = await db.questions.toArray();
+  const siblings = all.filter(
+    (question) =>
+      question.parentId === parentId &&
+      (parentId !== null || question.projectId === projectId),
+  );
+
+  if (siblings.length === 0) {
+    return 0;
+  }
+
+  return Math.min(...siblings.map((question) => question.sortOrder ?? 0)) - 1;
 }
 
 export async function createQuestion(
@@ -48,11 +68,14 @@ export async function createQuestion(
     projectId = parent.projectId;
   }
 
+  const sortOrder = await getNextSortOrder(parentId, projectId);
+
   const question: Question = {
     id: crypto.randomUUID(),
     projectId,
     parentId,
     depth,
+    sortOrder,
     questionText,
     status: "unanswered",
     createdAt: now,
@@ -67,7 +90,7 @@ export async function createQuestion(
 export async function getAllQuestions(): Promise<Question[]> {
   const db = getDB();
   const questions = await db.questions.toArray();
-  return questions.sort((a, b) => b.createdAt - a.createdAt);
+  return questions.sort(compareQuestions);
 }
 
 export async function getInboxQuestions(): Promise<Question[]> {
@@ -75,7 +98,7 @@ export async function getInboxQuestions(): Promise<Question[]> {
   const questions = await db.questions.toArray();
   return questions
     .filter((question) => question.projectId === null)
-    .sort((a, b) => b.createdAt - a.createdAt);
+    .sort(compareQuestions);
 }
 
 export async function getQuestionsByProjectId(
@@ -86,7 +109,26 @@ export async function getQuestionsByProjectId(
     .where("projectId")
     .equals(projectId)
     .toArray();
-  return questions.sort((a, b) => b.createdAt - a.createdAt);
+  return questions.sort(compareQuestions);
+}
+
+export async function reorderQuestions(
+  parentId: string | null,
+  orderedIds: string[],
+): Promise<Question[]> {
+  const db = getDB();
+  const now = Date.now();
+
+  await db.transaction("rw", db.questions, async () => {
+    await Promise.all(
+      orderedIds.map((id, index) =>
+        db.questions.update(id, { sortOrder: index, updatedAt: now }),
+      ),
+    );
+  });
+
+  const updated = await Promise.all(orderedIds.map((id) => db.questions.get(id)));
+  return updated.filter((item): item is Question => item !== undefined);
 }
 
 export async function updateQuestionText(
@@ -269,6 +311,17 @@ export async function moveQuestionToParent(
   const newProjectId = parentId
     ? (await db.questions.get(parentId))!.projectId
     : question.projectId;
+  const newSortOrder = await (async () => {
+    const siblings = allQuestions.filter(
+      (item) => item.parentId === parentId && item.id !== questionId,
+    );
+    if (siblings.length === 0) {
+      return 0;
+    }
+    return (
+      Math.max(...siblings.map((item) => item.sortOrder ?? 0)) + 1
+    );
+  })();
 
   await db.transaction("rw", [db.questions, db.answers], async () => {
     for (const id of allIds) {
@@ -280,7 +333,7 @@ export async function moveQuestionToParent(
         depth: (existing.depth + depthDelta) as QuestionDepth,
         projectId: newProjectId,
         updatedAt: Date.now(),
-        ...(id === questionId ? { parentId } : {}),
+        ...(id === questionId ? { parentId, sortOrder: newSortOrder } : {}),
       };
 
       await db.questions.put(updated);
