@@ -1,16 +1,11 @@
 import type { Project } from "../types";
-import {
-  deleteAnswersByProject,
-  deleteAnswersByQuestion,
-} from "./answersRepository";
 import { getDB } from "./db";
-import { deleteQuestionsByProject } from "./questionsRepository";
 
 export async function createProject(input: {
   name: string;
   description?: string | null;
 }): Promise<Project> {
-  const db = await getDB();
+  const db = getDB();
   const now = Date.now();
   const project: Project = {
     id: crypto.randomUUID(),
@@ -20,27 +15,27 @@ export async function createProject(input: {
     updatedAt: now,
   };
 
-  await db.add("projects", project);
+  await db.projects.add(project);
   return project;
 }
 
 export async function getAllProjects(): Promise<Project[]> {
-  const db = await getDB();
-  const projects = await db.getAll("projects");
+  const db = getDB();
+  const projects = await db.projects.toArray();
   return projects.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 export async function getProjectById(id: string): Promise<Project | undefined> {
-  const db = await getDB();
-  return db.get("projects", id);
+  const db = getDB();
+  return db.projects.get(id);
 }
 
 export async function updateProject(
   id: string,
   input: { name: string; description?: string | null },
 ): Promise<Project> {
-  const db = await getDB();
-  const existing = await db.get("projects", id);
+  const db = getDB();
+  const existing = await db.projects.get(id);
 
   if (!existing) {
     throw new Error("Project not found");
@@ -53,19 +48,22 @@ export async function updateProject(
     updatedAt: Date.now(),
   };
 
-  await db.put("projects", updated);
+  await db.projects.put(updated);
   return updated;
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  const db = await getDB();
-  const questions = await db.getAllFromIndex("questions", "projectId", id);
+  const db = getDB();
 
-  for (const question of questions) {
-    await deleteAnswersByQuestion(question.id);
-  }
+  await db.transaction("rw", [db.projects, db.questions, db.answers], async () => {
+    const questions = await db.questions.where("projectId").equals(id).toArray();
 
-  await deleteQuestionsByProject(id);
-  await deleteAnswersByProject(id);
-  await db.delete("projects", id);
+    for (const question of questions) {
+      await db.answers.where("questionId").equals(question.id).delete();
+    }
+
+    await db.questions.where("projectId").equals(id).delete();
+    await db.answers.where("projectId").equals(id).delete();
+    await db.projects.delete(id);
+  });
 }

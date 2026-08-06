@@ -1,37 +1,27 @@
-import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import Dexie, { type EntityTable } from "dexie";
 
 import type { LogEntry } from "../types";
 
-interface LoggerDB extends DBSchema {
-  logEntries: {
-    key: string;
-    value: LogEntry;
-    indexes: { date: string };
-  };
-}
+class LoggerDatabase extends Dexie {
+  logEntries!: EntityTable<LogEntry, "id">;
 
-const DB_NAME = "logger-db";
-const DB_VERSION = 1;
+  constructor() {
+    super("logger-db");
 
-let dbPromise: Promise<IDBPDatabase<LoggerDB>> | null = null;
-
-export function getDB(): Promise<IDBPDatabase<LoggerDB>> {
-  if (typeof window === "undefined") {
-    return Promise.reject(
-      new Error("IndexedDB is only available in the browser"),
-    );
-  }
-
-  if (!dbPromise) {
-    dbPromise = openDB<LoggerDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains("logEntries")) {
-          const store = db.createObjectStore("logEntries", { keyPath: "id" });
-          store.createIndex("date", "date");
-        }
-      },
+    this.version(1).stores({
+      logEntries: "id, date",
     });
   }
+}
 
-  return dbPromise;
+export const db =
+  typeof window !== "undefined"
+    ? new LoggerDatabase()
+    : (null as unknown as LoggerDatabase);
+
+export function getDB(): LoggerDatabase {
+  if (!db) {
+    throw new Error("IndexedDB is only available in the browser");
+  }
+  return db;
 }

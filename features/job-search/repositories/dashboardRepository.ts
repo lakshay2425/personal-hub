@@ -17,11 +17,12 @@ import {
   getRecentLeads,
   getTodayFollowUpLeads,
 } from "../repositories/leadsRepository";
-import { getCompanyById } from "../repositories/companiesRepository";
-import { getLeadById } from "../repositories/leadsRepository";
+import { getDB } from "../db";
 import type {
+  Company,
   DashboardStats,
   FollowUpItem,
+  Lead,
   TimeFilter,
 } from "../types";
 
@@ -47,6 +48,18 @@ export async function getDashboardStats(
   };
 }
 
+function buildEntityMap<T extends { id?: number }>(
+  entities: (T | undefined)[],
+): Map<number, T> {
+  const map = new Map<number, T>();
+  for (const entity of entities) {
+    if (entity?.id !== undefined) {
+      map.set(entity.id, entity);
+    }
+  }
+  return map;
+}
+
 export async function getTodayFollowUps(): Promise<FollowUpItem[]> {
   const today = getTodayDateString();
   const [leads, coldEmails] = await Promise.all([
@@ -54,10 +67,27 @@ export async function getTodayFollowUps(): Promise<FollowUpItem[]> {
     getTodayFollowUpColdEmails(today),
   ]);
 
+  const companyIds = [
+    ...new Set([
+      ...leads.map((lead) => lead.companyId),
+      ...coldEmails.map((email) => email.companyId),
+    ]),
+  ];
+  const leadIds = [...new Set(coldEmails.map((email) => email.leadId))];
+
+  const database = getDB();
+  const [companies, relatedLeads] = await Promise.all([
+    database.companies.bulkGet(companyIds),
+    database.leads.bulkGet(leadIds),
+  ]);
+
+  const companyMap = buildEntityMap<Company>(companies);
+  const leadMap = buildEntityMap<Lead>(relatedLeads);
+
   const items: FollowUpItem[] = [];
 
   for (const lead of leads) {
-    const company = await getCompanyById(lead.companyId);
+    const company = companyMap.get(lead.companyId);
     if (lead.firstFollowUpDate === today) {
       items.push({
         id: lead.id!,
@@ -83,10 +113,8 @@ export async function getTodayFollowUps(): Promise<FollowUpItem[]> {
   }
 
   for (const email of coldEmails) {
-    const [company, lead] = await Promise.all([
-      getCompanyById(email.companyId),
-      getLeadById(email.leadId),
-    ]);
+    const company = companyMap.get(email.companyId);
+    const lead = leadMap.get(email.leadId);
     if (email.firstFollowUpDate === today) {
       items.push({
         id: email.id!,

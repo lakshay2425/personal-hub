@@ -1,8 +1,18 @@
+import { getDB } from "../db";
 import { searchApplications } from "../repositories/applicationsRepository";
 import { searchCompanies } from "../repositories/companiesRepository";
 import { searchLeads } from "../repositories/leadsRepository";
-import { getCompanyById } from "../repositories/companiesRepository";
-import type { GlobalSearchResult } from "../types";
+import type { Company, GlobalSearchResult } from "../types";
+
+function buildCompanyMap(companies: (Company | undefined)[]): Map<number, Company> {
+  const map = new Map<number, Company>();
+  for (const company of companies) {
+    if (company?.id !== undefined) {
+      map.set(company.id, company);
+    }
+  }
+  return map;
+}
 
 export async function globalSearch(
   query: string,
@@ -14,6 +24,19 @@ export async function globalSearch(
     searchLeads(query),
     searchApplications(query),
   ]);
+
+  const topLeads = leads.slice(0, 5);
+  const topApplications = applications.slice(0, 5);
+  const companyIds = [
+    ...new Set([
+      ...topLeads.map((lead) => lead.companyId),
+      ...topApplications.map((app) => app.companyId),
+    ]),
+  ];
+
+  const database = getDB();
+  const relatedCompanies = await database.companies.bulkGet(companyIds);
+  const companyMap = buildCompanyMap(relatedCompanies);
 
   const results: GlobalSearchResult[] = [];
 
@@ -27,8 +50,8 @@ export async function globalSearch(
     });
   }
 
-  for (const lead of leads.slice(0, 5)) {
-    const company = await getCompanyById(lead.companyId);
+  for (const lead of topLeads) {
+    const company = companyMap.get(lead.companyId);
     results.push({
       type: "lead",
       id: lead.id!,
@@ -38,8 +61,8 @@ export async function globalSearch(
     });
   }
 
-  for (const app of applications.slice(0, 5)) {
-    const company = await getCompanyById(app.companyId);
+  for (const app of topApplications) {
+    const company = companyMap.get(app.companyId);
     results.push({
       type: "application",
       id: app.id!,

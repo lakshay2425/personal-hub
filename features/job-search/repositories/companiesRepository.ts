@@ -15,25 +15,38 @@ export async function getCompanyById(id: number): Promise<Company | undefined> {
 
 export async function getCompaniesWithCounts(): Promise<CompanyWithCounts[]> {
   const database = getDB();
-  const companies = await database.companies.toArray();
+  const [companies, leads, applications] = await Promise.all([
+    database.companies.toArray(),
+    database.leads.toArray(),
+    database.applications.toArray(),
+  ]);
 
-  const results = await Promise.all(
-    companies.map(async (company: Company) => {
-      const id = company.id!;
-      const [leadsCount, applicationsCount] = await Promise.all([
-        database.leads.where("companyId").equals(id).count(),
-        database.applications.where("companyId").equals(id).count(),
-      ]);
-      return {
-        ...company,
-        id,
-        leadsCount,
-        applicationsCount,
-      };
-    }),
-  );
+  const leadsCountByCompany = new Map<number, number>();
+  const applicationsCountByCompany = new Map<number, number>();
 
-  return results;
+  for (const lead of leads) {
+    leadsCountByCompany.set(
+      lead.companyId,
+      (leadsCountByCompany.get(lead.companyId) ?? 0) + 1,
+    );
+  }
+
+  for (const application of applications) {
+    applicationsCountByCompany.set(
+      application.companyId,
+      (applicationsCountByCompany.get(application.companyId) ?? 0) + 1,
+    );
+  }
+
+  return companies.map((company: Company) => {
+    const id = company.id!;
+    return {
+      ...company,
+      id,
+      leadsCount: leadsCountByCompany.get(id) ?? 0,
+      applicationsCount: applicationsCountByCompany.get(id) ?? 0,
+    };
+  });
 }
 
 export async function createCompany(

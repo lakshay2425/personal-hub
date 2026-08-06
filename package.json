@@ -7,17 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:generate": "npx drizzle-kit generate",
-    "db:migrate": "npx drizzle-kit migrate",
     "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
-    "dotenv": "^17.4.2",
     "dexie": "^4.0.11",
     "date-fns": "^4.1.0",
-    "idb": "^8.0.3",
-    "jose": "^6.2.3",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",

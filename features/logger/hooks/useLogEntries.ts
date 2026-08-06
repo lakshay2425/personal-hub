@@ -15,20 +15,6 @@ export function useLogEntries() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await getAllLogEntries();
-      setEntries(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load log entries",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     let cancelled = false;
 
@@ -93,6 +79,5 @@ export function useLogEntries() {
     createEntry,
     updateEntry,
     deleteEntry,
-    refresh,
   };
 }

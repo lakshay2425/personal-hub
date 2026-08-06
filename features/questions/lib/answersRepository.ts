@@ -17,8 +17,11 @@ async function assertUniqueTitle(
   title: string,
   excludeId?: string,
 ): Promise<void> {
-  const db = await getDB();
-  const answers = await db.getAllFromIndex("answers", "questionId", questionId);
+  const db = getDB();
+  const answers = await db.answers
+    .where("questionId")
+    .equals(questionId)
+    .toArray();
   const normalized = normalizeTitle(title);
   const duplicate = answers.find(
     (answer) =>
@@ -33,8 +36,11 @@ async function assertUniqueTitle(
 export async function listAnswersByQuestion(
   questionId: string,
 ): Promise<Answer[]> {
-  const db = await getDB();
-  const answers = await db.getAllFromIndex("answers", "questionId", questionId);
+  const db = getDB();
+  const answers = await db.answers
+    .where("questionId")
+    .equals(questionId)
+    .toArray();
   return answers.sort((a, b) => b.createdAt - a.createdAt);
 }
 
@@ -46,7 +52,7 @@ export async function createAnswer(input: {
 }): Promise<Answer> {
   await assertUniqueTitle(input.questionId, input.title);
 
-  const db = await getDB();
+  const db = getDB();
   const now = Date.now();
   const answer: Answer = {
     id: crypto.randomUUID(),
@@ -58,7 +64,7 @@ export async function createAnswer(input: {
     updatedAt: now,
   };
 
-  await db.add("answers", answer);
+  await db.answers.add(answer);
   return answer;
 }
 
@@ -66,8 +72,8 @@ export async function updateAnswer(
   id: string,
   input: { title: string; body: string },
 ): Promise<Answer> {
-  const db = await getDB();
-  const existing = await db.get("answers", id);
+  const db = getDB();
+  const existing = await db.answers.get(id);
 
   if (!existing) {
     throw new Error("Answer not found");
@@ -82,19 +88,18 @@ export async function updateAnswer(
     updatedAt: Date.now(),
   };
 
-  await db.put("answers", updated);
+  await db.answers.put(updated);
   return updated;
 }
 
 export async function deleteAnswer(id: string): Promise<void> {
-  const db = await getDB();
-  await db.delete("answers", id);
+  const db = getDB();
+  await db.answers.delete(id);
 }
 
 export async function deleteAnswersByQuestion(questionId: string): Promise<void> {
-  const db = await getDB();
-  const answers = await db.getAllFromIndex("answers", "questionId", questionId);
-  await Promise.all(answers.map((answer) => db.delete("answers", answer.id)));
+  const db = getDB();
+  await db.answers.where("questionId").equals(questionId).delete();
 }
 
 export async function getAnswerCountsByQuestionIds(
@@ -104,11 +109,14 @@ export async function getAnswerCountsByQuestionIds(
     return {};
   }
 
-  const db = await getDB();
-  const allAnswers = await db.getAll("answers");
+  const db = getDB();
+  const answers = await db.answers
+    .where("questionId")
+    .anyOf(questionIds)
+    .toArray();
   const counts = Object.fromEntries(questionIds.map((id) => [id, 0]));
 
-  for (const answer of allAnswers) {
+  for (const answer of answers) {
     if (counts[answer.questionId] !== undefined) {
       counts[answer.questionId] += 1;
     }
@@ -118,7 +126,6 @@ export async function getAnswerCountsByQuestionIds(
 }
 
 export async function deleteAnswersByProject(projectId: string): Promise<void> {
-  const db = await getDB();
-  const answers = await db.getAllFromIndex("answers", "projectId", projectId);
-  await Promise.all(answers.map((answer) => db.delete("answers", answer.id)));
+  const db = getDB();
+  await db.answers.where("projectId").equals(projectId).delete();
 }
