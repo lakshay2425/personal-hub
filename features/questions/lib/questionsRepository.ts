@@ -1,17 +1,51 @@
-import type { Question, QuestionStatus } from "../types";
+import type { Question, QuestionDepth, QuestionStatus } from "../types";
 import { deleteAnswersByQuestion } from "./answersRepository";
 import { getDB } from "./db";
+
+async function collectDescendantIdsFromDb(
+  parentId: string,
+): Promise<string[]> {
+  const db = getDB();
+  const children = await db.questions.where("parentId").equals(parentId).toArray();
+  const ids: string[] = [];
+
+  for (const child of children) {
+    ids.push(child.id);
+    ids.push(...(await collectDescendantIdsFromDb(child.id)));
+  }
+
+  return ids;
+}
 
 export async function createQuestion(
   questionText: string,
   projectId: string | null = null,
+  parentId: string | null = null,
 ): Promise<Question> {
   const db = getDB();
   const now = Date.now();
+  let depth: QuestionDepth = 0;
+
+  if (parentId) {
+    const parent = await db.questions.get(parentId);
+
+    if (!parent) {
+      throw new Error("Parent question not found");
+    }
+
+    if (parent.depth >= 2) {
+      throw new Error("Maximum sub-question depth reached");
+    }
+
+    depth = (parent.depth + 1) as QuestionDepth;
+    projectId = parent.projectId;
+  }
 
   const question: Question = {
     id: crypto.randomUUID(),
     projectId,
+    parentId,
+    depth,
     questionText,
     status: "unanswered",
     createdAt: now,
@@ -91,10 +125,26 @@ export async function toggleQuestionStatus(id: string): Promise<Question> {
   return updated;
 }
 
-export async function deleteQuestion(id: string): Promise<void> {
+export async function countSubQuestions(id: string): Promise<number> {
+  const descendantIds = await collectDescendantIdsFromDb(id);
+  return descendantIds.length;
+}
+
+export async function deleteQuestion(
+  id: string,
+): Promise<{ deletedSubCount: number }> {
   const db = getDB();
-  await deleteAnswersByQuestion(id);
-  await db.questions.delete(id);
+  const descendantIds = await collectDescendantIdsFromDb(id);
+  const allIds = [...descendantIds, id];
+
+  await db.transaction("rw", [db.questions, db.answers], async () => {
+    for (const questionId of allIds) {
+      await deleteAnswersByQuestion(questionId);
+    }
+    await db.questions.bulkDelete(allIds);
+  });
+
+  return { deletedSubCount: descendantIds.length };
 }
 
 export async function deleteQuestionsByProject(
@@ -115,28 +165,41 @@ export async function moveQuestionToProject(
     throw new Error("Question not found");
   }
 
-  const updated: Question = {
-    ...existing,
-    projectId,
-    updatedAt: Date.now(),
-  };
+  const descendantIds = await collectDescendantIdsFromDb(questionId);
+  const allQuestionIds = [questionId, ...descendantIds];
 
   await db.transaction("rw", [db.questions, db.answers], async () => {
-    await db.questions.put(updated);
-    const answers = await db.answers
-      .where("questionId")
-      .equals(questionId)
-      .toArray();
-    await Promise.all(
-      answers.map((answer) =>
-        db.answers.put({
-          ...answer,
-          projectId,
-          updatedAt: Date.now(),
-        }),
-      ),
-    );
+    for (const id of allQuestionIds) {
+      const question = await db.questions.get(id);
+      if (!question) continue;
+
+      const updated: Question = {
+        ...question,
+        projectId,
+        updatedAt: Date.now(),
+      };
+      await db.questions.put(updated);
+
+      const answers = await db.answers
+        .where("questionId")
+        .equals(id)
+        .toArray();
+      await Promise.all(
+        answers.map((answer) =>
+          db.answers.put({
+            ...answer,
+            projectId,
+            updatedAt: Date.now(),
+          }),
+        ),
+      );
+    }
   });
+
+  const updated = await db.questions.get(questionId);
+  if (!updated) {
+    throw new Error("Question not found");
+  }
 
   return updated;
 }

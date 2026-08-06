@@ -1,5 +1,7 @@
 export type QuestionStatus = "answered" | "unanswered";
 
+export type QuestionDepth = 0 | 1 | 2;
+
 export interface Project {
   id: string;
   name: string;
@@ -11,6 +13,8 @@ export interface Project {
 export interface Question {
   id: string;
   projectId: string | null;
+  parentId: string | null;
+  depth: QuestionDepth;
   questionText: string;
   status: QuestionStatus;
   createdAt: number;
@@ -27,3 +31,7 @@ export interface Answer {
   createdAt: number;
   updatedAt: number;
 }
+
+export type QuestionTreeNode = Question & {
+  children: QuestionTreeNode[];
+};

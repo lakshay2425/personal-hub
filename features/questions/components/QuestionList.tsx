@@ -1,19 +1,23 @@
 "use client";
 
-import type { Question } from "../types";
+import type { QuestionTreeNode } from "../types";
+import { buildQuestionTree } from "../lib/questionTree";
 import { QuestionListItem } from "./QuestionListItem";
 
 interface QuestionListProps {
-  questions: Question[];
+  questions: Parameters<typeof buildQuestionTree>[0];
   isLoading: boolean;
   error: string | null;
   answerCounts: Record<string, number>;
   expandedQuestionId: string | null;
+  collapsedQuestionIds: Set<string>;
   projectId: string | null;
   onToggleExpand: (questionId: string) => void;
+  onToggleChildrenCollapse: (questionId: string) => void;
   onToggleStatus: (id: string) => void;
-  onEdit: (question: Question) => void;
-  onDelete: (question: Question) => void;
+  onEdit: (question: QuestionTreeNode) => void;
+  onDelete: (question: QuestionTreeNode) => void;
+  onAddSubQuestion: (parent: QuestionTreeNode) => void;
   onAnswerCountChange?: (questionId: string, count: number) => void;
   togglingId?: string | null;
   emptyTitle?: string;
@@ -26,11 +30,14 @@ export function QuestionList({
   error,
   answerCounts,
   expandedQuestionId,
+  collapsedQuestionIds,
   projectId,
   onToggleExpand,
+  onToggleChildrenCollapse,
   onToggleStatus,
   onEdit,
   onDelete,
+  onAddSubQuestion,
   onAnswerCountChange,
   togglingId,
   emptyTitle = "No questions yet",
@@ -57,7 +64,9 @@ export function QuestionList({
     );
   }
 
-  if (questions.length === 0) {
+  const tree = buildQuestionTree(questions);
+
+  if (tree.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-12 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
         <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
@@ -72,19 +81,26 @@ export function QuestionList({
 
   return (
     <ul className="space-y-3">
-      {questions.map((question) => (
+      {tree.map((node) => (
         <QuestionListItem
-          key={question.id}
-          question={question}
-          answerCount={answerCounts[question.id] ?? 0}
-          isExpanded={expandedQuestionId === question.id}
-          onToggleExpand={() => onToggleExpand(question.id)}
-          onToggleStatus={() => onToggleStatus(question.id)}
-          onEdit={() => onEdit(question)}
-          onDelete={() => onDelete(question)}
-          isToggling={togglingId === question.id}
+          key={node.id}
+          node={node}
+          answerCount={answerCounts[node.id] ?? 0}
+          isExpanded={expandedQuestionId === node.id}
+          isChildrenCollapsed={collapsedQuestionIds.has(node.id)}
+          onToggleExpand={onToggleExpand}
+          onToggleChildrenCollapse={onToggleChildrenCollapse}
+          onToggleStatus={onToggleStatus}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onAddSubQuestion={onAddSubQuestion}
+          isToggling={togglingId === node.id}
           projectId={projectId}
           onAnswerCountChange={onAnswerCountChange}
+          collapsedQuestionIds={collapsedQuestionIds}
+          expandedQuestionId={expandedQuestionId}
+          answerCounts={answerCounts}
+          togglingId={togglingId}
         />
       ))}
     </ul>

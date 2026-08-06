@@ -5,9 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import { getAnswerCountsByQuestionIds } from "../lib/answersRepository";
+import { countDescendantsInList } from "../lib/questionTree";
 import { useQuestions } from "../hooks/useQuestions";
 import type { QuestionFormValues } from "../schema";
-import type { Question } from "../types";
+import type { Question, QuestionTreeNode } from "../types";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { QuestionFormModal } from "./QuestionFormModal";
 import { QuestionList } from "./QuestionList";
@@ -45,11 +46,15 @@ export function QuestionsWorkspace({
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(
     null,
   );
+  const [collapsedQuestionIds, setCollapsedQuestionIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-  const [deletingQuestion, setDeletingQuestion] = useState<Question | null>(
-    null,
-  );
+  const [subQuestionParent, setSubQuestionParent] =
+    useState<QuestionTreeNode | null>(null);
+  const [deletingQuestion, setDeletingQuestion] =
+    useState<QuestionTreeNode | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
@@ -92,19 +97,40 @@ export function QuestionsWorkspace({
     );
   }, []);
 
+  const handleToggleChildrenCollapse = useCallback((questionId: string) => {
+    setCollapsedQuestionIds((current) => {
+      const next = new Set(current);
+      if (next.has(questionId)) {
+        next.delete(questionId);
+      } else {
+        next.add(questionId);
+      }
+      return next;
+    });
+  }, []);
+
   const handleOpenCreate = () => {
     setEditingQuestion(null);
+    setSubQuestionParent(null);
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (question: Question) => {
+  const handleOpenEdit = (question: QuestionTreeNode) => {
     setEditingQuestion(question);
+    setSubQuestionParent(null);
+    setIsFormOpen(true);
+  };
+
+  const handleAddSubQuestion = (parent: QuestionTreeNode) => {
+    setEditingQuestion(null);
+    setSubQuestionParent(parent);
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingQuestion(null);
+    setSubQuestionParent(null);
   };
 
   const handleFormSubmit = useCallback(
@@ -113,6 +139,14 @@ export function QuestionsWorkspace({
         if (editingQuestion) {
           await updateQuestion(editingQuestion.id, values.questionText);
           toast.success("Question updated");
+        } else if (subQuestionParent) {
+          await createQuestion(values.questionText, subQuestionParent.id);
+          setCollapsedQuestionIds((current) => {
+            const next = new Set(current);
+            next.delete(subQuestionParent.id);
+            return next;
+          });
+          toast.success("Sub-question created");
         } else {
           await createQuestion(values.questionText);
           toast.success("Question created");
@@ -122,11 +156,13 @@ export function QuestionsWorkspace({
         toast.error(
           editingQuestion
             ? "Failed to update question"
-            : "Failed to create question",
+            : subQuestionParent
+              ? "Failed to create sub-question"
+              : "Failed to create question",
         );
       }
     },
-    [createQuestion, editingQuestion, updateQuestion],
+    [createQuestion, editingQuestion, subQuestionParent, updateQuestion],
   );
 
   const handleToggleStatus = useCallback(
@@ -157,6 +193,11 @@ export function QuestionsWorkspace({
         delete next[deletingQuestion.id];
         return next;
       });
+      setCollapsedQuestionIds((current) => {
+        const next = new Set(current);
+        next.delete(deletingQuestion.id);
+        return next;
+      });
       toast.success("Question deleted");
       setDeletingQuestion(null);
     } catch {
@@ -165,6 +206,21 @@ export function QuestionsWorkspace({
       setIsDeleting(false);
     }
   }, [deleteQuestion, deletingQuestion, expandedQuestionId]);
+
+  const deleteSubCount = deletingQuestion
+    ? countDescendantsInList(deletingQuestion.id, questions)
+    : 0;
+
+  const deleteMessage =
+    deleteSubCount > 0
+      ? `This question and all of its answers will be permanently removed. This will also delete ${deleteSubCount} sub-question${deleteSubCount === 1 ? "" : "s"}.`
+      : "This question and all of its answers will be permanently removed.";
+
+  const formTitle = editingQuestion
+    ? "Edit question"
+    : subQuestionParent
+      ? "New sub-question"
+      : "New question";
 
   return (
     <div className="mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
@@ -198,11 +254,14 @@ export function QuestionsWorkspace({
         error={error}
         answerCounts={answerCounts}
         expandedQuestionId={expandedQuestionId}
+        collapsedQuestionIds={collapsedQuestionIds}
         projectId={projectId}
         onToggleExpand={handleToggleExpand}
+        onToggleChildrenCollapse={handleToggleChildrenCollapse}
         onToggleStatus={handleToggleStatus}
         onEdit={handleOpenEdit}
         onDelete={setDeletingQuestion}
+        onAddSubQuestion={handleAddSubQuestion}
         onAnswerCountChange={handleAnswerCountChange}
         togglingId={togglingId}
         emptyTitle={emptyTitle}
@@ -214,6 +273,7 @@ export function QuestionsWorkspace({
         onClose={handleCloseForm}
         onSubmit={handleFormSubmit}
         question={editingQuestion}
+        title={formTitle}
       />
 
       <ConfirmDialog
@@ -222,7 +282,7 @@ export function QuestionsWorkspace({
         onConfirm={handleConfirmDelete}
         isLoading={isDeleting}
         title="Delete question?"
-        message="This question and all of its answers will be permanently removed."
+        message={deleteMessage}
       />
     </div>
   );

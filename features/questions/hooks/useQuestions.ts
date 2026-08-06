@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { Question } from "../types";
+import { collectDescendantIds } from "../lib/questionTree";
 import {
   createQuestion as createQuestionRepo,
   deleteQuestion as deleteQuestionRepo,
@@ -76,11 +77,19 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
   }, [loadQuestions]);
 
   const createQuestion = useCallback(
-    async (questionText: string) => {
-      const created = await createQuestionRepo(questionText, projectId);
-      setQuestions((prev) =>
-        [created, ...prev].sort((a, b) => b.createdAt - a.createdAt),
-      );
+    async (questionText: string, parentId: string | null = null) => {
+      const created = await createQuestionRepo(questionText, projectId, parentId);
+
+      if (parentId) {
+        setQuestions((prev) =>
+          [...prev, created].sort((a, b) => b.createdAt - a.createdAt),
+        );
+      } else {
+        setQuestions((prev) =>
+          [created, ...prev].sort((a, b) => b.createdAt - a.createdAt),
+        );
+      }
+
       return created;
     },
     [projectId],
@@ -105,15 +114,27 @@ export function useQuestions(options: UseQuestionsOptions = {}) {
     return updated;
   }, []);
 
-  const deleteQuestion = useCallback(async (id: string) => {
-    await deleteQuestionRepo(id);
-    setQuestions((prev) => prev.filter((question) => question.id !== id));
-  }, []);
+  const deleteQuestion = useCallback(
+    async (id: string) => {
+      const { deletedSubCount } = await deleteQuestionRepo(id);
+      setQuestions((prev) => {
+        const descendantIds = new Set(collectDescendantIds(id, prev));
+        descendantIds.add(id);
+        return prev.filter((question) => !descendantIds.has(question.id));
+      });
+      return { deletedSubCount };
+    },
+    [],
+  );
 
   const moveToProject = useCallback(
     async (id: string, targetProjectId: string) => {
       await moveQuestionToProjectRepo(id, targetProjectId);
-      setQuestions((prev) => prev.filter((question) => question.id !== id));
+      setQuestions((prev) => {
+        const descendantIds = new Set(collectDescendantIds(id, prev));
+        descendantIds.add(id);
+        return prev.filter((question) => !descendantIds.has(question.id));
+      });
     },
     [],
   );

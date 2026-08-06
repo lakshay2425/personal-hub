@@ -10,11 +10,37 @@ class QuestionHubDatabase extends Dexie {
   constructor() {
     super("question-hub-db");
 
+    this.version(1).stores({
+      projects: "id",
+      questions: "id, projectId",
+      answers: "id, questionId, projectId",
+    });
+
     this.version(2).stores({
       projects: "id",
       questions: "id, projectId",
       answers: "id, questionId, projectId",
     });
+
+    this.version(3)
+      .stores({
+        projects: "id",
+        questions: "id, projectId, parentId",
+        answers: "id, questionId, projectId",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("questions")
+          .toCollection()
+          .modify((question: Question) => {
+            if (question.parentId === undefined) {
+              question.parentId = null;
+            }
+            if (question.depth === undefined) {
+              question.depth = 0;
+            }
+          });
+      });
   }
 }
 

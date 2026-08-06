@@ -10,6 +10,7 @@ interface QuestionFormModalProps {
   onClose: () => void;
   onSubmit: (values: QuestionFormValues) => Promise<void>;
   question?: Question | null;
+  title?: string;
 }
 
 export function QuestionFormModal({
@@ -17,14 +18,17 @@ export function QuestionFormModal({
   onClose,
   onSubmit,
   question,
+  title,
 }: QuestionFormModalProps) {
   const isEdit = Boolean(question);
+  const modalTitle =
+    title ?? (isEdit ? "Edit question" : "New question");
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? "Edit question" : "New question"}
+      title={modalTitle}
     >
       <QuestionForm
         key={question?.id ?? "create"}
