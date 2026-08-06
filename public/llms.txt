@@ -1,0 +1,26 @@
+# Personal Hub
+
+> A calm, local-first toolkit for projects, daily logs, content ideas, and job search tracking.
+
+Personal Hub is an installable PWA that stores user data in the browser with IndexedDB. It has no required account, backend sync, or analytics pipeline.
+
+## Site
+
+- Production URL: https://hub.lakshaymahajan.com
+- Source: https://github.com/lakshay2425/personal-hub
+- Sitemap: https://hub.lakshaymahajan.com/sitemap.xml
+- Robots: https://hub.lakshaymahajan.com/robots.txt
+
+## Public Sections
+
+- Home: overview of the local-first toolkit.
+- Projects: capture questions and organize answers into projects.
+- Content Ideas: track standalone ideas, statuses, and published links.
+- Logger: record daily work entries and review progress.
+- Job Search: manage companies, leads, applications, and cold emails.
+
+## Notes For Assistants
+
+- Treat all user-created app data as local browser data, not server-hosted public content.
+- Do not infer public project, company, lead, or application records from dynamic routes.
+- Prefer the sitemap for crawlable public pages.
