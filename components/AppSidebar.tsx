@@ -7,6 +7,7 @@ import { SITE_NAME } from "@/lib/site";
 
 const NAV_ITEMS = [
   { href: "/projects", label: "Projects" },
+  { href: "/content-ideas", label: "Content Ideas" },
   { href: "/logger", label: "Logger" },
   { href: "/job-search", label: "Job Search" },
 ] as const;

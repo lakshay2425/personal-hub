@@ -1,11 +1,18 @@
 import Dexie, { type EntityTable } from "dexie";
 
+import type {
+  ContentIdea,
+  ContentIdeaActivityLog,
+} from "@/features/content-ideas/types";
+
 import type { Answer, Project, Question } from "../types";
 
 class QuestionHubDatabase extends Dexie {
   projects!: EntityTable<Project, "id">;
   questions!: EntityTable<Question, "id">;
   answers!: EntityTable<Answer, "id">;
+  contentIdeas!: EntityTable<ContentIdea, "id">;
+  activityLogs!: EntityTable<ContentIdeaActivityLog, "id">;
 
   constructor() {
     super("question-hub-db");
@@ -68,6 +75,14 @@ class QuestionHubDatabase extends Dexie {
           );
         }
       });
+
+    this.version(5).stores({
+      projects: "id",
+      questions: "id, projectId, parentId",
+      answers: "id, questionId, projectId",
+      contentIdeas: "++id, projectId, title, status, createdAt",
+      activityLogs: "++id, entityType, entityId, action, timestamp",
+    });
   }
 }
 

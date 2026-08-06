@@ -9,6 +9,7 @@ import {
   getAllProjects,
   getProjectById,
   updateProject as updateProjectRepo,
+  type DeleteProjectOptions,
 } from "../lib/projectsRepository";
 
 export function useProjects() {
@@ -83,10 +84,13 @@ export function useProjects() {
     [],
   );
 
-  const deleteProject = useCallback(async (id: string) => {
-    await deleteProjectRepo(id);
-    setProjects((prev) => prev.filter((project) => project.id !== id));
-  }, []);
+  const deleteProject = useCallback(
+    async (id: string, options?: DeleteProjectOptions) => {
+      await deleteProjectRepo(id, options);
+      setProjects((prev) => prev.filter((project) => project.id !== id));
+    },
+    [],
+  );
 
   return {
     projects,

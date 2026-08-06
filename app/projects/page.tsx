@@ -5,7 +5,8 @@ import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ExportButton } from "@/components/ExportButton";
-import { ConfirmDialog } from "@/features/questions/components/ConfirmDialog";
+import { ProjectDeleteDialog } from "@/features/content-ideas/components/ProjectDeleteDialog";
+import { countContentIdeasByProjectId } from "@/features/content-ideas/lib/contentIdeasRepository";
 import { InboxSection } from "@/features/questions/components/InboxSection";
 import { ProjectFormModal } from "@/features/questions/components/ProjectFormModal";
 import { useProjects } from "@/features/questions/hooks/useProjects";
@@ -26,6 +27,7 @@ export default function ProjectsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [contentIdeasCount, setContentIdeasCount] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleOpenCreate = () => {
@@ -69,20 +71,38 @@ export default function ProjectsPage() {
     [createProject, editingProject, updateProject],
   );
 
-  const handleConfirmDelete = useCallback(async () => {
-    if (!deletingProject) return;
-
-    setIsDeleting(true);
+  const handleOpenDelete = useCallback(async (project: Project) => {
+    setDeletingProject(project);
     try {
-      await deleteProject(deletingProject.id);
-      toast.success("Project deleted");
-      setDeletingProject(null);
+      const count = await countContentIdeasByProjectId(project.id);
+      setContentIdeasCount(count);
     } catch {
-      toast.error("Failed to delete project");
-    } finally {
-      setIsDeleting(false);
+      setContentIdeasCount(0);
     }
-  }, [deleteProject, deletingProject]);
+  }, []);
+
+  const handleCloseDelete = useCallback(() => {
+    setDeletingProject(null);
+    setContentIdeasCount(0);
+  }, []);
+
+  const handleDeleteProject = useCallback(
+    async (deleteContentIdeas: boolean) => {
+      if (!deletingProject) return;
+
+      setIsDeleting(true);
+      try {
+        await deleteProject(deletingProject.id, { deleteContentIdeas });
+        toast.success("Project deleted");
+        handleCloseDelete();
+      } catch {
+        toast.error("Failed to delete project");
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [deleteProject, deletingProject, handleCloseDelete],
+  );
 
   return (
     <div className="mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
@@ -176,7 +196,7 @@ export default function ProjectsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setDeletingProject(project)}
+                    onClick={() => void handleOpenDelete(project)}
                     className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"
                   >
                     Delete
@@ -195,13 +215,13 @@ export default function ProjectsPage() {
         project={editingProject}
       />
 
-      <ConfirmDialog
+      <ProjectDeleteDialog
         isOpen={Boolean(deletingProject)}
-        onClose={() => setDeletingProject(null)}
-        onConfirm={handleConfirmDelete}
+        onClose={handleCloseDelete}
+        onDeleteWithIdeas={() => void handleDeleteProject(true)}
+        onDeleteKeepIdeas={() => void handleDeleteProject(false)}
+        contentIdeasCount={contentIdeasCount}
         isLoading={isDeleting}
-        title="Delete project?"
-        message="This project and all of its questions and answers will be permanently removed."
       />
     </div>
   );

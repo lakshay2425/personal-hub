@@ -21,6 +21,7 @@ interface QuestionsWorkspaceProps {
   backLabel?: string;
   emptyTitle?: string;
   emptyDescription?: string;
+  embedded?: boolean;
 }
 
 export function QuestionsWorkspace({
@@ -31,6 +32,7 @@ export function QuestionsWorkspace({
   backLabel = "Home",
   emptyTitle,
   emptyDescription,
+  embedded = false,
 }: QuestionsWorkspaceProps) {
   const {
     questions,
@@ -250,22 +252,36 @@ export function QuestionsWorkspace({
       : "New question";
 
   return (
-    <div className="mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <Link
-            href={backHref}
-            className="mb-2 inline-block text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-300"
-          >
-            &larr; {backLabel}
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {title}
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {description}
-          </p>
-        </div>
+    <div
+      className={
+        embedded
+          ? undefined
+          : "mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10"
+      }
+    >
+      <div
+        className={`flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${
+          embedded ? "mb-6" : "mb-8"
+        }`}
+      >
+        {embedded ? (
+          <div className="min-w-0 flex-1" />
+        ) : (
+          <div className="min-w-0">
+            <Link
+              href={backHref}
+              className="mb-2 inline-block text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-300"
+            >
+              &larr; {backLabel}
+            </Link>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              {title}
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              {description}
+            </p>
+          </div>
+        )}
         <button
           type="button"
           onClick={handleOpenCreate}

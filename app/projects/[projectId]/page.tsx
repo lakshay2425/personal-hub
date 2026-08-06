@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { use } from "react";
 
-import { QuestionsWorkspace } from "@/features/questions/components/QuestionsWorkspace";
+import { ProjectDetailWorkspace } from "@/features/questions/components/ProjectDetailWorkspace";
 import { useProject } from "@/features/questions/hooks/useProjects";
 
 interface ProjectDetailPageProps {
@@ -38,18 +38,5 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     );
   }
 
-  return (
-    <QuestionsWorkspace
-      projectId={project.id}
-      title={project.name}
-      description={
-        project.description ??
-        "Project questions and titled answers — stored locally in IndexedDB."
-      }
-      backHref="/projects"
-      backLabel="Projects"
-      emptyTitle="No questions in this project yet"
-      emptyDescription='Click "New Question" to add the first question to this project.'
-    />
-  );
+  return <ProjectDetailWorkspace project={project} />;
 }

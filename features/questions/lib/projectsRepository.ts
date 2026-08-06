@@ -1,5 +1,14 @@
+import {
+  deleteContentIdeasByProjectId,
+  orphanContentIdeasByProjectId,
+} from "@/features/content-ideas/lib/contentIdeasRepository";
+
 import type { Project } from "../types";
 import { getDB } from "./db";
+
+export type DeleteProjectOptions = {
+  deleteContentIdeas?: boolean;
+};
 
 export async function createProject(input: {
   name: string;
@@ -52,8 +61,17 @@ export async function updateProject(
   return updated;
 }
 
-export async function deleteProject(id: string): Promise<void> {
+export async function deleteProject(
+  id: string,
+  options: DeleteProjectOptions = {},
+): Promise<void> {
   const db = getDB();
+
+  if (options.deleteContentIdeas) {
+    await deleteContentIdeasByProjectId(id);
+  } else {
+    await orphanContentIdeasByProjectId(id);
+  }
 
   await db.transaction("rw", [db.projects, db.questions, db.answers], async () => {
     const questions = await db.questions.where("projectId").equals(id).toArray();
