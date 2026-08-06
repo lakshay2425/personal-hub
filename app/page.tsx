@@ -1,11 +1,13 @@
 import Link from "next/link";
 
+import { SITE_NAME } from "@/lib/site";
+
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-4 py-20 dark:bg-black">
       <main className="w-full max-w-3xl text-center">
         <h1 className="text-4xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl">
-          Question Hub
+          {SITE_NAME}
         </h1>
         <p className="mt-4 text-lg leading-8 text-zinc-600 dark:text-zinc-400">
           Local-first tools for your learning and career — stored entirely in

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { SITE_NAME } from "@/lib/site";
 const NAV_ITEMS = [
   { href: "/projects", label: "Projects" },
   { href: "/logger", label: "Logger" },
@@ -59,7 +60,7 @@ export function AppSidebar() {
             className="text-lg font-semibold text-zinc-900 dark:text-zinc-50"
             onClick={close}
           >
-            Question Hub
+            {SITE_NAME}
           </Link>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">

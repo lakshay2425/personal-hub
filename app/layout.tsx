@@ -5,6 +5,12 @@ import { Toaster } from "react-hot-toast";
 import { AppSerwistProvider } from "@/app/providers/serwist-provider";
 import { ThemeProvider } from "@/app/providers/theme-provider";
 import { AppShell } from "@/components/AppShell";
+import {
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_TITLE_TEMPLATE,
+} from "@/lib/site";
 
 import "./globals.css";
 
@@ -18,26 +24,35 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_NAME = "Question Hub";
-const APP_DEFAULT_TITLE = "Question Hub";
-const APP_TITLE_TEMPLATE = "%s | Question Hub";
-const APP_DESCRIPTION =
-  "Capture questions and track answered vs unanswered — stored locally in your browser.";
-
 export const metadata: Metadata = {
-  applicationName: APP_NAME,
+  applicationName: SITE_NAME,
   title: {
-    default: APP_DEFAULT_TITLE,
-    template: APP_TITLE_TEMPLATE,
+    default: SITE_NAME,
+    template: SITE_TITLE_TEMPLATE,
   },
-  description: APP_DESCRIPTION,
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: APP_DEFAULT_TITLE,
+    title: SITE_NAME,
   },
   formatDetection: {
     telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
   },
   icons: {
     icon: [

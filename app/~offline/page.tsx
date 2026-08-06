@@ -8,7 +8,7 @@ export default function OfflinePage() {
           You&apos;re offline
         </h1>
         <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-400">
-          This page wasn&apos;t cached yet. Open Question Hub once while online,
+          This page wasn&apos;t cached yet. Open Personal Hub once while online,
           then questions and previously visited pages will work offline.
         </p>
         <div className="mt-8">
