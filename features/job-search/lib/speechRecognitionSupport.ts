@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 
 const DEFAULT_LANG = "en-IN";
-const PROBE_TIMEOUT_MS = 3000;
+const PROBE_TIMEOUT_MS = 5000;
 
 const FATAL_PROBE_ERRORS = new Set<SpeechRecognitionErrorCode>([
   "network",
@@ -20,6 +20,7 @@ function getSpeechRecognition(): SpeechRecognitionConstructor | null {
   return window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null;
 }
 
+/** Returns false when definitely unavailable; null when a start probe is needed. */
 async function probeWithAvailable(
   SpeechRecognitionImpl: SpeechRecognitionConstructor,
   lang: string,
@@ -31,10 +32,9 @@ async function probeWithAvailable(
       langs: [lang],
       processLocally: false,
     });
-    if (status === "available") return true;
-    if (status === "unavailable") return false;
-    // "downloading" — treat as unsupported (e.g. Brave stub that never resolves).
-    return false;
+    if (status === "unavailable" || status === "downloading") return false;
+    // "available" can be a false positive (e.g. Brave stub) — verify with start probe.
+    return null;
   } catch {
     return null;
   }
@@ -50,8 +50,13 @@ function probeWithStart(
     recognition.continuous = false;
     recognition.interimResults = false;
 
+    let settled = false;
+    let started = false;
+    let fatalError = false;
+
     const cleanup = () => {
       recognition.onstart = null;
+      recognition.onresult = null;
       recognition.onerror = null;
       recognition.onend = null;
       try {
@@ -61,26 +66,40 @@ function probeWithStart(
       }
     };
 
-    const timeoutId = window.setTimeout(() => {
-      cleanup();
-      resolve(false);
-    }, PROBE_TIMEOUT_MS);
-
     const finish = (supported: boolean) => {
+      if (settled) return;
+      settled = true;
       window.clearTimeout(timeoutId);
       cleanup();
       resolve(supported);
     };
 
-    recognition.onstart = () => finish(true);
+    const timeoutId = window.setTimeout(() => finish(false), PROBE_TIMEOUT_MS);
+
+    recognition.onstart = () => {
+      started = true;
+    };
+
+    recognition.onresult = () => finish(true);
 
     recognition.onerror = (event) => {
       if (FATAL_PROBE_ERRORS.has(event.error)) {
+        fatalError = true;
+        return;
+      }
+      if (event.error === "not-allowed") {
+        // API works; the user denied mic access during the probe.
+        finish(true);
+      }
+    };
+
+    recognition.onend = () => {
+      if (fatalError) {
         finish(false);
         return;
       }
-      // Permission denied or benign errors mean the API itself works.
-      finish(true);
+      // Session ended without a fatal error — API is functional.
+      finish(started);
     };
 
     try {
@@ -96,7 +115,7 @@ async function probeSpeechRecognition(lang: string): Promise<boolean> {
   if (!SpeechRecognitionImpl) return false;
 
   const availableResult = await probeWithAvailable(SpeechRecognitionImpl, lang);
-  if (availableResult !== null) return availableResult;
+  if (availableResult === false) return false;
 
   return probeWithStart(SpeechRecognitionImpl, lang);
 }
@@ -142,6 +161,13 @@ function ensureProbe(lang = DEFAULT_LANG) {
     state = supported ? "supported" : "unsupported";
     emitChange();
   });
+}
+
+/** Downgrade after a runtime fatal error (safety net for false-positive probes). */
+export function markSpeechRecognitionUnsupported(): void {
+  if (state === "unsupported") return;
+  state = "unsupported";
+  emitChange();
 }
 
 export function useSpeechRecognitionSupport(): SpeechRecognitionSupportState {

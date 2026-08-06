@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
-import { useSpeechRecognitionSupport } from "../lib/speechRecognitionSupport";
+import {
+  markSpeechRecognitionUnsupported,
+  useSpeechRecognitionSupport,
+} from "../lib/speechRecognitionSupport";
 
 function getSpeechRecognition(): SpeechRecognitionConstructor | null {
   if (typeof window === "undefined") return null;
@@ -59,6 +62,9 @@ export function useSpeechRecognition({
 
     recognition.onerror = (event) => {
       switch (event.error) {
+        case "network":
+          markSpeechRecognitionUnsupported();
+          break;
         case "not-allowed":
         case "service-not-allowed":
           toast.error("Microphone access denied");
