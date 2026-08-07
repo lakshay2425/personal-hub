@@ -104,7 +104,7 @@ export function QuestionOverflowMenu({
       {isOpen ? (
         <div
           role="menu"
-          className="absolute right-0 z-30 mt-1 min-w-44 overflow-hidden rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+          className="absolute right-0 z-50 mt-1 max-h-[min(70dvh,24rem)] min-w-44 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
         >
           {canAddSubQuestion ? (
             <button

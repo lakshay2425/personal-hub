@@ -224,7 +224,7 @@ export function ContentIdeasWorkspace({
           <button
             type="button"
             onClick={openCreateForm}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             {addButtonLabel}
           </button>
@@ -267,7 +267,7 @@ export function ContentIdeasWorkspace({
             </option>
           ))}
         </select>
-        <ContentIdeasViewToggle value={viewMode} onChange={setViewMode} />
+        <ContentIdeasViewToggle value={viewMode} onChange={setViewMode} className="w-full sm:w-auto" />
       </div>
 
       {viewMode === "list" && hasActiveFilter ? (
@@ -313,17 +313,32 @@ export function ContentIdeasWorkspace({
           onMoveToParent={handleMoveToParent}
           movingUnderId={movingUnderId}
         />
-      ) : (
-        <ContentIdeasTable
-          ideas={filtered}
-          allIdeas={ideas}
-          onEdit={handleEdit}
-          onDelete={setDeletingIdea}
-          onAddSubIdea={handleAddSubIdea}
-          onMoveToParent={handleMoveToParent}
-          movingUnderId={movingUnderId}
-        />
-      )}
+      ) : viewMode === "table" ? (
+        <>
+          <div className="lg:hidden">
+            <ContentIdeasCards
+              ideas={filtered}
+              allIdeas={ideas}
+              onEdit={handleEdit}
+              onDelete={setDeletingIdea}
+              onAddSubIdea={handleAddSubIdea}
+              onMoveToParent={handleMoveToParent}
+              movingUnderId={movingUnderId}
+            />
+          </div>
+          <div className="hidden lg:block">
+            <ContentIdeasTable
+              ideas={filtered}
+              allIdeas={ideas}
+              onEdit={handleEdit}
+              onDelete={setDeletingIdea}
+              onAddSubIdea={handleAddSubIdea}
+              onMoveToParent={handleMoveToParent}
+              movingUnderId={movingUnderId}
+            />
+          </div>
+        </>
+      ) : null}
 
       <ContentIdeaFormModal
         isOpen={isFormOpen}

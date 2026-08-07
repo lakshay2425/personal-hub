@@ -25,7 +25,7 @@ export function SubQuestionHeader({
   if (!hasChildren) {
     return (
       <div className="min-w-0 flex-1">
-        <p className={`text-zinc-900 dark:text-zinc-50 ${textClassName}`}>
+        <p className={`break-words text-zinc-900 dark:text-zinc-50 ${textClassName}`}>
           {questionText}
         </p>
         {meta ? <div className="mt-1">{meta}</div> : null}
@@ -51,7 +51,7 @@ export function SubQuestionHeader({
             }`}
           />
         </button>
-        <p className={`min-w-0 flex-1 text-zinc-900 dark:text-zinc-50 ${textClassName}`}>
+        <p className={`min-w-0 flex-1 break-words text-zinc-900 dark:text-zinc-50 ${textClassName}`}>
           {questionText}
         </p>
       </div>

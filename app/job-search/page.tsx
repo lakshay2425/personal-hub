@@ -5,6 +5,13 @@ import { useState } from "react";
 
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
+import {
+  MobileCardHeader,
+  MobileCardMeta,
+  MobileCardMetaRow,
+  MobileList,
+  MobileListItem,
+} from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatsCard } from "@/features/job-search/components/StatsCard";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
@@ -67,7 +74,39 @@ export default function DashboardPage() {
             description="You're all caught up for today."
           />
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <>
+            <MobileList>
+              {followUps.map((item, idx) => (
+                <MobileListItem key={`${item.entityType}-${item.entityId}-${item.followUpType}-${idx}`}>
+                  <MobileCardHeader
+                    title={item.leadName}
+                    subtitle={item.companyName}
+                    badge={<StatusBadge status={item.followUpType} variant="info" />}
+                  />
+                  <MobileCardMeta>
+                    {item.role ? (
+                      <MobileCardMetaRow label="Role" value={item.role} />
+                    ) : null}
+                    <MobileCardMetaRow
+                      label="Action"
+                      value={
+                        <Link
+                          href={
+                            item.entityType === "lead"
+                              ? "/job-search/leads"
+                              : "/job-search/cold-emails"
+                          }
+                          className="font-medium text-zinc-900 hover:underline dark:text-zinc-50"
+                        >
+                          Open
+                        </Link>
+                      }
+                    />
+                  </MobileCardMeta>
+                </MobileListItem>
+              ))}
+            </MobileList>
+            <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <tr>
@@ -120,6 +159,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
 
@@ -146,7 +186,7 @@ export default function DashboardPage() {
                     href={`/job-search/companies/${c.id}`}
                     className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                   >
-                    <span className="min-w-0 flex-1 truncate font-medium text-zinc-900 dark:text-zinc-50">
+                    <span className="min-w-0 flex-1 break-words font-medium text-zinc-900 dark:text-zinc-50">
                       {c.companyName}
                     </span>
                     <span className="shrink-0 text-xs text-zinc-500">
@@ -173,10 +213,10 @@ export default function DashboardPage() {
                   className="flex items-center justify-between gap-3 px-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-zinc-900 dark:text-zinc-50">
+                    <p className="break-words font-medium text-zinc-900 dark:text-zinc-50">
                       {l.name}
                     </p>
-                    <p className="truncate text-xs text-zinc-500">
+                    <p className="break-words text-xs text-zinc-500">
                       {getCompanyName(l.companyId, companies)}
                     </p>
                   </div>
@@ -201,10 +241,10 @@ export default function DashboardPage() {
                   className="flex items-center justify-between gap-3 px-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-zinc-900 dark:text-zinc-50">
+                    <p className="break-words font-medium text-zinc-900 dark:text-zinc-50">
                       {a.role}
                     </p>
-                    <p className="truncate text-xs text-zinc-500">
+                    <p className="break-words text-xs text-zinc-500">
                       {getCompanyName(a.companyId, companies)} ·{" "}
                       {formatDate(a.appliedDate)}
                     </p>
@@ -227,7 +267,25 @@ export default function DashboardPage() {
             description="Track your outreach emails here."
           />
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <>
+            <MobileList>
+              {recentColdEmails.map((e) => (
+                <MobileListItem key={e.id}>
+                  <MobileCardHeader
+                    title={leads.find((l) => l.id === e.leadId)?.name ?? "—"}
+                    subtitle={getCompanyName(e.companyId, companies)}
+                    badge={<StatusBadge status={e.status} />}
+                  />
+                  <MobileCardMeta>
+                    <MobileCardMetaRow
+                      label="Sent"
+                      value={formatDate(e.sentDate)}
+                    />
+                  </MobileCardMeta>
+                </MobileListItem>
+              ))}
+            </MobileList>
+            <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <tr>
@@ -265,6 +323,7 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </div>

@@ -52,12 +52,12 @@ export function AnswerList({
           key={answer.id}
           className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50"
         >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+              <p className="break-words text-sm font-medium text-zinc-900 dark:text-zinc-50">
                 {answer.title}
               </p>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-300">
+              <p className="mt-2 break-words whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-300">
                 {answer.body}
               </p>
             </div>

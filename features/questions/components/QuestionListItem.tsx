@@ -14,8 +14,8 @@ import { SubQuestionHeader } from "./SubQuestionHeader";
 
 const DEPTH_STYLES = {
   0: "rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900",
-  1: "ml-4 rounded-lg border border-zinc-200 border-l-2 border-l-zinc-400 bg-white p-3 dark:border-zinc-800 dark:border-l-zinc-500 dark:bg-zinc-900",
-  2: "ml-8 rounded-lg border border-zinc-200 border-l-2 border-l-zinc-300 bg-zinc-50/80 p-2.5 dark:border-zinc-800 dark:border-l-zinc-600 dark:bg-zinc-900/50",
+  1: "ml-0 rounded-lg border border-zinc-200 border-l-2 border-l-zinc-400 bg-white p-3 sm:ml-2 md:ml-4 dark:border-zinc-800 dark:border-l-zinc-500 dark:bg-zinc-900",
+  2: "ml-2 rounded-lg border border-zinc-200 border-l-2 border-l-zinc-300 bg-zinc-50/80 p-2.5 sm:ml-4 md:ml-8 dark:border-zinc-800 dark:border-l-zinc-600 dark:bg-zinc-900/50",
 } as const;
 
 const DEPTH_TEXT_STYLES = {
@@ -83,7 +83,7 @@ export function QuestionListItem({
   return (
     <li ref={itemRef} style={style}>
       <div className={DEPTH_STYLES[depth]}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div className="flex min-w-0 flex-1 items-start gap-2">
             {dragHandleProps ? (
               <button

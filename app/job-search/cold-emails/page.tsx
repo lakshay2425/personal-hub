@@ -7,6 +7,15 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { ColdEmailFormModal } from "@/features/job-search/components/forms/ColdEmailFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
+import {
+  MobileCardActions,
+  MobileCardHeader,
+  MobileCardMeta,
+  MobileCardMetaRow,
+  MobileList,
+  MobileListItem,
+  mobileActionClass,
+} from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { COLD_EMAIL_STATUSES } from "@/features/job-search/constants";
@@ -157,7 +166,55 @@ export default function ColdEmailsPage() {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+        <>
+          <MobileList>
+            {filtered.map((email) => (
+              <MobileListItem key={email.id}>
+                <MobileCardHeader
+                  title={leadMap.get(email.leadId) ?? "—"}
+                  subtitle={companyMap.get(email.companyId) ?? "—"}
+                  badge={<StatusBadge status={email.status} />}
+                />
+                <MobileCardMeta>
+                  {email.role ? (
+                    <MobileCardMetaRow label="Role" value={email.role} />
+                  ) : null}
+                  <MobileCardMetaRow
+                    label="Sent"
+                    value={formatDate(email.sentDate)}
+                  />
+                  <MobileCardMetaRow
+                    label="Follow-up 1"
+                    value={formatDate(email.firstFollowUpDate)}
+                  />
+                  <MobileCardMetaRow
+                    label="Follow-up 2"
+                    value={formatDate(email.secondFollowUpDate)}
+                  />
+                </MobileCardMeta>
+                <MobileCardActions>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingEmail(email);
+                      setIsFormOpen(true);
+                    }}
+                    className={mobileActionClass.edit}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingEmail(email)}
+                    className={mobileActionClass.delete}
+                  >
+                    Delete
+                  </button>
+                </MobileCardActions>
+              </MobileListItem>
+            ))}
+          </MobileList>
+          <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
               <tr>
@@ -211,6 +268,7 @@ export default function ColdEmailsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <ColdEmailFormModal

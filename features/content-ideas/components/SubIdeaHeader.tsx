@@ -25,7 +25,7 @@ export function SubIdeaHeader({
   if (!hasChildren) {
     return (
       <div className="min-w-0 flex-1">
-        <p className={`text-zinc-900 dark:text-zinc-50 ${textClassName}`}>
+        <p className={`break-words text-zinc-900 dark:text-zinc-50 ${textClassName}`}>
           {title}
         </p>
         {meta ? <div className="mt-1">{meta}</div> : null}
@@ -51,7 +51,7 @@ export function SubIdeaHeader({
             }`}
           />
         </button>
-        <p className={`min-w-0 flex-1 text-zinc-900 dark:text-zinc-50 ${textClassName}`}>
+        <p className={`min-w-0 flex-1 break-words text-zinc-900 dark:text-zinc-50 ${textClassName}`}>
           {title}
         </p>
       </div>

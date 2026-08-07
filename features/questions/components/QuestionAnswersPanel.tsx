@@ -93,14 +93,14 @@ export function QuestionAnswersPanel({
 
   return (
     <div className="mt-4 border-t border-zinc-200 pt-4 dark:border-zinc-700">
-      <div className="mb-2 flex items-center justify-between gap-3">
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
           Answers ({answers.length})
         </p>
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="w-full rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
           Add answer
         </button>

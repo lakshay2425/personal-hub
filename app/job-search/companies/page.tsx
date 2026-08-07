@@ -8,6 +8,15 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { CompanyFormModal } from "@/features/job-search/components/forms/CompanyFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
+import {
+  MobileCardActions,
+  MobileCardHeader,
+  MobileCardMeta,
+  MobileCardMetaRow,
+  MobileList,
+  MobileListItem,
+  mobileActionClass,
+} from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { formatTimestamp } from "@/features/job-search/lib/dateUtils";
@@ -160,7 +169,79 @@ export default function CompaniesPage() {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+        <>
+          <MobileList>
+            {filtered.map((company) => (
+              <MobileListItem key={company.id}>
+                <MobileCardHeader
+                  title={
+                    <Link
+                      href={`/job-search/companies/${company.id}`}
+                      className="hover:underline"
+                    >
+                      {company.companyName}
+                    </Link>
+                  }
+                  subtitle={company.sector || undefined}
+                />
+                <MobileCardMeta>
+                  <MobileCardMetaRow
+                    label="Leads"
+                    value={company.leadsCount}
+                  />
+                  <MobileCardMetaRow
+                    label="Applications"
+                    value={company.applicationsCount}
+                  />
+                  <MobileCardMetaRow
+                    label="Created"
+                    value={formatTimestamp(company.createdAt)}
+                  />
+                  {company.website ? (
+                    <MobileCardMetaRow
+                      label="Website"
+                      value={
+                        <a
+                          href={company.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline dark:text-blue-400"
+                        >
+                          Link
+                        </a>
+                      }
+                    />
+                  ) : null}
+                </MobileCardMeta>
+                <MobileCardActions>
+                  <Link
+                    href={`/job-search/companies/${company.id}`}
+                    className={mobileActionClass.edit}
+                  >
+                    Open
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCompany(company);
+                      setIsFormOpen(true);
+                    }}
+                    className={mobileActionClass.edit}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingCompany(company)}
+                    className={mobileActionClass.delete}
+                  >
+                    Delete
+                  </button>
+                </MobileCardActions>
+              </MobileListItem>
+            ))}
+          </MobileList>
+          <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
               <tr>
@@ -250,6 +331,7 @@ export default function CompaniesPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <CompanyFormModal

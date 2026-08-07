@@ -18,12 +18,13 @@ function subscribe(callback: () => void) {
 function getSnapshot(): ContentIdeasViewMode {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === "cards") return "cards";
+  if (stored === "table") return "table";
   if (stored === "list") return "list";
-  return "table";
+  return "list";
 }
 
 function getServerSnapshot(): ContentIdeasViewMode {
-  return "table";
+  return "list";
 }
 
 function emitChange() {

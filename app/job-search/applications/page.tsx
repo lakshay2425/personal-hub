@@ -7,6 +7,15 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { ApplicationFormModal } from "@/features/job-search/components/forms/ApplicationFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
+import {
+  MobileCardActions,
+  MobileCardHeader,
+  MobileCardMeta,
+  MobileCardMetaRow,
+  MobileList,
+  MobileListItem,
+  mobileActionClass,
+} from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { APPLICATION_STATUSES } from "@/features/job-search/constants";
@@ -165,7 +174,47 @@ export default function ApplicationsPage() {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+        <>
+          <MobileList>
+            {filtered.map((app) => (
+              <MobileListItem key={app.id}>
+                <MobileCardHeader
+                  title={app.role}
+                  subtitle={companyMap.get(app.companyId) ?? "—"}
+                  badge={<StatusBadge status={app.status} />}
+                />
+                <MobileCardMeta>
+                  {app.portal ? (
+                    <MobileCardMetaRow label="Portal" value={app.portal} />
+                  ) : null}
+                  <MobileCardMetaRow
+                    label="Applied"
+                    value={formatDate(app.appliedDate)}
+                  />
+                </MobileCardMeta>
+                <MobileCardActions>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingApp(app);
+                      setIsFormOpen(true);
+                    }}
+                    className={mobileActionClass.edit}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingApp(app)}
+                    className={mobileActionClass.delete}
+                  >
+                    Delete
+                  </button>
+                </MobileCardActions>
+              </MobileListItem>
+            ))}
+          </MobileList>
+          <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
               <tr>
@@ -213,6 +262,7 @@ export default function ApplicationsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <ApplicationFormModal

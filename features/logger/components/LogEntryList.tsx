@@ -89,8 +89,8 @@ export function LogEntryList({
       key={entry.id}
       className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <p className="min-w-0 flex-1 text-sm text-zinc-900 dark:text-zinc-50">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <p className="min-w-0 flex-1 break-words text-sm text-zinc-900 dark:text-zinc-50">
           {entry.text}
         </p>
         <div className="flex shrink-0 items-center gap-2">

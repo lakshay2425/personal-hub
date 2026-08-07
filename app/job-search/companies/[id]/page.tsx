@@ -9,6 +9,13 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { CompanyFormModal } from "@/features/job-search/components/forms/CompanyFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
+import {
+  MobileCardHeader,
+  MobileCardMeta,
+  MobileCardMetaRow,
+  MobileList,
+  MobileListItem,
+} from "@/features/job-search/components/MobileListCard";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { useCompany, useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { formatDate, formatTimestamp } from "@/features/job-search/lib/dateUtils";
@@ -151,28 +158,46 @@ export default function CompanyDetailPage() {
               description="Add leads for this company."
             />
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <tr>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                  {leads.map((l) => (
-                    <tr key={l.id}>
-                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{l.name}</td>
-                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{l.role || "—"}</td>
-                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{l.type || "—"}</td>
-                      <td className="px-4 py-3"><StatusBadge status={l.status} /></td>
+            <>
+              <MobileList>
+                {leads.map((l) => (
+                  <MobileListItem key={l.id}>
+                    <MobileCardHeader
+                      title={l.name}
+                      subtitle={l.role || undefined}
+                      badge={<StatusBadge status={l.status} />}
+                    />
+                    {l.type ? (
+                      <MobileCardMeta>
+                        <MobileCardMetaRow label="Type" value={l.type} />
+                      </MobileCardMeta>
+                    ) : null}
+                  </MobileListItem>
+                ))}
+              </MobileList>
+              <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <tr>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    {leads.map((l) => (
+                      <tr key={l.id}>
+                        <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{l.name}</td>
+                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{l.role || "—"}</td>
+                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{l.type || "—"}</td>
+                        <td className="px-4 py-3"><StatusBadge status={l.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </>
       )}
@@ -182,28 +207,47 @@ export default function CompanyDetailPage() {
           {applications.length === 0 ? (
             <EmptyState title="No applications" description="No applications for this company yet." />
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <tr>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Portal</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Applied</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                  {applications.map((a) => (
-                    <tr key={a.id}>
-                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{a.role}</td>
-                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{a.portal || "—"}</td>
-                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(a.appliedDate)}</td>
-                      <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
+            <>
+              <MobileList>
+                {applications.map((a) => (
+                  <MobileListItem key={a.id}>
+                    <MobileCardHeader
+                      title={a.role}
+                      subtitle={a.portal || undefined}
+                      badge={<StatusBadge status={a.status} />}
+                    />
+                    <MobileCardMeta>
+                      <MobileCardMetaRow
+                        label="Applied"
+                        value={formatDate(a.appliedDate)}
+                      />
+                    </MobileCardMeta>
+                  </MobileListItem>
+                ))}
+              </MobileList>
+              <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <tr>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Portal</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Applied</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    {applications.map((a) => (
+                      <tr key={a.id}>
+                        <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{a.role}</td>
+                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{a.portal || "—"}</td>
+                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(a.appliedDate)}</td>
+                        <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </>
       )}
@@ -213,30 +257,49 @@ export default function CompanyDetailPage() {
           {coldEmails.length === 0 ? (
             <EmptyState title="No cold emails" description="No cold emails for this company yet." />
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                  <tr>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Lead</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Sent</th>
-                    <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                  {coldEmails.map((e) => (
-                    <tr key={e.id}>
-                      <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                        {leads.find((l) => l.id === e.leadId)?.name ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{e.role || "—"}</td>
-                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(e.sentDate)}</td>
-                      <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
+            <>
+              <MobileList>
+                {coldEmails.map((e) => (
+                  <MobileListItem key={e.id}>
+                    <MobileCardHeader
+                      title={leads.find((l) => l.id === e.leadId)?.name ?? "—"}
+                      subtitle={e.role || undefined}
+                      badge={<StatusBadge status={e.status} />}
+                    />
+                    <MobileCardMeta>
+                      <MobileCardMetaRow
+                        label="Sent"
+                        value={formatDate(e.sentDate)}
+                      />
+                    </MobileCardMeta>
+                  </MobileListItem>
+                ))}
+              </MobileList>
+              <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <tr>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Lead</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Sent</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    {coldEmails.map((e) => (
+                      <tr key={e.id}>
+                        <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
+                          {leads.find((l) => l.id === e.leadId)?.name ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{e.role || "—"}</td>
+                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(e.sentDate)}</td>
+                        <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </>
       )}
@@ -245,7 +308,7 @@ export default function CompanyDetailPage() {
         <button
           type="button"
           onClick={() => setShowDeleteConfirm(true)}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 sm:w-auto"
         >
           Delete Company
         </button>

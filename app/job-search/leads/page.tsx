@@ -7,6 +7,15 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
+import {
+  MobileCardActions,
+  MobileCardHeader,
+  MobileCardMeta,
+  MobileCardMetaRow,
+  MobileList,
+  MobileListItem,
+  mobileActionClass,
+} from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import {
@@ -238,7 +247,62 @@ export default function LeadsPage() {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
+        <>
+          <MobileList>
+            {filtered.map((lead) => (
+              <MobileListItem key={lead.id}>
+                <MobileCardHeader
+                  title={lead.name}
+                  subtitle={companyMap.get(lead.companyId) ?? "—"}
+                  badge={<StatusBadge status={lead.status} />}
+                />
+                <MobileCardMeta>
+                  {lead.role ? (
+                    <MobileCardMetaRow label="Role" value={lead.role} />
+                  ) : null}
+                  {lead.type ? (
+                    <MobileCardMetaRow label="Type" value={lead.type} />
+                  ) : null}
+                  <MobileCardMetaRow
+                    label="Channel"
+                    value={<ChannelBadge channel={lead.channel} />}
+                  />
+                  {lead.channel === "Email" && lead.firstFollowUpDate ? (
+                    <MobileCardMetaRow
+                      label="Follow-up 1"
+                      value={formatDate(lead.firstFollowUpDate)}
+                    />
+                  ) : null}
+                  {lead.channel === "Email" && lead.secondFollowUpDate ? (
+                    <MobileCardMetaRow
+                      label="Follow-up 2"
+                      value={formatDate(lead.secondFollowUpDate)}
+                    />
+                  ) : null}
+                </MobileCardMeta>
+                <MobileCardActions>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingLead(lead);
+                      setIsFormOpen(true);
+                    }}
+                    className={mobileActionClass.edit}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingLead(lead)}
+                    className={mobileActionClass.delete}
+                  >
+                    Delete
+                  </button>
+                </MobileCardActions>
+              </MobileListItem>
+            ))}
+          </MobileList>
+          <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
           <table className="w-full min-w-[1000px] text-left text-sm">
             <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
               <tr>
@@ -302,6 +366,7 @@ export default function LeadsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <LeadFormModal

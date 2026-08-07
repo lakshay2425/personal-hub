@@ -45,7 +45,7 @@ export function StatusBadge({ status, variant }: StatusBadgeProps) {
   const resolvedVariant = variant ?? getStatusVariant(status);
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${variantClasses[resolvedVariant ?? "default"]}`}
+      className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${variantClasses[resolvedVariant ?? "default"]}`}
     >
       {status}
     </span>

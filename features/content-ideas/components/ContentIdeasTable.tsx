@@ -9,8 +9,8 @@ import { StatusBadge } from "./StatusBadge";
 
 const DEPTH_PADDING = {
   0: "",
-  1: "pl-4",
-  2: "pl-8",
+  1: "pl-2 sm:pl-4",
+  2: "pl-4 sm:pl-8",
 } as const;
 
 interface ContentIdeasTableProps {
@@ -43,10 +43,10 @@ export function ContentIdeasTable({
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
               Status
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <th className="hidden px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 md:table-cell dark:text-zinc-400">
               Published Links
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <th className="hidden px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 sm:table-cell dark:text-zinc-400">
               Created
             </th>
             <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -58,17 +58,17 @@ export function ContentIdeasTable({
           {ideas.map((idea) => (
             <tr key={idea.id}>
               <td
-                className={`px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-50 ${DEPTH_PADDING[idea.depth]}`}
+                className={`max-w-[12rem] px-4 py-3 text-sm font-medium break-words text-zinc-900 sm:max-w-none dark:text-zinc-50 ${DEPTH_PADDING[idea.depth]}`}
               >
                 {idea.title}
               </td>
               <td className="px-4 py-3">
                 <StatusBadge status={idea.status} />
               </td>
-              <td className="px-4 py-3">
+              <td className="hidden px-4 py-3 md:table-cell">
                 <PublishedLinksSummary links={idea.publishedLinks} />
               </td>
-              <td className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+              <td className="hidden px-4 py-3 text-sm text-zinc-500 sm:table-cell dark:text-zinc-400">
                 {format(idea.createdAt, "MMM d, yyyy")}
               </td>
               <td className="px-4 py-3 text-right">

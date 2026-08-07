@@ -32,11 +32,11 @@ export function ContentIdeasCards({
         <li
           key={idea.id}
           className={`flex flex-col rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 ${
-            idea.depth === 1 ? "ml-4" : idea.depth === 2 ? "ml-8" : ""
+            idea.depth === 1 ? "ml-0 sm:ml-2 md:ml-4" : idea.depth === 2 ? "ml-2 sm:ml-4 md:ml-8" : ""
           }`}
         >
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+            <h3 className="min-w-0 flex-1 break-words text-sm font-medium text-zinc-900 dark:text-zinc-50">
               {idea.title}
             </h3>
             <div className="flex shrink-0 items-center gap-2">

@@ -27,7 +27,7 @@ export function ProjectDetailWorkspace({ project }: ProjectDetailWorkspaceProps)
     "Project questions and titled answers — stored locally in IndexedDB.";
 
   return (
-    <div className="mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+    <div className="mx-auto min-h-full w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-8">
         <Link
           href="/projects"
@@ -35,7 +35,7 @@ export function ProjectDetailWorkspace({ project }: ProjectDetailWorkspaceProps)
         >
           &larr; Projects
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h1 className="text-balance text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           {project.name}
         </h1>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{description}</p>

@@ -7,6 +7,7 @@ export type { ContentIdeasViewMode };
 interface ContentIdeasViewToggleProps {
   value: ContentIdeasViewMode;
   onChange: (mode: ContentIdeasViewMode) => void;
+  className?: string;
 }
 
 function TableIcon() {
@@ -79,12 +80,13 @@ const OPTIONS: {
 export function ContentIdeasViewToggle({
   value,
   onChange,
+  className,
 }: ContentIdeasViewToggleProps) {
   return (
     <div
       role="group"
       aria-label="View mode"
-      className="inline-flex shrink-0 rounded-lg border border-zinc-300 bg-white p-1 dark:border-zinc-600 dark:bg-zinc-800"
+      className={`inline-flex w-full shrink-0 justify-center rounded-lg border border-zinc-300 bg-white p-1 sm:w-auto sm:justify-start dark:border-zinc-600 dark:bg-zinc-800 ${className ?? ""}`}
     >
       {OPTIONS.map(({ mode, label, icon: Icon }) => {
         const isActive = value === mode;

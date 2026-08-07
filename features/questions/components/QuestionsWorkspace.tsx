@@ -259,14 +259,18 @@ export function QuestionsWorkspace({
           : "mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10"
       }
     >
-      <div
-        className={`flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${
-          embedded ? "mb-6" : "mb-8"
-        }`}
-      >
-        {embedded ? (
-          <div className="min-w-0 flex-1" />
-        ) : (
+      {embedded ? (
+        <div className="mb-6 flex justify-end">
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            New Question
+          </button>
+        </div>
+      ) : (
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <Link
               href={backHref}
@@ -281,15 +285,15 @@ export function QuestionsWorkspace({
               {description}
             </p>
           </div>
-        )}
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="w-full shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-        >
-          New Question
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="w-full shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            New Question
+          </button>
+        </div>
+      )}
 
       <QuestionList
         questions={questions}

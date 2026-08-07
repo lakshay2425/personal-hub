@@ -24,21 +24,23 @@ export function JobSearchShell({ children }: { children: ReactNode }) {
           sidebarOpen ? "top-0" : "top-14 lg:top-0"
         }`}
       >
-        <div className="flex h-14 items-center gap-3 sm:h-16">
+        <div className="flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:py-0">
           <div className="min-w-0 flex-1">
             <GlobalSearch />
           </div>
-          <ExportButton
-            onExport={exportJobSearchData}
-            filenamePrefix="question-hub-job-search"
-            className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          />
-          <ImportButton
-            onValidate={validateJobSearchBackup}
-            onImport={importJobSearchData}
-            onImported={() => window.location.reload()}
-            className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          />
+          <div className="flex shrink-0 gap-2">
+            <ExportButton
+              onExport={exportJobSearchData}
+              filenamePrefix="question-hub-job-search"
+              className="flex-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            />
+            <ImportButton
+              onValidate={validateJobSearchBackup}
+              onImport={importJobSearchData}
+              onImported={() => window.location.reload()}
+              className="flex-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            />
+          </div>
         </div>
         <div className="pb-4">
           <JobSearchSubNav />

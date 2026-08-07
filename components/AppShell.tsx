@@ -37,7 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         onClose={() => setSidebarOpen(false)}
       />
       <div
-        className={`flex min-w-0 flex-1 flex-col ${sidebarOpen ? "" : "pt-14 pl-14"}`}
+        className={`flex min-w-0 flex-1 flex-col ${sidebarOpen ? "" : "max-lg:pt-14"}`}
       >
         <SidebarProvider isOpen={sidebarOpen}>{children}</SidebarProvider>
       </div>
