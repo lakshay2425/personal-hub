@@ -46,6 +46,7 @@ app/                 # Next.js App Router pages, layout, PWA (manifest, SW)
 components/          # Shared shell / UI primitives
 features/
   questions/         # Projects + inbox (Dexie)
+  content-ideas/     # Content ideas + calendar (shared question-hub-db)
   logger/            # Daily log entries (Dexie)
   job-search/        # Job search tracker (Dexie)
 lib/                 # Site-wide constants

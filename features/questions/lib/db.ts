@@ -124,6 +124,26 @@ class QuestionHubDatabase extends Dexie {
           );
         }
       });
+
+    this.version(7)
+      .stores({
+        projects: "id",
+        questions: "id, projectId, parentId",
+        answers: "id, questionId, projectId",
+        contentIdeas:
+          "++id, projectId, parentId, title, status, scheduledDate, createdAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("contentIdeas")
+          .toCollection()
+          .modify((idea: ContentIdea) => {
+            if (idea.scheduledDate === undefined) {
+              idea.scheduledDate = null;
+            }
+          });
+      });
   }
 }
 

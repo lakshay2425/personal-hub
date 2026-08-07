@@ -22,6 +22,7 @@ export type ContentIdeaInput = {
   status: ContentIdeaStatus;
   publishedLinks: PublishedLinks;
   notes: string;
+  scheduledDate: string | null;
 };
 
 function normalizePublishedLinks(links: PublishedLinks): PublishedLinks {
@@ -133,6 +134,7 @@ export async function createContentIdea(
       input.status === "Published" ? input.publishedLinks : EMPTY_PUBLISHED_LINKS,
     ),
     notes: input.notes.trim(),
+    scheduledDate: input.scheduledDate ?? null,
     createdAt,
   });
 
@@ -150,6 +152,7 @@ export async function createContentIdea(
       input.status === "Published" ? input.publishedLinks : EMPTY_PUBLISHED_LINKS,
     ),
     notes: input.notes.trim(),
+    scheduledDate: input.scheduledDate ?? null,
     createdAt,
   };
 }
@@ -174,6 +177,7 @@ export async function updateContentIdea(
       input.status === "Published" ? input.publishedLinks : EMPTY_PUBLISHED_LINKS,
     ),
     notes: input.notes.trim(),
+    scheduledDate: input.scheduledDate ?? null,
   });
 
   if (previousStatus && previousStatus !== input.status) {
@@ -319,6 +323,26 @@ export async function deleteContentIdeasByProjectId(
   }
 
   await db.contentIdeas.where("projectId").equals(projectId).delete();
+}
+
+export async function getAllContentIdeas(): Promise<ContentIdea[]> {
+  const db = getDB();
+  const ideas = await db.contentIdeas.toArray();
+  return ideas.sort(compareContentIdeas);
+}
+
+export async function updateContentIdeaScheduledDate(
+  id: number,
+  scheduledDate: string | null,
+): Promise<void> {
+  const db = getDB();
+  const existing = await db.contentIdeas.get(id);
+
+  if (!existing) {
+    throw new Error("Content idea not found");
+  }
+
+  await db.contentIdeas.update(id, { scheduledDate });
 }
 
 export async function orphanContentIdeasByProjectId(

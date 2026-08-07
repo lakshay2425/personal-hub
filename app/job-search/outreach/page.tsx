@@ -20,25 +20,21 @@ import {
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import {
-  DEFAULT_LEADS_PAGE_CHANNEL,
-  isOutreachChannel,
-  LEADS_PAGE_CHANNELS,
+  DEFAULT_LEAD_CHANNEL,
   LEAD_STATUSES,
+  OUTREACH_CHANNELS,
 } from "@/features/job-search/constants";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
-import { formatDate } from "@/features/job-search/lib/dateUtils";
 import type { Lead } from "@/features/job-search/types";
 
-export default function LeadsPage() {
+export default function OutreachPage() {
   const { companies, addCompany } = useCompanies();
   const { leads, isLoading, addLead, editLead, removeLead } = useLeads();
 
   const [search, setSearch] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [channelFilter, setChannelFilter] = useState("");
-  const [roleTypeFilter, setRoleTypeFilter] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
@@ -50,13 +46,10 @@ export default function LeadsPage() {
   );
 
   const filtered = useMemo(() => {
-    let result = leads.filter((l) => !isOutreachChannel(l.channel));
+    let result = leads.filter((l) => OUTREACH_CHANNELS.includes(l.channel));
     if (search) {
       const lower = search.toLowerCase();
       result = result.filter((l) => l.name.toLowerCase().includes(lower));
-    }
-    if (companyFilter) {
-      result = result.filter((l) => l.companyId === Number(companyFilter));
     }
     if (statusFilter) {
       result = result.filter((l) => l.status === statusFilter);
@@ -64,23 +57,8 @@ export default function LeadsPage() {
     if (channelFilter) {
       result = result.filter((l) => l.channel === channelFilter);
     }
-    if (roleTypeFilter) {
-      const lower = roleTypeFilter.toLowerCase();
-      result = result.filter(
-        (l) =>
-          l.role.toLowerCase().includes(lower) ||
-          l.type.toLowerCase().includes(lower),
-      );
-    }
     return result;
-  }, [
-    leads,
-    search,
-    companyFilter,
-    statusFilter,
-    channelFilter,
-    roleTypeFilter,
-  ]);
+  }, [leads, search, statusFilter, channelFilter]);
 
   const handleCreateCompany = async (companyName: string) => {
     const company = await addCompany({
@@ -122,13 +100,13 @@ export default function LeadsPage() {
     }
   };
 
-  if (isLoading) return <LoadingState message="Loading leads..." />;
+  if (isLoading) return <LoadingState message="Loading outreach leads..." />;
 
   return (
     <div>
       <PageHeader
-        title="Leads"
-        description="Track email and other contacts at target companies"
+        title="Outreach"
+        description="Track LinkedIn and X contacts at target companies"
         action={
           <button
             type="button"
@@ -152,14 +130,14 @@ export default function LeadsPage() {
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:min-w-[200px] sm:flex-1 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
         />
         <select
-          value={companyFilter}
-          onChange={(e) => setCompanyFilter(e.target.value)}
+          value={channelFilter}
+          onChange={(e) => setChannelFilter(e.target.value)}
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
         >
-          <option value="">All Companies</option>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.companyName}
+          <option value="">All Channels</option>
+          {OUTREACH_CHANNELS.map((channel) => (
+            <option key={channel} value={channel}>
+              {channel}
             </option>
           ))}
         </select>
@@ -175,31 +153,12 @@ export default function LeadsPage() {
             </option>
           ))}
         </select>
-        <select
-          value={channelFilter}
-          onChange={(e) => setChannelFilter(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        >
-          <option value="">All Channels</option>
-          {LEADS_PAGE_CHANNELS.map((channel) => (
-            <option key={channel} value={channel}>
-              {channel}
-            </option>
-          ))}
-        </select>
-        <input
-          type="text"
-          value={roleTypeFilter}
-          onChange={(e) => setRoleTypeFilter(e.target.value)}
-          placeholder="Filter by role/type..."
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:min-w-[200px] sm:flex-1 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        />
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="No leads found"
-          description="Add a lead to start building your network."
+          title="No outreach leads found"
+          description="Add a LinkedIn or X contact to start building your network."
           action={
             <button
               type="button"
@@ -231,18 +190,6 @@ export default function LeadsPage() {
                     label="Channel"
                     value={<ChannelBadge channel={lead.channel} />}
                   />
-                  {lead.channel === "Email" && lead.firstFollowUpDate ? (
-                    <MobileCardMetaRow
-                      label="Follow-up 1"
-                      value={formatDate(lead.firstFollowUpDate)}
-                    />
-                  ) : null}
-                  {lead.channel === "Email" && lead.secondFollowUpDate ? (
-                    <MobileCardMetaRow
-                      label="Follow-up 2"
-                      value={formatDate(lead.secondFollowUpDate)}
-                    />
-                  ) : null}
                 </MobileCardMeta>
                 <MobileCardActions>
                   <button
@@ -267,69 +214,79 @@ export default function LeadsPage() {
             ))}
           </MobileList>
           <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-          <table className="w-full min-w-[1000px] text-left text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-              <tr>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Company</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Channel</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 1</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 2</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {filtered.map((lead) => (
-                <tr key={lead.id}>
-                  <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{lead.name}</td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {companyMap.get(lead.companyId) ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.role || "—"}</td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.type || "—"}</td>
-                  <td className="px-4 py-3">
-                    <ChannelBadge channel={lead.channel} />
-                  </td>
-                  <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {lead.channel === "Email"
-                      ? formatDate(lead.firstFollowUpDate)
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {lead.channel === "Email"
-                      ? formatDate(lead.secondFollowUpDate)
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingLead(lead);
-                          setIsFormOpen(true);
-                        }}
-                        className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeletingLead(lead)}
-                        className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+            <table className="w-full min-w-[800px] text-left text-sm">
+              <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <tr>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Company
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Role
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Type
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Channel
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {filtered.map((lead) => (
+                  <tr key={lead.id}>
+                    <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">
+                      {lead.name}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                      {companyMap.get(lead.companyId) ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                      {lead.role || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                      {lead.type || "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <ChannelBadge channel={lead.channel} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={lead.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingLead(lead);
+                            setIsFormOpen(true);
+                          }}
+                          className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeletingLead(lead)}
+                          className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
 
@@ -342,8 +299,8 @@ export default function LeadsPage() {
         onSubmit={handleSubmit}
         lead={editingLead}
         companies={companies}
-        defaultChannel={DEFAULT_LEADS_PAGE_CHANNEL}
-        channelOptions={LEADS_PAGE_CHANNELS}
+        defaultChannel={DEFAULT_LEAD_CHANNEL}
+        channelOptions={OUTREACH_CHANNELS}
         onCreateCompany={handleCreateCompany}
       />
 

@@ -17,7 +17,7 @@ Schema definitions live in each feature’s `types.ts`. Dexie store definitions 
 ## `question-hub-db`
 
 **Source:** `features/questions/lib/db.ts`  
-**Current version:** 6
+**Current version:** 7
 
 ### Tables
 
@@ -93,9 +93,10 @@ Schema definitions live in each feature’s `types.ts`. Dexie store definitions 
 | `publishedLinks.blog` | `string` | Optional URL |
 | `publishedLinks.other` | `string` | Optional URL |
 | `notes` | `string` | Optional |
+| `scheduledDate` | `string \| null` | `YYYY-MM-DD` calendar date; `null` = not scheduled |
 | `createdAt` | `number` | Unix ms |
 
-**Indexes:** `id`, `projectId`, `parentId`, `title`, `status`, `createdAt`
+**Indexes:** `id`, `projectId`, `parentId`, `title`, `status`, `scheduledDate`, `createdAt`
 
 **Hierarchy rules:** Same as questions — max depth 2, inherit `projectId` from parent, cascade delete on subtree, sibling-only reorder.
 
@@ -132,6 +133,7 @@ Audit trail for content idea lifecycle events.
 | 4 | Questions: add `sortOrder`; backfill from `createdAt` |
 | 5 | Add `contentIdeas`, `activityLogs` |
 | 6 | Content ideas: add `parentId`, `depth`, `sortOrder`; backfill existing rows |
+| 7 | Content ideas: add `scheduledDate`; backfill existing rows to `null` |
 
 ---
 
@@ -230,6 +232,15 @@ Import is full overwrite of `logEntries`.
 | `createdAt` | `number` | Unix ms |
 
 **Indexes:** `id`, `companyId`, `name`, `role`, `type`, `channel`, `status`, `firstFollowUpDate`, `secondFollowUpDate`, `createdAt`
+
+**UI routing by channel (same table, filtered views):**
+
+| Page | Route | Channels shown |
+|------|-------|----------------|
+| Leads | `/job-search/leads` | Email, Other |
+| Outreach | `/job-search/outreach` | LinkedIn, X |
+
+Follow-up date columns appear on the Leads page for Email-channel leads only. The Outreach page omits follow-up columns.
 
 ---
 

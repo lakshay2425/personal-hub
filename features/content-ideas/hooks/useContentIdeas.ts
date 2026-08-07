@@ -100,6 +100,7 @@ export function useContentIdeas({ projectId }: UseContentIdeasOptions) {
                 ...input,
                 title: input.title.trim(),
                 notes: input.notes.trim(),
+                scheduledDate: input.scheduledDate ?? null,
               }
             : idea,
         ),

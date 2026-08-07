@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Content Ideas",
   description:
-    "Capture standalone content ideas with status tracking and published links.",
+    "Capture standalone content ideas with status tracking, published links, and calendar scheduling.",
 };
 
 export default function ContentIdeasLayout({

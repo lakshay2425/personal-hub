@@ -15,9 +15,9 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 | Tool | What it does |
 |------|----------------|
 | **Projects** | Inbox for questions; organize them into projects with titled answers. Sub-question hierarchy (up to 3 levels), drag-and-drop reorder, move between projects/inbox. JSON export/import. |
-| **Content Ideas** | Capture ideas standalone or per-project; sub-ideas (up to 3 levels), status (Draft / Ready / Published), publish links, list/table/card views. Drag-and-drop, reparent, activity log. Included in Projects export. |
+| **Content Ideas** | Capture ideas standalone or per-project; sub-ideas (up to 3 levels), status (Draft / Ready / Published), publish links, list/table/card views. Drag-and-drop, reparent, activity log. **Content Calendar** to schedule publish dates (month/week views). Included in Projects export. |
 | **Logger** | Timestamped daily entries — log multiple times per day. Dashboard view to filter and review entries by date. JSON export/import. |
-| **Job Search Tracker** | Companies, leads, applications, cold emails, and a dashboard. Global search, voice-to-text on forms, company detail pages, lead channels (Email / LinkedIn / X / Other) with conditional follow-up dates. JSON export/import. |
+| **Job Search Tracker** | Companies, leads, outreach (LinkedIn/X), applications, cold emails, and a dashboard. Global search, voice-to-text on forms, company detail pages, lead channels (Email / LinkedIn / X / Other) with conditional follow-up dates. JSON export/import. |
 
 Shared across tools: light/dark theme (system default, persisted in localStorage), toast notifications, and responsive sidebar layout.
 
@@ -31,12 +31,14 @@ All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three 
 | `/projects` | Project list + question inbox |
 | `/projects/[projectId]` | Project detail — Questions and Content Ideas tabs |
 | `/content-ideas` | Standalone content ideas (not tied to a project) |
+| `/content-ideas/calendar` | Content calendar — schedule ideas by date (planning only, no auto-posting) |
 | `/logger` | Log entries (chronological) |
 | `/logger/dashboard` | Filter and review entries by date |
 | `/job-search` | Dashboard — stats, recent activity, follow-ups |
 | `/job-search/companies` | Company list |
 | `/job-search/companies/[id]` | Company detail |
-| `/job-search/leads` | Leads |
+| `/job-search/leads` | Email and other leads (with follow-up dates for Email) |
+| `/job-search/outreach` | LinkedIn and X outreach leads |
 | `/job-search/applications` | Applications |
 | `/job-search/cold-emails` | Cold emails |
 
@@ -87,7 +89,7 @@ Open [http://localhost:3000](http://localhost:3000).
 app/                       # App Router pages, layouts, PWA glue
 ├── page.tsx               # Landing
 ├── projects/              # Projects + inbox UI (content ideas per project)
-├── content-ideas/         # Standalone content ideas
+├── content-ideas/         # Standalone content ideas + calendar
 ├── logger/                # Daily logger + dashboard
 ├── job-search/            # Job search tracker routes
 ├── providers/             # Theme + Serwist providers

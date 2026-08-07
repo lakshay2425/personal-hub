@@ -20,12 +20,14 @@ These are crawlable app shell / marketing pages. Dynamic IDs in URLs (e.g. proje
 - `/projects` — Project list and question inbox
 - `/projects/[projectId]` — Project detail (Questions + Content Ideas tabs)
 - `/content-ideas` — Standalone content ideas
+- `/content-ideas/calendar` — Content calendar (schedule ideas by date)
 - `/logger` — Daily log entries
 - `/logger/dashboard` — Date-filtered log review
 - `/job-search` — Dashboard (stats, activity, follow-ups)
 - `/job-search/companies` — Company list
 - `/job-search/companies/[id]` — Company detail
-- `/job-search/leads` — Leads
+- `/job-search/leads` — Email and other leads
+- `/job-search/outreach` — LinkedIn and X outreach leads
 - `/job-search/applications` — Applications
 - `/job-search/cold-emails` — Cold emails
 
@@ -44,6 +46,7 @@ Legacy redirect: `/questions` → `/projects`.
 - Sub-idea hierarchy (max depth 2), drag-and-drop, reparent via overflow menu
 - Status: Draft / Ready / Published; published links (LinkedIn, Twitter, blog, other)
 - View modes: table, cards, list (persisted in localStorage)
+- **Content Calendar** (`/content-ideas/calendar`): schedule ideas by date; month/week views; status colour dots (Draft grey, Ready amber, Published green); planning only — no auto-posting
 - Activity log for lifecycle events
 - Included in Projects JSON export (not a separate export)
 
@@ -53,11 +56,12 @@ Legacy redirect: `/questions` → `/projects`.
 - JSON export/import
 
 ### Job Search
-- Companies, leads, applications, cold emails
+- Companies, leads, outreach (LinkedIn/X), applications, cold emails
 - Dashboard with time filters (today, 7/30/90 days, all time)
 - Global search across entities
 - Company detail pages; creatable selects for sector/role/type
 - Lead channel: Email, LinkedIn, X, Other — follow-up dates shown for Email leads only
+- **Leads** page shows Email and Other channels; **Outreach** page shows LinkedIn and X channels (same underlying leads table, filtered by channel)
 - Voice-to-text input on forms (Web Speech API)
 - Activity logs per entity type
 - JSON export/import (version 2)

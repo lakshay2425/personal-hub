@@ -6,12 +6,36 @@ import { usePathname } from "next/navigation";
 import { AppLogo } from "@/components/AppLogo";
 import { SITE_NAME } from "@/lib/site";
 
-const NAV_ITEMS = [
+type NavLink = {
+  href: string;
+  label: string;
+};
+
+type NavGroup = {
+  label: string;
+  href: string;
+  children: NavLink[];
+};
+
+type NavItem = NavLink | NavGroup;
+
+function isNavGroup(item: NavItem): item is NavGroup {
+  return "children" in item;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: "/projects", label: "Projects" },
-  { href: "/content-ideas", label: "Content Ideas" },
+  {
+    label: "Content Ideas",
+    href: "/content-ideas",
+    children: [
+      { href: "/content-ideas", label: "Ideas" },
+      { href: "/content-ideas/calendar", label: "Calendar" },
+    ],
+  },
   { href: "/logger", label: "Logger" },
   { href: "/job-search", label: "Job Search" },
-] as const;
+];
 
 function MenuIcon() {
   return (
@@ -48,6 +72,41 @@ function CloseIcon() {
         d="M6 18L18 6M6 6l12 12"
       />
     </svg>
+  );
+}
+
+function NavLinkItem({
+  href,
+  label,
+  pathname,
+  onClose,
+  nested = false,
+}: {
+  href: string;
+  label: string;
+  pathname: string;
+  onClose: () => void;
+  nested?: boolean;
+}) {
+  const isActive =
+    href === "/content-ideas"
+      ? pathname === "/content-ideas"
+      : pathname.startsWith(href);
+
+  return (
+    <Link
+      href={href}
+      onClick={onClose}
+      className={`block rounded-lg py-2 text-sm font-medium transition-colors ${
+        nested ? "pl-6 pr-3" : "px-3"
+      } ${
+        isActive
+          ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50"
+          : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-50"
+      }`}
+    >
+      {label}
+    </Link>
   );
 }
 
@@ -107,20 +166,46 @@ export function AppSidebar({ isOpen, onOpen, onClose }: AppSidebarProps) {
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            if (isNavGroup(item)) {
+              const isGroupActive = item.children.some((child) =>
+                child.href === "/content-ideas"
+                  ? pathname === "/content-ideas"
+                  : pathname.startsWith(child.href),
+              );
+
+              return (
+                <div key={item.href} className="space-y-0.5">
+                  <p
+                    className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
+                      isGroupActive
+                        ? "text-zinc-900 dark:text-zinc-50"
+                        : "text-zinc-500 dark:text-zinc-400"
+                    }`}
+                  >
+                    {item.label}
+                  </p>
+                  {item.children.map((child) => (
+                    <NavLinkItem
+                      key={child.href}
+                      href={child.href}
+                      label={child.label}
+                      pathname={pathname}
+                      onClose={onClose}
+                      nested
+                    />
+                  ))}
+                </div>
+              );
+            }
+
             return (
-              <Link
+              <NavLinkItem
                 key={item.href}
                 href={item.href}
-                onClick={onClose}
-                className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50"
-                    : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-50"
-                }`}
-              >
-                {item.label}
-              </Link>
+                label={item.label}
+                pathname={pathname}
+                onClose={onClose}
+              />
             );
           })}
         </nav>

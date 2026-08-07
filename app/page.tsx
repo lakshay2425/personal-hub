@@ -44,7 +44,7 @@ const FEATURES = [
     href: "/content-ideas",
     title: "Content Ideas",
     description:
-      "Capture standalone content ideas with status tracking and published links.",
+      "Capture standalone content ideas with status tracking, published links, and a content calendar.",
     cta: "Open Content Ideas",
     icon: (
       <svg

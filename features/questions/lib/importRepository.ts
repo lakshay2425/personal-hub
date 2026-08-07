@@ -32,7 +32,10 @@ export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
     projects: arrays.projects as Project[],
     questions: arrays.questions as Question[],
     answers: arrays.answers as Answer[],
-    contentIdeas: arrays.contentIdeas as ContentIdea[],
+    contentIdeas: (arrays.contentIdeas as ContentIdea[]).map((idea) => ({
+      ...idea,
+      scheduledDate: idea.scheduledDate ?? null,
+    })),
     activityLogs: arrays.activityLogs as ContentIdeaActivityLog[],
   };
 }

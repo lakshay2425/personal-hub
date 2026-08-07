@@ -20,11 +20,26 @@ export const LEAD_CHANNELS: LeadChannel[] = [
   "Other",
 ];
 
+export const OUTREACH_CHANNELS: LeadChannel[] = ["LinkedIn", "X"];
+
+export const LEADS_PAGE_CHANNELS: LeadChannel[] = ["Email", "Other"];
+
 export const DEFAULT_LEAD_CHANNEL: LeadChannel = "LinkedIn";
+export const DEFAULT_LEADS_PAGE_CHANNEL: LeadChannel = "Email";
 export const LEGACY_LEAD_CHANNEL: LeadChannel = "Email";
 
 export function isLeadChannel(value: unknown): value is LeadChannel {
   return LEAD_CHANNELS.includes(value as LeadChannel);
+}
+
+export function isOutreachChannel(channel: LeadChannel): boolean {
+  return OUTREACH_CHANNELS.includes(channel);
+}
+
+export function getLeadPageHref(channel: LeadChannel): string {
+  return isOutreachChannel(channel)
+    ? "/job-search/outreach"
+    : "/job-search/leads";
 }
 
 export const APPLICATION_STATUSES: ApplicationStatus[] = [
@@ -56,6 +71,7 @@ export const NAV_ITEMS = [
   { href: "/job-search", label: "Dashboard", exact: true },
   { href: "/job-search/companies", label: "Companies", exact: false },
   { href: "/job-search/leads", label: "Leads", exact: false },
+  { href: "/job-search/outreach", label: "Outreach", exact: false },
   { href: "/job-search/applications", label: "Applications", exact: false },
   { href: "/job-search/cold-emails", label: "Cold Emails", exact: false },
 ] as const;

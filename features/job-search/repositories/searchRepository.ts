@@ -1,4 +1,5 @@
 import { getDB } from "../db";
+import { getLeadPageHref } from "../constants";
 import { searchApplications } from "../repositories/applicationsRepository";
 import { searchCompanies } from "../repositories/companiesRepository";
 import { searchLeads } from "../repositories/leadsRepository";
@@ -57,7 +58,7 @@ export async function globalSearch(
       id: lead.id!,
       title: lead.name,
       subtitle: company?.companyName ?? "Lead",
-      href: "/job-search/leads",
+      href: getLeadPageHref(lead.channel),
     });
   }
 

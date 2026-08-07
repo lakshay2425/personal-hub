@@ -31,6 +31,8 @@ interface LeadFormModalProps {
   lead?: Lead | null;
   companies: Company[];
   defaultCompanyId?: number;
+  defaultChannel?: Lead["channel"];
+  channelOptions?: Lead["channel"][];
   onCreateCompany: (companyName: string) => Promise<Company>;
 }
 
@@ -38,6 +40,8 @@ interface LeadFormFieldsProps {
   lead?: Lead | null;
   companies: Company[];
   defaultCompanyId?: number;
+  defaultChannel?: Lead["channel"];
+  channelOptions?: Lead["channel"][];
   onClose: () => void;
   onSubmit: (data: Omit<Lead, "id" | "createdAt">) => Promise<void>;
   onCreateCompany: (companyName: string) => Promise<Company>;
@@ -47,6 +51,8 @@ function LeadFormFields({
   lead,
   companies,
   defaultCompanyId,
+  defaultChannel = DEFAULT_LEAD_CHANNEL,
+  channelOptions = LEAD_CHANNELS,
   onClose,
   onSubmit,
   onCreateCompany,
@@ -64,7 +70,7 @@ function LeadFormFields({
   const [email, setEmail] = useState(lead?.email ?? "");
   const [linkedin, setLinkedin] = useState(lead?.linkedin ?? "");
   const [channel, setChannel] = useState<Lead["channel"]>(
-    lead?.channel ?? DEFAULT_LEAD_CHANNEL,
+    lead?.channel ?? defaultChannel,
   );
   const [status, setStatus] = useState<Lead["status"]>(lead?.status ?? "New");
   const [firstFollowUpDate, setFirstFollowUpDate] = useState(
@@ -200,7 +206,7 @@ function LeadFormFields({
           <SelectInput
             value={channel}
             onChange={(v) => setChannel(v as Lead["channel"])}
-            options={LEAD_CHANNELS.map((c) => ({ value: c, label: c }))}
+            options={channelOptions.map((c) => ({ value: c, label: c }))}
             required
           />
         </FormField>
@@ -251,6 +257,8 @@ export function LeadFormModal({
   lead,
   companies,
   defaultCompanyId,
+  defaultChannel,
+  channelOptions,
   onCreateCompany,
 }: LeadFormModalProps) {
   return (
@@ -261,10 +269,15 @@ export function LeadFormModal({
       size="lg"
     >
       <LeadFormFields
-        key={lead?.id ?? `create-${defaultCompanyId ?? "none"}`}
+        key={
+          lead?.id ??
+          `create-${defaultCompanyId ?? "none"}-${defaultChannel ?? DEFAULT_LEAD_CHANNEL}`
+        }
         lead={lead}
         companies={companies}
         defaultCompanyId={defaultCompanyId}
+        defaultChannel={defaultChannel}
+        channelOptions={channelOptions}
         onClose={onClose}
         onSubmit={onSubmit}
         onCreateCompany={onCreateCompany}
