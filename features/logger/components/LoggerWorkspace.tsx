@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 import { useLogEntries } from "../hooks/useLogEntries";
+import { getTodayDateString } from "../lib/dateUtils";
 import type { LogEntryFormValues } from "../schema";
 import type { LogEntry } from "../types";
 import { LogEntryFormModal } from "./LogEntryFormModal";
@@ -32,6 +33,11 @@ export function LoggerWorkspace() {
 
   const handleFormSubmit = useCallback(
     async (values: LogEntryFormValues) => {
+      if (values.date > getTodayDateString()) {
+        toast.error("You can only log entries for today or past dates");
+        return;
+      }
+
       try {
         if (editingEntry) {
           await updateEntry(editingEntry.id, values.date, values.text);

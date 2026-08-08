@@ -1,6 +1,6 @@
 # Personal Hub
 
-> A calm, local-first toolkit for projects, daily logs, content ideas, job search tracking, outreach templates, and template links on cold emails and outreach.
+> A calm, local-first toolkit for projects, weekly planning, daily logs, content ideas, job search tracking, outreach templates, and template links on cold emails and outreach.
 
 Personal Hub is an installable PWA that stores user data in the browser with IndexedDB (via Dexie). It has no required account, backend sync, or analytics pipeline for user content.
 
@@ -21,6 +21,7 @@ These are crawlable app shell / marketing pages. Dynamic IDs in URLs (e.g. proje
 - `/projects/[projectId]` — Project detail (Questions + Content Ideas tabs)
 - `/content-ideas` — Standalone content ideas
 - `/content-ideas/calendar` — Content calendar (schedule ideas by date)
+- `/planner` — Weekly task planner (week navigation, backlog, Logger integration)
 - `/logger` — Daily log entries
 - `/logger/dashboard` — Date-filtered log review
 - `/job-search` — Dashboard (stats, activity, follow-ups)
@@ -51,9 +52,18 @@ Legacy redirect: `/questions` → `/projects`.
 - Activity log for lifecycle events
 - Included in Projects JSON export (not a separate export)
 
+### Planner
+- Monday-based weekly task planner with week navigation (prev/next, "This Week")
+- Tasks with priority (High / Medium / Low), optional notes with voice input
+- Backlog for incomplete past-week tasks; "Move to This Week"
+- Completing a task auto-creates a separate Logger entry for today with `source: "planner"`
+- Activity log audit trail (Task Created, Completed, Moved, Deleted)
+- Included in Projects JSON export
+
 ### Logger
 - Multiple timestamped entries per calendar day
 - Dashboard view to filter entries by date
+- Future dates blocked on add/edit forms
 - JSON export/import
 
 ### Job Search
@@ -75,7 +85,7 @@ Three separate IndexedDB databases (Dexie):
 
 | Database | Dexie name | Feature |
 |----------|------------|---------|
-| Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas |
+| Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas, planner tasks |
 | Logger | `logger-db` | Daily log entries |
 | Job Search | `job-search-tracker-db` | Companies, leads, applications, cold emails, templates |
 

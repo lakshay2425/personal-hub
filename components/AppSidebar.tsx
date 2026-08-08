@@ -33,6 +33,7 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/content-ideas/calendar", label: "Calendar" },
     ],
   },
+  { href: "/planner", label: "Planner" },
   { href: "/logger", label: "Logger" },
   { href: "/job-search", label: "Job Search" },
 ];

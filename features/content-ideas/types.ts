@@ -34,13 +34,18 @@ export type ContentIdeaTreeNode = ContentIdea & {
 
 export type ContentIdeaEntityType = "contentIdea";
 
-export interface ContentIdeaActivityLog {
+export type QuestionHubEntityType = "contentIdea" | "task";
+
+export interface QuestionHubActivityLog {
   id?: number;
-  entityType: ContentIdeaEntityType;
+  entityType: QuestionHubEntityType;
   entityId: number;
   action: string;
   timestamp: number;
 }
+
+/** @deprecated Use QuestionHubActivityLog */
+export type ContentIdeaActivityLog = QuestionHubActivityLog;
 
 export const EMPTY_PUBLISHED_LINKS: PublishedLinks = {
   linkedin: "",

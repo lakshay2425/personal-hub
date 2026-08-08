@@ -25,6 +25,11 @@ export function LoggerDashboard() {
     async (values: LogEntryFormValues) => {
       if (!editingEntry) return;
 
+      if (values.date > getTodayDateString()) {
+        toast.error("You can only log entries for today or past dates");
+        return;
+      }
+
       try {
         await updateEntry(editingEntry.id, values.date, values.text);
         toast.success("Entry updated");

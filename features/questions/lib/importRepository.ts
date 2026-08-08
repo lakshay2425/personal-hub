@@ -1,7 +1,8 @@
 import type {
   ContentIdea,
-  ContentIdeaActivityLog,
+  QuestionHubActivityLog,
 } from "@/features/content-ideas/types";
+import type { Task } from "@/features/planner/types";
 import { assertBackupShape } from "@/lib/export/validateBackup";
 
 import type { Answer, Project, Question } from "../types";
@@ -21,11 +22,13 @@ export type ProjectsBackupPayload = {
   questions: Question[];
   answers: Answer[];
   contentIdeas: ContentIdea[];
-  activityLogs: ContentIdeaActivityLog[];
+  activityLogs: QuestionHubActivityLog[];
+  tasks?: Task[];
 };
 
 export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
   const arrays = assertBackupShape(data, [...REQUIRED_ARRAYS]);
+  const record = data as Record<string, unknown>;
 
   return {
     version: 1,
@@ -36,7 +39,8 @@ export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
       ...idea,
       scheduledDate: idea.scheduledDate ?? null,
     })),
-    activityLogs: arrays.activityLogs as ContentIdeaActivityLog[],
+    activityLogs: arrays.activityLogs as QuestionHubActivityLog[],
+    tasks: Array.isArray(record.tasks) ? (record.tasks as Task[]) : [],
   };
 }
 
@@ -44,6 +48,7 @@ export async function importProjectsData(
   payload: ProjectsBackupPayload,
 ): Promise<void> {
   const db = getDB();
+  const tasks = payload.tasks ?? [];
 
   await db.transaction(
     "rw",
@@ -53,6 +58,7 @@ export async function importProjectsData(
       db.answers,
       db.contentIdeas,
       db.activityLogs,
+      db.tasks,
     ],
     async () => {
       await Promise.all([
@@ -61,6 +67,7 @@ export async function importProjectsData(
         db.answers.clear(),
         db.contentIdeas.clear(),
         db.activityLogs.clear(),
+        db.tasks.clear(),
       ]);
 
       await Promise.all([
@@ -69,6 +76,7 @@ export async function importProjectsData(
         db.answers.bulkPut(payload.answers),
         db.contentIdeas.bulkPut(payload.contentIdeas),
         db.activityLogs.bulkPut(payload.activityLogs),
+        db.tasks.bulkPut(tasks),
       ]);
     },
   );

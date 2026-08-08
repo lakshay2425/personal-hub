@@ -11,6 +11,18 @@ class LoggerDatabase extends Dexie {
     this.version(1).stores({
       logEntries: "id, date",
     });
+
+    this.version(2)
+      .stores({
+        logEntries: "id, date",
+      })
+      .upgrade(async (tx) => {
+        await tx.table("logEntries").toCollection().modify((entry: LogEntry) => {
+          if (entry.source === undefined) {
+            delete entry.source;
+          }
+        });
+      });
   }
 }
 

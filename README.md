@@ -4,7 +4,7 @@
   <img src="public/logo.png" alt="Personal Hub logo" width="96" height="96">
 </p>
 
-A **local-first** personal toolkit for learning and career work. Capture project questions, content ideas, daily logs, and your job search — all stored in your browser. Nothing is sent to a server.
+A **local-first** personal toolkit for learning and career work. Capture project questions, content ideas, weekly tasks, daily logs, and your job search — all stored in your browser. Nothing is sent to a server.
 
 Installable as a Progressive Web App (PWA) and usable offline after the app shell has been cached.
 
@@ -16,12 +16,13 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 |------|----------------|
 | **Projects** | Inbox for questions; organize them into projects with titled answers. Sub-question hierarchy (up to 3 levels), drag-and-drop reorder, move between projects/inbox. JSON export/import. |
 | **Content Ideas** | Capture ideas standalone or per-project; sub-ideas (up to 3 levels), status (Draft / Ready / Published), publish links, list/table/card views. Drag-and-drop, reparent, activity log. **Content Calendar** to schedule publish dates (month/week views). Included in Projects export. |
-| **Logger** | Timestamped daily entries — log multiple times per day. Dashboard view to filter and review entries by date. JSON export/import. |
+| **Planner** | Monday-based weekly task planner with week navigation, priority badges (High / Medium / Low), optional notes with voice input, and backlog for past incomplete tasks. Completing a task auto-creates a separate Logger entry for today. Tasks included in Projects JSON export. |
+| **Logger** | Timestamped daily entries — log multiple times per day. Dashboard view to filter and review entries by date. Future dates blocked on add/edit. JSON export/import. |
 | **Job Search Tracker** | Companies, leads, outreach (LinkedIn/X), applications, cold emails, and **outreach templates**. Create reusable templates (cold email, LinkedIn, X DM, follow-up) with copy-to-clipboard and `{{name}}` / `{{company}}` / `{{role}}` placeholders. **Link templates** to cold emails, outreach leads, and email follow-ups so you know which message was used. Global search, voice-to-text on forms, company detail pages, lead channels (Email / LinkedIn / X / Other) with conditional follow-up dates. JSON export/import (v4). |
 
 Shared across tools: light/dark theme (system default, persisted in localStorage), toast notifications, and responsive sidebar layout.
 
-All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three databases: projects and content ideas share one; logger and job search each have their own. See [DATA.md](DATA.md) for schemas, migrations, and export formats.
+All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three databases: projects, content ideas, and planner tasks share one; logger and job search each have their own. See [DATA.md](DATA.md) for schemas, migrations, and export formats.
 
 ## Routes
 
@@ -32,6 +33,7 @@ All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three 
 | `/projects/[projectId]` | Project detail — Questions and Content Ideas tabs |
 | `/content-ideas` | Standalone content ideas (not tied to a project) |
 | `/content-ideas/calendar` | Content calendar — schedule ideas by date (planning only, no auto-posting) |
+| `/planner` | Weekly task planner — week navigation, backlog, Logger integration on complete |
 | `/logger` | Log entries (chronological) |
 | `/logger/dashboard` | Filter and review entries by date |
 | `/job-search` | Dashboard — stats, recent activity, follow-ups |
@@ -91,6 +93,7 @@ app/                       # App Router pages, layouts, PWA glue
 ├── page.tsx               # Landing
 ├── projects/              # Projects + inbox UI (content ideas per project)
 ├── content-ideas/         # Standalone content ideas + calendar
+├── planner/               # Weekly task planner
 ├── logger/                # Daily logger + dashboard
 ├── job-search/            # Job search tracker routes
 ├── providers/             # Theme + Serwist providers
@@ -104,6 +107,7 @@ components/                # App shell, sidebar, shared UI (export/import button
 features/
 ├── questions/             # Projects / questions / answers (Dexie)
 ├── content-ideas/         # Content ideas UI + repo (shared question-hub-db)
+├── planner/               # Weekly task planner (shared question-hub-db)
 ├── logger/                # Log entries (Dexie)
 └── job-search/            # Companies, leads, applications, cold emails, templates (Dexie v4)
 lib/

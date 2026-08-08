@@ -1,9 +1,15 @@
 import { z } from "zod";
 
+import { getTodayDateString } from "./lib/dateUtils";
+
 export const logEntryFormSchema = z.object({
   date: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD")
+    .refine(
+      (date) => date <= getTodayDateString(),
+      "You can only log entries for today or past dates",
+    ),
   text: z
     .string()
     .trim()

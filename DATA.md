@@ -6,7 +6,7 @@ There are **three separate databases** — one per feature area — so modules s
 
 | Database | Dexie name | Feature |
 |----------|------------|---------|
-| Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas |
+| Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas, planner tasks |
 | Logger | `logger-db` | Daily log entries |
 | Job Search | `job-search-tracker-db` | Companies, leads, applications, cold emails, templates |
 
@@ -17,7 +17,7 @@ Schema definitions live in each feature’s `types.ts`. Dexie store definitions 
 ## `question-hub-db`
 
 **Source:** `features/questions/lib/db.ts`  
-**Current version:** 7
+**Current version:** 8
 
 ### Tables
 
@@ -107,19 +107,42 @@ Schema definitions live in each feature’s `types.ts`. Dexie store definitions 
 
 ---
 
-#### `activityLogs` (Content Ideas)
+#### `activityLogs`
 
-Audit trail for content idea lifecycle events.
+Audit trail for content idea and planner task lifecycle events.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | `number` | Auto-increment primary key |
-| `entityType` | `"contentIdea"` | Fixed value |
-| `entityId` | `number` | Content idea id |
-| `action` | `string` | e.g. `"Content Idea Created"`, `"Content Idea Status Changed"`, `"Content Idea Deleted"` |
+| `entityType` | `"contentIdea" \| "task"` | Entity kind |
+| `entityId` | `number` | Content idea or task id |
+| `action` | `string` | e.g. `"Content Idea Created"`, `"Task Completed"`, `"Task Deleted"` |
 | `timestamp` | `number` | Unix ms |
 
 **Indexes:** `id`, `entityType`, `entityId`, `action`, `timestamp`
+
+---
+
+#### `tasks`
+
+Weekly planner tasks (Monday-based weeks).
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Auto-increment primary key |
+| `weekStart` | `string` | `YYYY-MM-DD` — Monday of the task's week |
+| `title` | `string` | Required |
+| `priority` | `"High" \| "Medium" \| "Low"` | Default `Medium` |
+| `status` | `"Todo" \| "Done"` | |
+| `completedAt` | `number \| null` | Unix ms when marked done; `null` otherwise |
+| `notes` | `string` | Optional |
+| `createdAt` | `number` | Unix ms |
+
+**Indexes:** `id`, `weekStart`, `title`, `priority`, `status`, `completedAt`, `createdAt`
+
+**Planner actions logged:** `"Task Created"`, `"Task Completed"`, `"Task Moved to This Week"`, `"Task Deleted"`
+
+**Logger integration:** Completing a task creates a separate log entry in `logger-db` with `text: "✓ Completed task: [title]"` and `source: "planner"`.
 
 ---
 
@@ -134,6 +157,7 @@ Audit trail for content idea lifecycle events.
 | 5 | Add `contentIdeas`, `activityLogs` |
 | 6 | Content ideas: add `parentId`, `depth`, `sortOrder`; backfill existing rows |
 | 7 | Content ideas: add `scheduledDate`; backfill existing rows to `null` |
+| 8 | Add `tasks` table (no data migration; existing rows preserved) |
 
 ---
 
@@ -150,21 +174,22 @@ Audit trail for content idea lifecycle events.
   "questions": [],
   "answers": [],
   "contentIdeas": [],
-  "activityLogs": []
+  "activityLogs": [],
+  "tasks": []
 }
 ```
 
-**Import:** Full overwrite — clears all five tables, then inserts exported records.  
+**Import:** Full overwrite — clears all six tables, then inserts exported records. Older backups without a `tasks` array import with `tasks: []`.  
 **Source:** `features/questions/lib/exportRepository.ts`, `features/questions/lib/importRepository.ts`
 
-Standalone content ideas (`projectId: null`) are included in this export. They are not exported separately.
+Standalone content ideas (`projectId: null`) and planner tasks are included in this export. They are not exported separately.
 
 ---
 
 ## `logger-db`
 
 **Source:** `features/logger/lib/db.ts`  
-**Current version:** 1
+**Current version:** 2
 
 ### `logEntries`
 
@@ -173,10 +198,20 @@ Standalone content ideas (`projectId: null`) are included in this export. They a
 | `id` | `string` | UUID primary key |
 | `date` | `string` | Calendar date (e.g. `YYYY-MM-DD`) |
 | `text` | `string` | Entry body |
+| `source` | `"planner" \| undefined` | Optional; set on auto-generated entries from Planner task completion |
 | `createdAt` | `number` | Unix ms |
 | `updatedAt` | `number` | Unix ms |
 
 **Indexes:** `id`, `date`
+
+**Validation:** Add and edit forms block future dates (`max` = today; rejected with toast if submitted).
+
+### Migration history (`logger-db`)
+
+| Version | Change |
+|---------|--------|
+| 1 | Initial: `logEntries` |
+| 2 | Add optional `source` field (no index change; existing rows preserved) |
 
 ### Export / import
 

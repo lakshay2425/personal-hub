@@ -2,8 +2,9 @@ import Dexie, { type EntityTable } from "dexie";
 
 import type {
   ContentIdea,
-  ContentIdeaActivityLog,
+  QuestionHubActivityLog,
 } from "@/features/content-ideas/types";
+import type { Task } from "@/features/planner/types";
 
 import type { Answer, Project, Question } from "../types";
 
@@ -12,7 +13,8 @@ class QuestionHubDatabase extends Dexie {
   questions!: EntityTable<Question, "id">;
   answers!: EntityTable<Answer, "id">;
   contentIdeas!: EntityTable<ContentIdea, "id">;
-  activityLogs!: EntityTable<ContentIdeaActivityLog, "id">;
+  activityLogs!: EntityTable<QuestionHubActivityLog, "id">;
+  tasks!: EntityTable<Task, "id">;
 
   constructor() {
     super("question-hub-db");
@@ -144,6 +146,16 @@ class QuestionHubDatabase extends Dexie {
             }
           });
       });
+
+    this.version(8).stores({
+      projects: "id",
+      questions: "id, projectId, parentId",
+      answers: "id, questionId, projectId",
+      contentIdeas:
+        "++id, projectId, parentId, title, status, scheduledDate, createdAt",
+      activityLogs: "++id, entityType, entityId, action, timestamp",
+      tasks: "++id, weekStart, title, priority, status, completedAt, createdAt",
+    });
   }
 }
 

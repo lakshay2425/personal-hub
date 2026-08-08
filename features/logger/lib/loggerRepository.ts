@@ -4,6 +4,7 @@ import { getDB } from "./db";
 export async function createLogEntry(
   date: string,
   text: string,
+  options?: { source?: "planner" },
 ): Promise<LogEntry> {
   const db = getDB();
   const now = Date.now();
@@ -12,6 +13,7 @@ export async function createLogEntry(
     id: crypto.randomUUID(),
     date,
     text,
+    ...(options?.source && { source: options.source }),
     createdAt: now,
     updatedAt: now,
   };
