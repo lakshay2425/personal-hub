@@ -1,6 +1,6 @@
 # Personal Hub
 
-> A calm, local-first toolkit for projects, daily logs, content ideas, job search tracking, and outreach templates.
+> A calm, local-first toolkit for projects, daily logs, content ideas, job search tracking, outreach templates, and template links on cold emails and outreach.
 
 Personal Hub is an installable PWA that stores user data in the browser with IndexedDB (via Dexie). It has no required account, backend sync, or analytics pipeline for user content.
 
@@ -26,10 +26,10 @@ These are crawlable app shell / marketing pages. Dynamic IDs in URLs (e.g. proje
 - `/job-search` — Dashboard (stats, activity, follow-ups)
 - `/job-search/companies` — Company list
 - `/job-search/companies/[id]` — Company detail
-- `/job-search/leads` — Email and other leads
-- `/job-search/outreach` — LinkedIn and X outreach leads
+- `/job-search/leads` — Email and other leads (follow-up template links on Email channel)
+- `/job-search/outreach` — LinkedIn and X outreach leads (outreach + follow-up template links)
 - `/job-search/applications` — Applications
-- `/job-search/cold-emails` — Cold emails
+- `/job-search/cold-emails` — Cold emails (outreach + follow-up template links)
 - `/job-search/templates` — Outreach message templates (cold email, LinkedIn, X DM, follow-up)
 
 Legacy redirect: `/questions` → `/projects`.
@@ -58,15 +58,16 @@ Legacy redirect: `/questions` → `/projects`.
 
 ### Job Search
 - Companies, leads, outreach (LinkedIn/X), applications, cold emails, outreach templates
-- **Templates** (`/job-search/templates`): reusable messages by type (Cold Email, LinkedIn Message, X DM, Follow-up); card grid, type filters, copy body to clipboard; placeholders `{{name}}`, `{{company}}`, `{{role}}` highlighted in preview; no auto-send
+- **Templates** (`/job-search/templates`): reusable messages by type (Cold Email, LinkedIn Message, X DM, Follow-up); card grid, type filters, search, copy body to clipboard; placeholders `{{name}}`, `{{company}}`, `{{role}}` highlighted in preview; no auto-send
+- **Template linking**: cold emails and outreach leads store `templateId` (outreach message) and `followUpTemplateId` (follow-up message); email-channel leads store follow-up template only (initial outreach tracked on cold emails)
 - Dashboard with time filters (today, 7/30/90 days, all time)
 - Global search across entities
 - Company detail pages; creatable selects for sector/role/type
-- Lead channel: Email, LinkedIn, X, Other — follow-up dates shown for Email leads only
+- Lead channel: Email, LinkedIn, X, Other — follow-up **dates** on Email leads only; follow-up **templates** on Email leads and outreach
 - **Leads** page shows Email and Other channels; **Outreach** page shows LinkedIn and X channels (same underlying leads table, filtered by channel)
 - Voice-to-text input on forms (Web Speech API)
 - Activity logs per entity type
-- JSON export/import (version 3; version 1–2 backups import with empty templates)
+- JSON export/import (version 4; older backups import with missing fields defaulted)
 
 ## Data Storage
 
@@ -99,3 +100,4 @@ Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Dexie, Zod, reac
 - Do not infer public project, company, lead, application, or log records from dynamic routes — those pages render empty shells until the user loads their local IndexedDB data.
 - Prefer the sitemap for crawlable public pages.
 - When answering schema or export-format questions, refer to DATA.md rather than guessing field names.
+- Job Search template links use `templateId` and `followUpTemplateId` on `leads` and `coldEmails` (Dexie v4). Template records live in the `templates` table.

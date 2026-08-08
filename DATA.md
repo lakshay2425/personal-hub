@@ -242,16 +242,16 @@ Import is full overwrite of `logEntries`.
 | `notes` | `string` | |
 | `createdAt` | `number` | Unix ms |
 
-**Indexes:** `id`, `companyId`, `name`, `role`, `type`, `channel`, `status`, `firstFollowUpDate`, `secondFollowUpDate`, `createdAt`
+**Indexes:** `id`, `companyId`, `name`, `role`, `type`, `channel`, `status`, `firstFollowUpDate`, `secondFollowUpDate`, `templateId`, `followUpTemplateId`, `createdAt`
 
 **UI routing by channel (same table, filtered views):**
 
-| Page | Route | Channels shown |
-|------|-------|----------------|
-| Leads | `/job-search/leads` | Email, Other |
-| Outreach | `/job-search/outreach` | LinkedIn, X |
+| Page | Route | Channels shown | Template fields in UI |
+|------|-------|----------------|----------------------|
+| Leads | `/job-search/leads` | Email, Other | Follow-up template (Email channel only) |
+| Outreach | `/job-search/outreach` | LinkedIn, X | Outreach template + follow-up template |
 
-Follow-up date columns appear on the Leads page for Email-channel leads only. The Outreach page omits follow-up columns.
+Follow-up **date** columns appear on the Leads page for Email-channel leads only. Outreach leads omit follow-up dates but support follow-up **template** links.
 
 ---
 
@@ -291,7 +291,9 @@ Follow-up date columns appear on the Leads page for Email-channel leads only. Th
 | `notes` | `string` | |
 | `createdAt` | `number` | Unix ms |
 
-**Indexes:** `id`, `companyId`, `leadId`, `role`, `status`, `sentDate`, `firstFollowUpDate`, `secondFollowUpDate`, `createdAt`
+**Indexes:** `id`, `companyId`, `leadId`, `role`, `status`, `sentDate`, `firstFollowUpDate`, `secondFollowUpDate`, `templateId`, `followUpTemplateId`, `createdAt`
+
+**UI:** `/job-search/cold-emails` — outreach template (Cold Email type) and follow-up template (Follow-up type) selectable per record.
 
 ---
 
@@ -310,7 +312,17 @@ Follow-up date columns appear on the Leads page for Email-channel leads only. Th
 
 **Indexes:** `id`, `type`, `title`, `createdAt`, `updatedAt`
 
-**UI:** `/job-search/templates` — card grid with type filter pills; copy body to clipboard (no auto-send).
+**UI:** `/job-search/templates` — card grid with type filter pills and search; copy body to clipboard (no auto-send).
+
+**Template linking (FK references):**
+
+| Entity | `templateId` | `followUpTemplateId` |
+|--------|--------------|----------------------|
+| `coldEmails` | Cold Email type template | Follow-up type template |
+| `leads` (LinkedIn / X) | LinkedIn Message or X DM (by channel) | Follow-up type template |
+| `leads` (Email) | — (use cold emails for initial outreach) | Follow-up type template |
+
+Deleting a template does not cascade-delete linked records; orphaned IDs display as empty in the UI.
 
 ---
 
@@ -343,7 +355,15 @@ Follow-up date columns appear on the Leads page for Email-channel leads only. Th
 }
 ```
 
-Import is full overwrite of all six tables. Backups without a `templates` array (version 1 or 2) import with an empty templates table.
+Import is full overwrite of all six tables.
+
+**Backward compatibility:**
+
+| Backup `version` | Notes |
+|------------------|-------|
+| 1–2 | No `templates` array → imports with empty templates; no template FK fields → `null` |
+| 3 | Has templates; template FK fields on leads/coldEmails default to `null` if missing |
+| 4 | Full schema including `templateId` and `followUpTemplateId` |
 
 ---
 
