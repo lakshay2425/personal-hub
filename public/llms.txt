@@ -1,6 +1,6 @@
 # Personal Hub
 
-> A calm, local-first toolkit for projects, daily logs, content ideas, and job search tracking.
+> A calm, local-first toolkit for projects, daily logs, content ideas, job search tracking, and outreach templates.
 
 Personal Hub is an installable PWA that stores user data in the browser with IndexedDB (via Dexie). It has no required account, backend sync, or analytics pipeline for user content.
 
@@ -30,6 +30,7 @@ These are crawlable app shell / marketing pages. Dynamic IDs in URLs (e.g. proje
 - `/job-search/outreach` — LinkedIn and X outreach leads
 - `/job-search/applications` — Applications
 - `/job-search/cold-emails` — Cold emails
+- `/job-search/templates` — Outreach message templates (cold email, LinkedIn, X DM, follow-up)
 
 Legacy redirect: `/questions` → `/projects`.
 
@@ -56,7 +57,8 @@ Legacy redirect: `/questions` → `/projects`.
 - JSON export/import
 
 ### Job Search
-- Companies, leads, outreach (LinkedIn/X), applications, cold emails
+- Companies, leads, outreach (LinkedIn/X), applications, cold emails, outreach templates
+- **Templates** (`/job-search/templates`): reusable messages by type (Cold Email, LinkedIn Message, X DM, Follow-up); card grid, type filters, copy body to clipboard; placeholders `{{name}}`, `{{company}}`, `{{role}}` highlighted in preview; no auto-send
 - Dashboard with time filters (today, 7/30/90 days, all time)
 - Global search across entities
 - Company detail pages; creatable selects for sector/role/type
@@ -64,7 +66,7 @@ Legacy redirect: `/questions` → `/projects`.
 - **Leads** page shows Email and Other channels; **Outreach** page shows LinkedIn and X channels (same underlying leads table, filtered by channel)
 - Voice-to-text input on forms (Web Speech API)
 - Activity logs per entity type
-- JSON export/import (version 2)
+- JSON export/import (version 3; version 1–2 backups import with empty templates)
 
 ## Data Storage
 
@@ -74,7 +76,7 @@ Three separate IndexedDB databases (Dexie):
 |----------|------------|---------|
 | Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas |
 | Logger | `logger-db` | Daily log entries |
-| Job Search | `job-search-tracker-db` | Companies, leads, applications, cold emails |
+| Job Search | `job-search-tracker-db` | Companies, leads, applications, cold emails, templates |
 
 All user content stays on the device. Export/import is manual JSON backup — there is no cloud sync.
 

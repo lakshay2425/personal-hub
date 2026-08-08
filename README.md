@@ -17,7 +17,7 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 | **Projects** | Inbox for questions; organize them into projects with titled answers. Sub-question hierarchy (up to 3 levels), drag-and-drop reorder, move between projects/inbox. JSON export/import. |
 | **Content Ideas** | Capture ideas standalone or per-project; sub-ideas (up to 3 levels), status (Draft / Ready / Published), publish links, list/table/card views. Drag-and-drop, reparent, activity log. **Content Calendar** to schedule publish dates (month/week views). Included in Projects export. |
 | **Logger** | Timestamped daily entries — log multiple times per day. Dashboard view to filter and review entries by date. JSON export/import. |
-| **Job Search Tracker** | Companies, leads, outreach (LinkedIn/X), applications, cold emails, and a dashboard. Global search, voice-to-text on forms, company detail pages, lead channels (Email / LinkedIn / X / Other) with conditional follow-up dates. JSON export/import. |
+| **Job Search Tracker** | Companies, leads, outreach (LinkedIn/X), applications, cold emails, **outreach templates**, and a dashboard. Reusable message templates (cold email, LinkedIn, X DM, follow-up) with copy-to-clipboard and placeholder support. Global search, voice-to-text on forms, company detail pages, lead channels (Email / LinkedIn / X / Other) with conditional follow-up dates. JSON export/import. |
 
 Shared across tools: light/dark theme (system default, persisted in localStorage), toast notifications, and responsive sidebar layout.
 
@@ -41,6 +41,7 @@ All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three 
 | `/job-search/outreach` | LinkedIn and X outreach leads |
 | `/job-search/applications` | Applications |
 | `/job-search/cold-emails` | Cold emails |
+| `/job-search/templates` | Outreach message templates (cold email, LinkedIn, X DM, follow-up) |
 
 Legacy redirect: `/questions` → `/projects`.
 
@@ -104,7 +105,7 @@ features/
 ├── questions/             # Projects / questions / answers (Dexie)
 ├── content-ideas/         # Content ideas UI + repo (shared question-hub-db)
 ├── logger/                # Log entries (Dexie)
-└── job-search/            # Companies, leads, applications, emails (Dexie)
+└── job-search/            # Companies, leads, applications, emails, templates (Dexie)
 lib/
 ├── site.ts                # Site name, description, keywords, URLs
 └── export/                # Shared JSON download / validation helpers

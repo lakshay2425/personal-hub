@@ -90,7 +90,7 @@ const FEATURES = [
     href: "/job-search",
     title: "Job Search Tracker",
     description:
-      "Track companies, leads, applications, and cold emails all in one place.",
+      "Track companies, leads, applications, cold emails, and reusable outreach templates all in one place.",
     cta: "Open Tracker",
     icon: (
       <svg

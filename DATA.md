@@ -8,7 +8,7 @@ There are **three separate databases** — one per feature area — so modules s
 |----------|------------|---------|
 | Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas |
 | Logger | `logger-db` | Daily log entries |
-| Job Search | `job-search-tracker-db` | Companies, leads, applications, cold emails |
+| Job Search | `job-search-tracker-db` | Companies, leads, applications, cold emails, templates |
 
 Schema definitions live in each feature’s `types.ts`. Dexie store definitions and migrations live in each feature’s `db.ts` (or `lib/db.ts`).
 
@@ -195,7 +195,15 @@ Import is full overwrite of `logEntries`.
 ## `job-search-tracker-db`
 
 **Source:** `features/job-search/db.ts`  
-**Current version:** 1
+**Current version:** 3
+
+### Migration history (`job-search-tracker-db`)
+
+| Version | Change |
+|---------|--------|
+| 1 | Initial tables: companies, leads, applications, coldEmails, activityLogs |
+| 2 | Add `channel` index on leads; backfill missing `channel` with `"Email"` |
+| 3 | Add `templates` table (no data migration; existing rows preserved) |
 
 ### `companies`
 
@@ -282,12 +290,31 @@ Follow-up date columns appear on the Leads page for Email-channel leads only. Th
 
 ---
 
+### `templates`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Auto-increment primary key |
+| `type` | `"Cold Email" \| "LinkedIn Message" \| "X DM" \| "Follow-up"` | Required |
+| `title` | `string` | Required — short name for the template |
+| `subject` | `string` | Optional — relevant for Cold Email type only |
+| `body` | `string` | Required — message content; supports `{{name}}`, `{{company}}`, `{{role}}` placeholders |
+| `notes` | `string` | Optional — personal notes about when to use |
+| `createdAt` | `number` | Unix ms |
+| `updatedAt` | `number` | Unix ms |
+
+**Indexes:** `id`, `type`, `title`, `createdAt`, `updatedAt`
+
+**UI:** `/job-search/templates` — card grid with type filter pills; copy body to clipboard (no auto-send).
+
+---
+
 ### `activityLogs` (Job Search)
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | `number` | Auto-increment primary key |
-| `entityType` | `"company" \| "lead" \| "application" \| "coldEmail"` | |
+| `entityType` | `"company" \| "lead" \| "application" \| "coldEmail" \| "template"` | |
 | `entityId` | `number` | Id of the related entity |
 | `action` | `string` | Human-readable action label |
 | `timestamp` | `number` | Unix ms |
@@ -300,17 +327,18 @@ Follow-up date columns appear on the Leads page for Email-channel leads only. Th
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "exportedAt": "ISO-8601 string",
   "companies": [],
   "leads": [],
   "applications": [],
   "coldEmails": [],
+  "templates": [],
   "activityLogs": []
 }
 ```
 
-Import is full overwrite of all five tables.
+Import is full overwrite of all six tables. Backups without a `templates` array (version 1 or 2) import with an empty templates table.
 
 ---
 
