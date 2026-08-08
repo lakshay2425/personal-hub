@@ -2,6 +2,7 @@ import {
   deleteContentIdeasByProjectId,
   orphanContentIdeasByProjectId,
 } from "@/features/content-ideas/lib/contentIdeasRepository";
+import { deleteProjectFeaturesAndVersions } from "@/features/project-features/lib/featuresRepository";
 
 import type { Project } from "../types";
 import { getDB } from "./db";
@@ -72,6 +73,8 @@ export async function deleteProject(
   } else {
     await orphanContentIdeasByProjectId(id);
   }
+
+  await deleteProjectFeaturesAndVersions(id);
 
   await db.transaction("rw", [db.projects, db.questions, db.answers], async () => {
     const questions = await db.questions.where("projectId").equals(id).toArray();

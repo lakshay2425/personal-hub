@@ -48,6 +48,7 @@ features/
   questions/         # Projects + inbox (Dexie)
   content-ideas/     # Content ideas + calendar (shared question-hub-db)
   planner/           # Weekly task planner (shared question-hub-db)
+  project-features/  # Per-project features + versions (shared question-hub-db)
   logger/            # Daily log entries (Dexie)
   job-search/        # Job search tracker — companies, leads, templates, template FK links (Dexie v4)
 lib/                 # Site-wide constants

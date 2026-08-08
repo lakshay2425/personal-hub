@@ -22,7 +22,7 @@ const FEATURES = [
     href: "/projects",
     title: "Projects",
     description:
-      "Capture questions in an inbox and organize them into projects with titled answers.",
+      "Capture questions in an inbox, organize them into projects, and track product features by version.",
     cta: "Open Projects",
     icon: (
       <svg

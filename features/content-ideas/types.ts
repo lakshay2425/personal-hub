@@ -34,7 +34,7 @@ export type ContentIdeaTreeNode = ContentIdea & {
 
 export type ContentIdeaEntityType = "contentIdea";
 
-export type QuestionHubEntityType = "contentIdea" | "task";
+export type QuestionHubEntityType = "contentIdea" | "task" | "feature";
 
 export interface QuestionHubActivityLog {
   id?: number;

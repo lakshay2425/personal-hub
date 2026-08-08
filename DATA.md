@@ -6,7 +6,7 @@ There are **three separate databases** — one per feature area — so modules s
 
 | Database | Dexie name | Feature |
 |----------|------------|---------|
-| Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas, planner tasks |
+| Projects & Content Ideas | `question-hub-db` | Projects, questions, answers, content ideas, planner tasks, project features, versions |
 | Logger | `logger-db` | Daily log entries |
 | Job Search | `job-search-tracker-db` | Companies, leads, applications, cold emails, templates |
 
@@ -17,7 +17,7 @@ Schema definitions live in each feature’s `types.ts`. Dexie store definitions 
 ## `question-hub-db`
 
 **Source:** `features/questions/lib/db.ts`  
-**Current version:** 8
+**Current version:** 9
 
 ### Tables
 
@@ -109,14 +109,14 @@ Schema definitions live in each feature’s `types.ts`. Dexie store definitions 
 
 #### `activityLogs`
 
-Audit trail for content idea and planner task lifecycle events.
+Audit trail for content idea, planner task, and project feature lifecycle events.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | `number` | Auto-increment primary key |
-| `entityType` | `"contentIdea" \| "task"` | Entity kind |
-| `entityId` | `number` | Content idea or task id |
-| `action` | `string` | e.g. `"Content Idea Created"`, `"Task Completed"`, `"Task Deleted"` |
+| `entityType` | `"contentIdea" \| "task" \| "feature"` | Entity kind |
+| `entityId` | `number` | Content idea, task, or feature id |
+| `action` | `string` | e.g. `"Content Idea Created"`, `"Task Completed"`, `"Feature Status Changed"` |
 | `timestamp` | `number` | Unix ms |
 
 **Indexes:** `id`, `entityType`, `entityId`, `action`, `timestamp`
@@ -146,6 +146,45 @@ Weekly planner tasks (Monday-based weeks).
 
 ---
 
+#### `features`
+
+Per-project product features (tracked in the Features tab on project detail).
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Auto-increment primary key |
+| `projectId` | `string` | Required — parent project UUID |
+| `versionId` | `number \| null` | FK → `versions.id`; `null` = unassigned |
+| `title` | `string` | Required |
+| `status` | `"Idea" \| "Planned" \| "In Progress" \| "Done" \| "Dropped"` | Default `Idea` |
+| `notes` | `string` | Optional |
+| `createdAt` | `number` | Unix ms |
+
+**Indexes:** `id`, `projectId`, `versionId`, `title`, `status`, `createdAt`
+
+**Feature actions logged:** `"Feature Created"`, `"Feature Status Changed"`, `"Feature Deleted"`
+
+**Version assignment:** Versions are created inline from the feature form combobox. There is no separate version management page and no direct version delete — versions are managed implicitly through features.
+
+---
+
+#### `versions`
+
+Named release buckets for grouping project features (e.g. `"v1.0"`, `"Backlog"`).
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Auto-increment primary key |
+| `projectId` | `string` | Required — parent project UUID |
+| `name` | `string` | Required, free text |
+| `createdAt` | `number` | Unix ms |
+
+**Indexes:** `id`, `projectId`, `name`, `createdAt`
+
+**Cascade:** Deleting a project deletes all its features and versions. Deleting a feature does not delete its version.
+
+---
+
 ### Migration history (`question-hub-db`)
 
 | Version | Change |
@@ -158,6 +197,7 @@ Weekly planner tasks (Monday-based weeks).
 | 6 | Content ideas: add `parentId`, `depth`, `sortOrder`; backfill existing rows |
 | 7 | Content ideas: add `scheduledDate`; backfill existing rows to `null` |
 | 8 | Add `tasks` table (no data migration; existing rows preserved) |
+| 9 | Add `features` and `versions` tables (no data migration; existing rows preserved) |
 
 ---
 
@@ -175,14 +215,18 @@ Weekly planner tasks (Monday-based weeks).
   "answers": [],
   "contentIdeas": [],
   "activityLogs": [],
-  "tasks": []
+  "tasks": [],
+  "features": [],
+  "versions": []
 }
 ```
 
-**Import:** Full overwrite — clears all six tables, then inserts exported records. Older backups without a `tasks` array import with `tasks: []`.  
+**Import:** Full overwrite — clears all eight tables, then inserts exported records. Older backups without `tasks`, `features`, or `versions` import with empty arrays for missing keys.  
 **Source:** `features/questions/lib/exportRepository.ts`, `features/questions/lib/importRepository.ts`
 
-Standalone content ideas (`projectId: null`) and planner tasks are included in this export. They are not exported separately.
+Standalone content ideas (`projectId: null`), planner tasks, and per-project features/versions are included in this export. They are not exported separately.
+
+**Project delete cascade:** Deleting a project always removes its questions, answers, features, and versions. Content ideas are either deleted or orphaned (`projectId → null`) based on user choice at delete time.
 
 ---
 

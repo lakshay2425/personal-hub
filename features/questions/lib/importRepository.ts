@@ -3,6 +3,10 @@ import type {
   QuestionHubActivityLog,
 } from "@/features/content-ideas/types";
 import type { Task } from "@/features/planner/types";
+import type {
+  ProjectFeature,
+  ProjectVersion,
+} from "@/features/project-features/types";
 import { assertBackupShape } from "@/lib/export/validateBackup";
 
 import type { Answer, Project, Question } from "../types";
@@ -24,6 +28,8 @@ export type ProjectsBackupPayload = {
   contentIdeas: ContentIdea[];
   activityLogs: QuestionHubActivityLog[];
   tasks?: Task[];
+  features?: ProjectFeature[];
+  versions?: ProjectVersion[];
 };
 
 export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
@@ -41,6 +47,12 @@ export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
     })),
     activityLogs: arrays.activityLogs as QuestionHubActivityLog[],
     tasks: Array.isArray(record.tasks) ? (record.tasks as Task[]) : [],
+    features: Array.isArray(record.features)
+      ? (record.features as ProjectFeature[])
+      : [],
+    versions: Array.isArray(record.versions)
+      ? (record.versions as ProjectVersion[])
+      : [],
   };
 }
 
@@ -49,6 +61,8 @@ export async function importProjectsData(
 ): Promise<void> {
   const db = getDB();
   const tasks = payload.tasks ?? [];
+  const features = payload.features ?? [];
+  const versions = payload.versions ?? [];
 
   await db.transaction(
     "rw",
@@ -59,6 +73,8 @@ export async function importProjectsData(
       db.contentIdeas,
       db.activityLogs,
       db.tasks,
+      db.features,
+      db.versions,
     ],
     async () => {
       await Promise.all([
@@ -68,6 +84,8 @@ export async function importProjectsData(
         db.contentIdeas.clear(),
         db.activityLogs.clear(),
         db.tasks.clear(),
+        db.features.clear(),
+        db.versions.clear(),
       ]);
 
       await Promise.all([
@@ -77,6 +95,8 @@ export async function importProjectsData(
         db.contentIdeas.bulkPut(payload.contentIdeas),
         db.activityLogs.bulkPut(payload.activityLogs),
         db.tasks.bulkPut(tasks),
+        db.features.bulkPut(features),
+        db.versions.bulkPut(versions),
       ]);
     },
   );

@@ -4,15 +4,17 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { ContentIdeasWorkspace } from "@/features/content-ideas/components/ContentIdeasWorkspace";
+import { FeaturesWorkspace } from "@/features/project-features/components/FeaturesWorkspace";
 
 import type { Project } from "../types";
 import { QuestionsWorkspace } from "./QuestionsWorkspace";
 
-type ProjectTab = "questions" | "content-ideas";
+type ProjectTab = "questions" | "content-ideas" | "features";
 
 const TABS: { id: ProjectTab; label: string }[] = [
   { id: "questions", label: "Questions" },
   { id: "content-ideas", label: "Content Ideas" },
+  { id: "features", label: "Features" },
 ];
 
 interface ProjectDetailWorkspaceProps {
@@ -61,7 +63,7 @@ export function ProjectDetailWorkspace({ project }: ProjectDetailWorkspaceProps)
         </nav>
       </div>
 
-      {activeTab === "questions" ? (
+      {activeTab === "questions" && (
         <QuestionsWorkspace
           embedded
           projectId={project.id}
@@ -72,7 +74,9 @@ export function ProjectDetailWorkspace({ project }: ProjectDetailWorkspaceProps)
           emptyTitle="No questions in this project yet"
           emptyDescription='Click "New Question" to add the first question to this project.'
         />
-      ) : (
+      )}
+
+      {activeTab === "content-ideas" && (
         <ContentIdeasWorkspace
           embedded
           projectId={project.id}
@@ -80,6 +84,17 @@ export function ProjectDetailWorkspace({ project }: ProjectDetailWorkspaceProps)
           description="Content ideas for this project."
           emptyTitle="No content ideas in this project yet"
           emptyDescription='Click "Add Idea" to capture your first content idea for this project.'
+        />
+      )}
+
+      {activeTab === "features" && (
+        <FeaturesWorkspace
+          embedded
+          projectId={project.id}
+          title="Features"
+          description="Track product features by version and status."
+          emptyTitle="No features yet. Add your first one."
+          emptyDescription="Add features and assign them to versions as you plan your product."
         />
       )}
     </div>

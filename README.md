@@ -14,7 +14,7 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 
 | Tool | What it does |
 |------|----------------|
-| **Projects** | Inbox for questions; organize them into projects with titled answers. Sub-question hierarchy (up to 3 levels), drag-and-drop reorder, move between projects/inbox. JSON export/import. |
+| **Projects** | Inbox for questions; organize them into projects with titled answers. Sub-question hierarchy (up to 3 levels), drag-and-drop reorder, move between projects/inbox. Per-project **Features** tab to track product features by version (Idea / Planned / In Progress / Done / Dropped). JSON export/import. |
 | **Content Ideas** | Capture ideas standalone or per-project; sub-ideas (up to 3 levels), status (Draft / Ready / Published), publish links, list/table/card views. Drag-and-drop, reparent, activity log. **Content Calendar** to schedule publish dates (month/week views). Included in Projects export. |
 | **Planner** | Monday-based weekly task planner with week navigation, priority badges (High / Medium / Low), optional notes with voice input, and backlog for past incomplete tasks. Completing a task auto-creates a separate Logger entry for today. Tasks included in Projects JSON export. |
 | **Logger** | Timestamped daily entries — log multiple times per day. Dashboard view to filter and review entries by date. Future dates blocked on add/edit. JSON export/import. |
@@ -22,7 +22,7 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 
 Shared across tools: light/dark theme (system default, persisted in localStorage), toast notifications, and responsive sidebar layout.
 
-All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three databases: projects, content ideas, and planner tasks share one; logger and job search each have their own. See [DATA.md](DATA.md) for schemas, migrations, and export formats.
+All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three databases: projects, content ideas, planner tasks, and project features/versions share one; logger and job search each have their own. See [DATA.md](DATA.md) for schemas, migrations, and export formats.
 
 ## Routes
 
@@ -30,7 +30,7 @@ All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three 
 |-------|-------------|
 | `/` | Landing page |
 | `/projects` | Project list + question inbox |
-| `/projects/[projectId]` | Project detail — Questions and Content Ideas tabs |
+| `/projects/[projectId]` | Project detail — Questions, Content Ideas, and Features tabs |
 | `/content-ideas` | Standalone content ideas (not tied to a project) |
 | `/content-ideas/calendar` | Content calendar — schedule ideas by date (planning only, no auto-posting) |
 | `/planner` | Weekly task planner — week navigation, backlog, Logger integration on complete |
@@ -108,6 +108,7 @@ features/
 ├── questions/             # Projects / questions / answers (Dexie)
 ├── content-ideas/         # Content ideas UI + repo (shared question-hub-db)
 ├── planner/               # Weekly task planner (shared question-hub-db)
+├── project-features/      # Per-project features + versions (shared question-hub-db)
 ├── logger/                # Log entries (Dexie)
 └── job-search/            # Companies, leads, applications, cold emails, templates (Dexie v4)
 lib/

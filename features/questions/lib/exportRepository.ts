@@ -2,7 +2,7 @@ import { getDB } from "./db";
 
 export async function exportProjectsData() {
   const db = getDB();
-  const [projects, questions, answers, contentIdeas, activityLogs, tasks] =
+  const [projects, questions, answers, contentIdeas, activityLogs, tasks, features, versions] =
     await Promise.all([
       db.projects.toArray(),
       db.questions.toArray(),
@@ -10,6 +10,8 @@ export async function exportProjectsData() {
       db.contentIdeas.toArray(),
       db.activityLogs.toArray(),
       db.tasks.toArray(),
+      db.features.toArray(),
+      db.versions.toArray(),
     ]);
 
   return {
@@ -21,5 +23,7 @@ export async function exportProjectsData() {
     contentIdeas,
     activityLogs,
     tasks,
+    features,
+    versions,
   };
 }
