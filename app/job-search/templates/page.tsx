@@ -18,6 +18,7 @@ export default function TemplatesPage() {
     useTemplates();
 
   const [typeFilter, setTypeFilter] = useState<TemplateType | "all">("all");
+  const [search, setSearch] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [deletingTemplate, setDeletingTemplate] = useState<Template | null>(
@@ -26,9 +27,37 @@ export default function TemplatesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const filtered = useMemo(() => {
-    if (typeFilter === "all") return templates;
-    return templates.filter((template) => template.type === typeFilter);
-  }, [templates, typeFilter]);
+    let result = templates;
+
+    if (typeFilter !== "all") {
+      result = result.filter((template) => template.type === typeFilter);
+    }
+
+    if (search.trim()) {
+      const lower = search.toLowerCase();
+      result = result.filter(
+        (template) =>
+          template.title.toLowerCase().includes(lower) ||
+          template.body.toLowerCase().includes(lower) ||
+          template.subject.toLowerCase().includes(lower) ||
+          template.notes.toLowerCase().includes(lower),
+      );
+    }
+
+    return result;
+  }, [templates, typeFilter, search]);
+
+  const createDefaultType =
+    typeFilter === "all" ? undefined : typeFilter;
+
+  const emptyDescription =
+    search.trim() && typeFilter !== "all"
+      ? "Try a different search, type filter, or add a new template."
+      : search.trim()
+        ? "Try a different search or add a new template."
+        : typeFilter !== "all"
+          ? "Try a different type or add a new template."
+          : "Add your first outreach template.";
 
   const openCreateForm = () => {
     setEditingTemplate(null);
@@ -93,8 +122,17 @@ export default function TemplatesPage() {
         }
       />
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
         <TemplateTypePills value={typeFilter} onChange={setTypeFilter} />
+        {templates.length > 0 && (
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by title or content..."
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:max-w-md dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+          />
+        )}
       </div>
 
       <div className="mt-6">
@@ -114,8 +152,12 @@ export default function TemplatesPage() {
           />
         ) : filtered.length === 0 ? (
           <EmptyState
-            title="No templates match this filter"
-            description="Try a different type or add a new template."
+            title={
+              search.trim()
+                ? "No templates match your search"
+                : "No templates match this filter"
+            }
+            description={emptyDescription}
             action={
               <button
                 type="button"
@@ -147,6 +189,7 @@ export default function TemplatesPage() {
         }}
         onSubmit={handleSubmit}
         template={editingTemplate}
+        defaultType={createDefaultType}
       />
 
       <ConfirmDialog

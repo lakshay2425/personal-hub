@@ -21,10 +21,12 @@ interface TemplateFormModalProps {
     data: Omit<Template, "id" | "createdAt" | "updatedAt">,
   ) => Promise<void>;
   template?: Template | null;
+  defaultType?: TemplateType;
 }
 
 interface TemplateFormFieldsProps {
   template?: Template | null;
+  defaultType?: TemplateType;
   onClose: () => void;
   onSubmit: (
     data: Omit<Template, "id" | "createdAt" | "updatedAt">,
@@ -33,12 +35,13 @@ interface TemplateFormFieldsProps {
 
 function TemplateFormFields({
   template,
+  defaultType,
   onClose,
   onSubmit,
 }: TemplateFormFieldsProps) {
   const [title, setTitle] = useState(template?.title ?? "");
   const [type, setType] = useState<TemplateType>(
-    template?.type ?? "Cold Email",
+    template?.type ?? defaultType ?? "Cold Email",
   );
   const [subject, setSubject] = useState(template?.subject ?? "");
   const [body, setBody] = useState(template?.body ?? "");
@@ -131,6 +134,7 @@ export function TemplateFormModal({
   onClose,
   onSubmit,
   template,
+  defaultType,
 }: TemplateFormModalProps) {
   return (
     <Modal
@@ -140,8 +144,9 @@ export function TemplateFormModal({
       size="lg"
     >
       <TemplateFormFields
-        key={template?.id ?? "create"}
+        key={template?.id ?? `create-${defaultType ?? "Cold Email"}`}
         template={template}
+        defaultType={defaultType}
         onClose={onClose}
         onSubmit={onSubmit}
       />
