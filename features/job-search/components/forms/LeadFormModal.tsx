@@ -9,11 +9,12 @@ import {
   LEAD_CHANNELS,
   LEAD_STATUSES,
 } from "../../constants";
+import { getOutreachTemplateTypeForChannel } from "../../lib/templateUtils";
 import {
   getUniqueLeadRoles,
   getUniqueLeadTypes,
 } from "../../repositories/leadsRepository";
-import type { Company, Lead } from "../../types";
+import type { Company, Lead, Template } from "../../types";
 import { CompanyCombobox } from "./CompanyCombobox";
 import { CreatableSelectInput } from "./CreatableSelectInput";
 import {
@@ -23,6 +24,7 @@ import {
   TextArea,
   TextInput,
 } from "./FormFields";
+import { TemplateSelectInput } from "./TemplateSelectInput";
 
 interface LeadFormModalProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ interface LeadFormModalProps {
   onSubmit: (data: Omit<Lead, "id" | "createdAt">) => Promise<void>;
   lead?: Lead | null;
   companies: Company[];
+  templates: Template[];
   defaultCompanyId?: number;
   defaultChannel?: Lead["channel"];
   channelOptions?: Lead["channel"][];
@@ -39,6 +42,7 @@ interface LeadFormModalProps {
 interface LeadFormFieldsProps {
   lead?: Lead | null;
   companies: Company[];
+  templates: Template[];
   defaultCompanyId?: number;
   defaultChannel?: Lead["channel"];
   channelOptions?: Lead["channel"][];
@@ -50,6 +54,7 @@ interface LeadFormFieldsProps {
 function LeadFormFields({
   lead,
   companies,
+  templates,
   defaultCompanyId,
   defaultChannel = DEFAULT_LEAD_CHANNEL,
   channelOptions = LEAD_CHANNELS,
@@ -79,6 +84,12 @@ function LeadFormFields({
   const [secondFollowUpDate, setSecondFollowUpDate] = useState(
     lead?.secondFollowUpDate ?? "",
   );
+  const [templateId, setTemplateId] = useState(
+    lead?.templateId != null ? String(lead.templateId) : "",
+  );
+  const [followUpTemplateId, setFollowUpTemplateId] = useState(
+    lead?.followUpTemplateId != null ? String(lead.followUpTemplateId) : "",
+  );
   const [notes, setNotes] = useState(lead?.notes ?? "");
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
   const [typeOptions, setTypeOptions] = useState<string[]>([]);
@@ -106,6 +117,33 @@ function LeadFormFields({
     };
   }, []);
 
+  const outreachTemplateType = getOutreachTemplateTypeForChannel(channel);
+  const showOutreachTemplate = outreachTemplateType !== null;
+  const showFollowUpTemplate =
+    channel === "Email" || outreachTemplateType !== null;
+
+  const handleChannelChange = (value: Lead["channel"]) => {
+    setChannel(value);
+    const nextOutreachType = getOutreachTemplateTypeForChannel(value);
+    if (
+      templateId &&
+      nextOutreachType &&
+      !templates.some(
+        (template) =>
+          template.id === Number(templateId) &&
+          template.type === nextOutreachType,
+      )
+    ) {
+      setTemplateId("");
+    }
+    if (nextOutreachType === null) {
+      setTemplateId("");
+    }
+    if (value !== "Email" && nextOutreachType === null) {
+      setFollowUpTemplateId("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyId) {
@@ -128,6 +166,10 @@ function LeadFormFields({
         status,
         firstFollowUpDate: isEmailChannel ? firstFollowUpDate || null : null,
         secondFollowUpDate: isEmailChannel ? secondFollowUpDate || null : null,
+        templateId: showOutreachTemplate && templateId ? Number(templateId) : null,
+        followUpTemplateId: showFollowUpTemplate && followUpTemplateId
+          ? Number(followUpTemplateId)
+          : null,
         notes,
       });
       onClose();
@@ -205,7 +247,7 @@ function LeadFormFields({
         <FormField label="Channel" required>
           <SelectInput
             value={channel}
-            onChange={(v) => setChannel(v as Lead["channel"])}
+            onChange={(v) => handleChannelChange(v as Lead["channel"])}
             options={channelOptions.map((c) => ({ value: c, label: c }))}
             required
           />
@@ -217,6 +259,26 @@ function LeadFormFields({
             options={LEAD_STATUSES.map((s) => ({ value: s, label: s }))}
           />
         </FormField>
+        {showOutreachTemplate && outreachTemplateType ? (
+          <TemplateSelectInput
+            label="Outreach Template"
+            value={templateId}
+            onChange={setTemplateId}
+            templates={templates}
+            filterType={outreachTemplateType}
+            placeholder={`Select ${outreachTemplateType.toLowerCase()} template (optional)`}
+          />
+        ) : null}
+        {showFollowUpTemplate ? (
+          <TemplateSelectInput
+            label="Follow-up Template"
+            value={followUpTemplateId}
+            onChange={setFollowUpTemplateId}
+            templates={templates}
+            filterType="Follow-up"
+            placeholder="Select follow-up template (optional)"
+          />
+        ) : null}
         {channel === "Email" ? (
           <>
             <FormField label="First Follow-up">
@@ -256,6 +318,7 @@ export function LeadFormModal({
   onSubmit,
   lead,
   companies,
+  templates,
   defaultCompanyId,
   defaultChannel,
   channelOptions,
@@ -275,6 +338,7 @@ export function LeadFormModal({
         }
         lead={lead}
         companies={companies}
+        templates={templates}
         defaultCompanyId={defaultCompanyId}
         defaultChannel={defaultChannel}
         channelOptions={channelOptions}

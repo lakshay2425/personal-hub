@@ -22,7 +22,12 @@ import { COLD_EMAIL_STATUSES } from "@/features/job-search/constants";
 import { useColdEmails } from "@/features/job-search/hooks/useColdEmails";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
+import { useTemplates } from "@/features/job-search/hooks/useTemplates";
 import { formatDate } from "@/features/job-search/lib/dateUtils";
+import {
+  buildTemplateMap,
+  getTemplateTitle,
+} from "@/features/job-search/lib/templateUtils";
 import type { ColdEmail } from "@/features/job-search/types";
 
 export default function ColdEmailsPage() {
@@ -30,6 +35,12 @@ export default function ColdEmailsPage() {
   const { leads } = useLeads();
   const { coldEmails, isLoading, addColdEmail, editColdEmail, removeColdEmail } =
     useColdEmails();
+  const { templates } = useTemplates();
+
+  const templateMap = useMemo(
+    () => buildTemplateMap(templates),
+    [templates],
+  );
 
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
@@ -191,6 +202,21 @@ export default function ColdEmailsPage() {
                     label="Follow-up 2"
                     value={formatDate(email.secondFollowUpDate)}
                   />
+                  <MobileCardMetaRow
+                    label="Template"
+                    value={getTemplateTitle(
+                      templateMap,
+                      email.templateId,
+                      email.templateName,
+                    )}
+                  />
+                  <MobileCardMetaRow
+                    label="Follow-up Template"
+                    value={getTemplateTitle(
+                      templateMap,
+                      email.followUpTemplateId,
+                    )}
+                  />
                 </MobileCardMeta>
                 <MobileCardActions>
                   <button
@@ -225,6 +251,8 @@ export default function ColdEmailsPage() {
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 1</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 2</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Template</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up Template</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Actions</th>
               </tr>
             </thead>
@@ -242,6 +270,12 @@ export default function ColdEmailsPage() {
                   <td className="px-4 py-3"><StatusBadge status={email.status} /></td>
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(email.firstFollowUpDate)}</td>
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(email.secondFollowUpDate)}</td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                    {getTemplateTitle(templateMap, email.templateId, email.templateName)}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                    {getTemplateTitle(templateMap, email.followUpTemplateId)}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button
@@ -281,6 +315,7 @@ export default function ColdEmailsPage() {
         coldEmail={editingEmail}
         companies={companies}
         leads={leads}
+        templates={templates}
       />
 
       <ConfirmDialog

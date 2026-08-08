@@ -5,7 +5,8 @@ import { useMemo, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 
 import { COLD_EMAIL_STATUSES } from "../../constants";
-import type { ColdEmail, Company, Lead } from "../../types";
+import { buildTemplateMap } from "../../lib/templateUtils";
+import type { ColdEmail, Company, Lead, Template } from "../../types";
 import {
   FormActions,
   FormField,
@@ -13,6 +14,7 @@ import {
   TextArea,
   TextInput,
 } from "./FormFields";
+import { TemplateSelectInput } from "./TemplateSelectInput";
 
 interface ColdEmailFormModalProps {
   isOpen: boolean;
@@ -21,6 +23,7 @@ interface ColdEmailFormModalProps {
   coldEmail?: ColdEmail | null;
   companies: Company[];
   leads: Lead[];
+  templates: Template[];
   defaultCompanyId?: number;
 }
 
@@ -28,6 +31,7 @@ interface ColdEmailFormFieldsProps {
   coldEmail?: ColdEmail | null;
   companies: Company[];
   leads: Lead[];
+  templates: Template[];
   defaultCompanyId?: number;
   onClose: () => void;
   onSubmit: (data: Omit<ColdEmail, "id" | "createdAt">) => Promise<void>;
@@ -37,6 +41,7 @@ function ColdEmailFormFields({
   coldEmail,
   companies,
   leads,
+  templates,
   defaultCompanyId,
   onClose,
   onSubmit,
@@ -62,11 +67,21 @@ function ColdEmailFormFields({
   const [secondFollowUpDate, setSecondFollowUpDate] = useState(
     coldEmail?.secondFollowUpDate ?? "",
   );
-  const [templateName, setTemplateName] = useState(
-    coldEmail?.templateName ?? "",
+  const [templateId, setTemplateId] = useState(
+    coldEmail?.templateId != null ? String(coldEmail.templateId) : "",
+  );
+  const [followUpTemplateId, setFollowUpTemplateId] = useState(
+    coldEmail?.followUpTemplateId != null
+      ? String(coldEmail.followUpTemplateId)
+      : "",
   );
   const [notes, setNotes] = useState(coldEmail?.notes ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const templateMap = useMemo(
+    () => buildTemplateMap(templates),
+    [templates],
+  );
 
   const filteredLeads = useMemo(
     () =>
@@ -85,6 +100,10 @@ function ColdEmailFormFields({
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const selectedTemplate = templateId
+        ? templateMap.get(Number(templateId))
+        : undefined;
+
       await onSubmit({
         companyId: Number(companyId),
         leadId: Number(leadId),
@@ -93,7 +112,11 @@ function ColdEmailFormFields({
         status,
         firstFollowUpDate,
         secondFollowUpDate,
-        templateName,
+        templateId: templateId ? Number(templateId) : null,
+        followUpTemplateId: followUpTemplateId
+          ? Number(followUpTemplateId)
+          : null,
+        templateName: selectedTemplate?.title ?? coldEmail?.templateName ?? "",
         notes,
       });
       onClose();
@@ -155,13 +178,22 @@ function ColdEmailFormFields({
             }))}
           />
         </FormField>
-        <FormField label="Template Name">
-          <TextInput
-            value={templateName}
-            onChange={setTemplateName}
-            placeholder="Optional template reference"
-          />
-        </FormField>
+        <TemplateSelectInput
+          label="Outreach Template"
+          value={templateId}
+          onChange={setTemplateId}
+          templates={templates}
+          filterType="Cold Email"
+          placeholder="Select cold email template (optional)"
+        />
+        <TemplateSelectInput
+          label="Follow-up Template"
+          value={followUpTemplateId}
+          onChange={setFollowUpTemplateId}
+          templates={templates}
+          filterType="Follow-up"
+          placeholder="Select follow-up template (optional)"
+        />
         <FormField label="First Follow-up">
           <TextInput
             value={firstFollowUpDate}
@@ -198,6 +230,7 @@ export function ColdEmailFormModal({
   coldEmail,
   companies,
   leads,
+  templates,
   defaultCompanyId,
 }: ColdEmailFormModalProps) {
   return (
@@ -212,6 +245,7 @@ export function ColdEmailFormModal({
         coldEmail={coldEmail}
         companies={companies}
         leads={leads}
+        templates={templates}
         defaultCompanyId={defaultCompanyId}
         onClose={onClose}
         onSubmit={onSubmit}

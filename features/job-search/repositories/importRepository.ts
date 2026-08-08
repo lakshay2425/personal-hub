@@ -20,7 +20,7 @@ const CORE_ARRAYS = [
 ] as const;
 
 export type JobSearchBackupPayload = {
-  version: 1 | 2 | 3;
+  version: 1 | 2 | 3 | 4;
   companies: Company[];
   leads: Lead[];
   applications: Application[];
@@ -28,6 +28,10 @@ export type JobSearchBackupPayload = {
   templates: Template[];
   activityLogs: ActivityLog[];
 };
+
+function normalizeTemplateRef(value: unknown): number | null {
+  return typeof value === "number" ? value : null;
+}
 
 function assertCoreBackupShape(data: unknown): Record<string, unknown[]> {
   if (!data || typeof data !== "object" || Array.isArray(data)) {
@@ -37,7 +41,7 @@ function assertCoreBackupShape(data: unknown): Record<string, unknown[]> {
   const record = data as Record<string, unknown>;
   const version = record.version;
 
-  if (version !== 1 && version !== 2 && version !== 3) {
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4) {
     throw new InvalidBackupError();
   }
 
@@ -60,7 +64,7 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
     : [];
 
   return {
-    version: 3,
+    version: 4,
     companies: arrays.companies as Company[],
     leads: (arrays.leads as Lead[]).map((lead) => {
       const channel = isLeadChannel(lead.channel)
@@ -74,10 +78,16 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
           channel === "Email" ? lead.firstFollowUpDate || null : null,
         secondFollowUpDate:
           channel === "Email" ? lead.secondFollowUpDate || null : null,
+        templateId: normalizeTemplateRef(lead.templateId),
+        followUpTemplateId: normalizeTemplateRef(lead.followUpTemplateId),
       };
     }),
     applications: arrays.applications as Application[],
-    coldEmails: arrays.coldEmails as ColdEmail[],
+    coldEmails: (arrays.coldEmails as ColdEmail[]).map((coldEmail) => ({
+      ...coldEmail,
+      templateId: normalizeTemplateRef(coldEmail.templateId),
+      followUpTemplateId: normalizeTemplateRef(coldEmail.followUpTemplateId),
+    })),
     templates,
     activityLogs: arrays.activityLogs as ActivityLog[],
   };

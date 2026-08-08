@@ -27,12 +27,23 @@ import {
 } from "@/features/job-search/constants";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
+import { useTemplates } from "@/features/job-search/hooks/useTemplates";
 import { formatDate } from "@/features/job-search/lib/dateUtils";
+import {
+  buildTemplateMap,
+  getTemplateTitle,
+} from "@/features/job-search/lib/templateUtils";
 import type { Lead } from "@/features/job-search/types";
 
 export default function LeadsPage() {
   const { companies, addCompany } = useCompanies();
   const { leads, isLoading, addLead, editLead, removeLead } = useLeads();
+  const { templates } = useTemplates();
+
+  const templateMap = useMemo(
+    () => buildTemplateMap(templates),
+    [templates],
+  );
 
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
@@ -243,6 +254,15 @@ export default function LeadsPage() {
                       value={formatDate(lead.secondFollowUpDate)}
                     />
                   ) : null}
+                  {lead.channel === "Email" ? (
+                    <MobileCardMetaRow
+                      label="Follow-up Template"
+                      value={getTemplateTitle(
+                        templateMap,
+                        lead.followUpTemplateId,
+                      )}
+                    />
+                  ) : null}
                 </MobileCardMeta>
                 <MobileCardActions>
                   <button
@@ -278,6 +298,7 @@ export default function LeadsPage() {
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 1</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up 2</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Follow-up Template</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Actions</th>
               </tr>
             </thead>
@@ -302,6 +323,11 @@ export default function LeadsPage() {
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
                     {lead.channel === "Email"
                       ? formatDate(lead.secondFollowUpDate)
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                    {lead.channel === "Email"
+                      ? getTemplateTitle(templateMap, lead.followUpTemplateId)
                       : "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -342,6 +368,7 @@ export default function LeadsPage() {
         onSubmit={handleSubmit}
         lead={editingLead}
         companies={companies}
+        templates={templates}
         defaultChannel={DEFAULT_LEADS_PAGE_CHANNEL}
         channelOptions={LEADS_PAGE_CHANNELS}
         onCreateCompany={handleCreateCompany}

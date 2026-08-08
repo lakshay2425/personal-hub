@@ -69,6 +69,45 @@ class JobSearchDatabase extends Dexie {
       templates: "++id, type, title, createdAt, updatedAt",
       activityLogs: "++id, entityType, entityId, action, timestamp",
     });
+
+    this.version(4)
+      .stores({
+        companies:
+          "++id, companyName, sector, createdAt",
+        leads:
+          "++id, companyId, name, role, type, channel, status, firstFollowUpDate, secondFollowUpDate, templateId, followUpTemplateId, createdAt",
+        applications:
+          "++id, companyId, role, portal, status, appliedDate, createdAt",
+        coldEmails:
+          "++id, companyId, leadId, role, status, sentDate, firstFollowUpDate, secondFollowUpDate, templateId, followUpTemplateId, createdAt",
+        templates: "++id, type, title, createdAt, updatedAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+      })
+      .upgrade(async (transaction) => {
+        await transaction
+          .table("leads")
+          .toCollection()
+          .modify((lead) => {
+            if (lead.templateId === undefined) {
+              lead.templateId = null;
+            }
+            if (lead.followUpTemplateId === undefined) {
+              lead.followUpTemplateId = null;
+            }
+          });
+
+        await transaction
+          .table("coldEmails")
+          .toCollection()
+          .modify((coldEmail) => {
+            if (coldEmail.templateId === undefined) {
+              coldEmail.templateId = null;
+            }
+            if (coldEmail.followUpTemplateId === undefined) {
+              coldEmail.followUpTemplateId = null;
+            }
+          });
+      });
   }
 }
 

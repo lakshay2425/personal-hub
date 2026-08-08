@@ -52,6 +52,8 @@ export interface Lead {
   status: LeadStatus;
   firstFollowUpDate: string | null;
   secondFollowUpDate: string | null;
+  templateId: number | null;
+  followUpTemplateId: number | null;
   notes: string;
   createdAt: number;
 }
@@ -78,6 +80,8 @@ export interface ColdEmail {
   firstFollowUpDate: string;
   secondFollowUpDate: string;
   templateName: string;
+  templateId: number | null;
+  followUpTemplateId: number | null;
   notes: string;
   createdAt: number;
 }

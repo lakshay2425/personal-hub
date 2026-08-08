@@ -26,11 +26,22 @@ import {
 } from "@/features/job-search/constants";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
+import { useTemplates } from "@/features/job-search/hooks/useTemplates";
+import {
+  buildTemplateMap,
+  getTemplateTitle,
+} from "@/features/job-search/lib/templateUtils";
 import type { Lead } from "@/features/job-search/types";
 
 export default function OutreachPage() {
   const { companies, addCompany } = useCompanies();
   const { leads, isLoading, addLead, editLead, removeLead } = useLeads();
+  const { templates } = useTemplates();
+
+  const templateMap = useMemo(
+    () => buildTemplateMap(templates),
+    [templates],
+  );
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -190,6 +201,17 @@ export default function OutreachPage() {
                     label="Channel"
                     value={<ChannelBadge channel={lead.channel} />}
                   />
+                  <MobileCardMetaRow
+                    label="Outreach Template"
+                    value={getTemplateTitle(templateMap, lead.templateId)}
+                  />
+                  <MobileCardMetaRow
+                    label="Follow-up Template"
+                    value={getTemplateTitle(
+                      templateMap,
+                      lead.followUpTemplateId,
+                    )}
+                  />
                 </MobileCardMeta>
                 <MobileCardActions>
                   <button
@@ -233,6 +255,12 @@ export default function OutreachPage() {
                     Channel
                   </th>
                   <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Outreach Template
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Follow-up Template
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
                     Status
                   </th>
                   <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
@@ -257,6 +285,12 @@ export default function OutreachPage() {
                     </td>
                     <td className="px-4 py-3">
                       <ChannelBadge channel={lead.channel} />
+                    </td>
+                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                      {getTemplateTitle(templateMap, lead.templateId)}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                      {getTemplateTitle(templateMap, lead.followUpTemplateId)}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={lead.status} />
@@ -299,6 +333,7 @@ export default function OutreachPage() {
         onSubmit={handleSubmit}
         lead={editingLead}
         companies={companies}
+        templates={templates}
         defaultChannel={DEFAULT_LEAD_CHANNEL}
         channelOptions={OUTREACH_CHANNELS}
         onCreateCompany={handleCreateCompany}

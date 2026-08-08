@@ -195,7 +195,7 @@ Import is full overwrite of `logEntries`.
 ## `job-search-tracker-db`
 
 **Source:** `features/job-search/db.ts`  
-**Current version:** 3
+**Current version:** 4
 
 ### Migration history (`job-search-tracker-db`)
 
@@ -204,6 +204,7 @@ Import is full overwrite of `logEntries`.
 | 1 | Initial tables: companies, leads, applications, coldEmails, activityLogs |
 | 2 | Add `channel` index on leads; backfill missing `channel` with `"Email"` |
 | 3 | Add `templates` table (no data migration; existing rows preserved) |
+| 4 | Add `templateId` and `followUpTemplateId` on `leads` and `coldEmails`; backfill with `null` |
 
 ### `companies`
 
@@ -236,6 +237,8 @@ Import is full overwrite of `logEntries`.
 | `status` | `"New" \| "Contacted" \| "Replied" \| "Inactive"` | |
 | `firstFollowUpDate` | `string \| null` | Date string for Email leads; `null` otherwise |
 | `secondFollowUpDate` | `string \| null` | Date string for Email leads; `null` otherwise |
+| `templateId` | `number \| null` | FK → `templates.id` (LinkedIn/X outreach message) |
+| `followUpTemplateId` | `number \| null` | FK → `templates.id` (Follow-up type) |
 | `notes` | `string` | |
 | `createdAt` | `number` | Unix ms |
 
@@ -282,7 +285,9 @@ Follow-up date columns appear on the Leads page for Email-channel leads only. Th
 | `status` | `"Draft" \| "Sent" \| "Replied" \| "Rejected" \| "Positive Response" \| "Closed"` | |
 | `firstFollowUpDate` | `string` | Date string |
 | `secondFollowUpDate` | `string` | Date string |
-| `templateName` | `string` | |
+| `templateName` | `string` | Legacy free-text; synced from selected template title when set |
+| `templateId` | `number \| null` | FK → `templates.id` (Cold Email type) |
+| `followUpTemplateId` | `number \| null` | FK → `templates.id` (Follow-up type) |
 | `notes` | `string` | |
 | `createdAt` | `number` | Unix ms |
 
@@ -327,7 +332,7 @@ Follow-up date columns appear on the Leads page for Email-channel leads only. Th
 
 ```json
 {
-  "version": 3,
+  "version": 4,
   "exportedAt": "ISO-8601 string",
   "companies": [],
   "leads": [],

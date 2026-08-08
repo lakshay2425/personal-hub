@@ -13,7 +13,7 @@ export async function exportJobSearchData() {
     ]);
 
   return {
-    version: 3,
+    version: 4,
     exportedAt: new Date().toISOString(),
     companies,
     leads,
