@@ -15,6 +15,7 @@ const routes = [
   "/job-search/outreach",
   "/job-search/applications",
   "/job-search/cold-emails",
+  "/job-search/templates",
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {

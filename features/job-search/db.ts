@@ -6,6 +6,7 @@ import type {
   ColdEmail,
   Company,
   Lead,
+  Template,
 } from "./types";
 
 import { LEGACY_LEAD_CHANNEL } from "./constants";
@@ -15,6 +16,7 @@ class JobSearchDatabase extends Dexie {
   leads!: EntityTable<Lead, "id">;
   applications!: EntityTable<Application, "id">;
   coldEmails!: EntityTable<ColdEmail, "id">;
+  templates!: EntityTable<Template, "id">;
   activityLogs!: EntityTable<ActivityLog, "id">;
 
   constructor() {
@@ -54,6 +56,19 @@ class JobSearchDatabase extends Dexie {
             }
           });
       });
+
+    this.version(3).stores({
+      companies:
+        "++id, companyName, sector, createdAt",
+      leads:
+        "++id, companyId, name, role, type, channel, status, firstFollowUpDate, secondFollowUpDate, createdAt",
+      applications:
+        "++id, companyId, role, portal, status, appliedDate, createdAt",
+      coldEmails:
+        "++id, companyId, leadId, role, status, sentDate, firstFollowUpDate, secondFollowUpDate, createdAt",
+      templates: "++id, type, title, createdAt, updatedAt",
+      activityLogs: "++id, entityType, entityId, action, timestamp",
+    });
   }
 }
 

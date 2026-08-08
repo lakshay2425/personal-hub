@@ -103,3 +103,18 @@ export async function deleteColdEmailWithLogs(
     },
   );
 }
+
+export async function deleteTemplateWithLogs(
+  templateId: number,
+): Promise<void> {
+  const database = getDB();
+  await database.transaction(
+    "rw",
+    [database.templates, database.activityLogs],
+    async () => {
+      await deleteActivityLogsForEntity("template", templateId);
+      await database.templates.delete(templateId);
+      await logActivity("template", templateId, "Template Deleted");
+    },
+  );
+}

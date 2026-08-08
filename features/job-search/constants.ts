@@ -3,6 +3,7 @@ import type {
   ColdEmailStatus,
   LeadChannel,
   LeadStatus,
+  TemplateType,
   TimeFilter,
 } from "./types";
 
@@ -67,6 +68,21 @@ export const TIME_FILTERS: { value: TimeFilter; label: string }[] = [
   { value: "all", label: "All Time" },
 ];
 
+export const TEMPLATE_TYPES: TemplateType[] = [
+  "Cold Email",
+  "LinkedIn Message",
+  "X DM",
+  "Follow-up",
+];
+
+export const TEMPLATE_TYPE_FILTERS: {
+  value: TemplateType | "all";
+  label: string;
+}[] = [
+  { value: "all", label: "All" },
+  ...TEMPLATE_TYPES.map((type) => ({ value: type, label: type })),
+];
+
 export const NAV_ITEMS = [
   { href: "/job-search", label: "Dashboard", exact: true },
   { href: "/job-search/companies", label: "Companies", exact: false },
@@ -74,4 +90,5 @@ export const NAV_ITEMS = [
   { href: "/job-search/outreach", label: "Outreach", exact: false },
   { href: "/job-search/applications", label: "Applications", exact: false },
   { href: "/job-search/cold-emails", label: "Cold Emails", exact: false },
+  { href: "/job-search/templates", label: "Templates", exact: false },
 ] as const;

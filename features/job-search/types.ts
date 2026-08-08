@@ -17,11 +17,18 @@ export type ColdEmailStatus =
   | "Positive Response"
   | "Closed";
 
+export type TemplateType =
+  | "Cold Email"
+  | "LinkedIn Message"
+  | "X DM"
+  | "Follow-up";
+
 export type EntityType =
   | "company"
   | "lead"
   | "application"
-  | "coldEmail";
+  | "coldEmail"
+  | "template";
 
 export interface Company {
   id?: number;
@@ -73,6 +80,17 @@ export interface ColdEmail {
   templateName: string;
   notes: string;
   createdAt: number;
+}
+
+export interface Template {
+  id?: number;
+  type: TemplateType;
+  title: string;
+  subject: string;
+  body: string;
+  notes: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface ActivityLog {
