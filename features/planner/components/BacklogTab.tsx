@@ -1,42 +1,47 @@
 "use client";
 
 import { formatWeekLabel } from "../lib/weekUtils";
-import { TaskRow } from "./TaskRow";
 import type { Task } from "../types";
+import { SortableTaskTree } from "./SortableTaskTree";
 
 interface BacklogTabProps {
   tasks: Task[];
   onToggle: (task: Task, markDone: boolean) => void;
+  onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  onAddSubTask: (task: Task) => void;
   onMoveToWeek: (task: Task) => void;
+  onViewNotes: (task: Task) => void;
+  onReorder: (
+    parentId: number | null,
+    weekStart: string,
+    orderedIds: number[],
+  ) => Promise<void>;
 }
 
 export function BacklogTab({
   tasks,
   onToggle,
+  onEdit,
   onDelete,
+  onAddSubTask,
   onMoveToWeek,
+  onViewNotes,
+  onReorder,
 }: BacklogTabProps) {
-  if (tasks.length === 0) {
-    return (
-      <p className="py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        No backlog. You&apos;re all caught up.
-      </p>
-    );
-  }
-
   return (
-    <div className="space-y-2">
-      {tasks.map((task) => (
-        <TaskRow
-          key={task.id}
-          task={task}
-          weekLabel={formatWeekLabel(task.weekStart)}
-          onToggle={onToggle}
-          onDelete={onDelete}
-          onMoveToWeek={onMoveToWeek}
-        />
-      ))}
-    </div>
+    <SortableTaskTree
+      tasks={tasks}
+      showMoveToWeek
+      getWeekLabel={(task) => formatWeekLabel(task.weekStart)}
+      onToggle={onToggle}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onAddSubTask={onAddSubTask}
+      onMoveToWeek={onMoveToWeek}
+      onViewNotes={onViewNotes}
+      onReorder={onReorder}
+      emptyMessage="No backlog. You're all caught up."
+    />
   );
 }

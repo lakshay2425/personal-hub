@@ -131,6 +131,9 @@ Weekly planner tasks (Monday-based weeks).
 |-------|------|-------|
 | `id` | `number` | Auto-increment primary key |
 | `weekStart` | `string` | `YYYY-MM-DD` — Monday of the task's week |
+| `parentId` | `number \| null` | `null` = root task; sub-tasks inherit parent's week |
+| `depth` | `0 \| 1 \| 2` | Hierarchy depth (max 2 levels of nesting) |
+| `sortOrder` | `number` | Manual order among siblings (same `parentId` + `weekStart`) |
 | `title` | `string` | Required |
 | `priority` | `"High" \| "Medium" \| "Low"` | Default `Medium` |
 | `status` | `"Todo" \| "Done"` | |
@@ -138,9 +141,13 @@ Weekly planner tasks (Monday-based weeks).
 | `notes` | `string` | Optional |
 | `createdAt` | `number` | Unix ms |
 
-**Indexes:** `id`, `weekStart`, `title`, `priority`, `status`, `completedAt`, `createdAt`
+**Indexes:** `id`, `weekStart`, `parentId`, `title`, `priority`, `status`, `completedAt`, `sortOrder`, `createdAt`
 
-**Planner actions logged:** `"Task Created"`, `"Task Completed"`, `"Task Moved to This Week"`, `"Task Deleted"`
+**Hierarchy:** Sub-tasks inherit the parent's `weekStart`. Max depth is 2 (root → sub-task → sub-sub-task). Deleting a parent cascades to all descendants. Reorder applies only among siblings (same `parentId` and `weekStart`). Display order uses `sortOrder`, not priority.
+
+**Completion:** Leaf tasks and sub-tasks log individually to Logger on completion. Parents with sub-tasks show an `X/Y` progress badge and have a disabled checkbox; when all descendants are done, the parent auto-completes silently (no extra Logger entry). Uncompleting any sub-task reverts an auto-completed parent to Todo.
+
+**Planner actions logged:** `"Task Created"`, `"Sub-task Created"`, `"Task Completed"`, `"Task Moved to This Week"`, `"Task Deleted"`
 
 **Logger integration:** Completing a task creates a separate log entry in `logger-db` with `text: "✓ Completed task: [title]"` and `source: "planner"`.
 
@@ -198,6 +205,7 @@ Named release buckets for grouping project features (e.g. `"v1.0"`, `"Backlog"`)
 | 7 | Content ideas: add `scheduledDate`; backfill existing rows to `null` |
 | 8 | Add `tasks` table (no data migration; existing rows preserved) |
 | 9 | Add `features` and `versions` tables (no data migration; existing rows preserved) |
+| 10 | Tasks: add `parentId`, `depth`, `sortOrder`; backfill existing flat tasks as depth-0 roots ordered by priority then `createdAt` |
 
 ---
 
@@ -221,7 +229,7 @@ Named release buckets for grouping project features (e.g. `"v1.0"`, `"Backlog"`)
 }
 ```
 
-**Import:** Full overwrite — clears all eight tables, then inserts exported records. Older backups without `tasks`, `features`, or `versions` import with empty arrays for missing keys.  
+**Import:** Full overwrite — clears all eight tables, then inserts exported records. Older backups without `tasks`, `features`, or `versions` import with empty arrays for missing keys. Tasks missing hierarchy fields are backfilled on import (`parentId: null`, `depth: 0`, `sortOrder` from priority then `createdAt`).  
 **Source:** `features/questions/lib/exportRepository.ts`, `features/questions/lib/importRepository.ts`
 
 Standalone content ideas (`projectId: null`), planner tasks, and per-project features/versions are included in this export. They are not exported separately.

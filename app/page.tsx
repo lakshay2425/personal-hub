@@ -68,7 +68,7 @@ const FEATURES = [
     href: "/planner",
     title: "Planner",
     description:
-      "Monday-based weekly task planner with priority badges, backlog, and automatic Logger entries when you complete tasks.",
+      "Weekly planner with sub-tasks, drag reorder, backlog, and automatic Logger entries when you complete tasks.",
     cta: "Open Planner",
     icon: (
       <svg
@@ -345,8 +345,8 @@ export default function Home() {
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-pretty text-zinc-600 sm:text-lg sm:leading-8 dark:text-zinc-400">
             A calm, local-first toolkit for your learning and career. Capture
-            questions, log your progress, and track your job search — all stored
-            entirely in your browser.
+            questions, plan your week with sub-tasks, log your progress, and
+            track your job search — all stored entirely in your browser.
           </p>
           <div className="mx-auto mt-8 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
             <Link href="/projects" className={buttonPrimaryClassName}>

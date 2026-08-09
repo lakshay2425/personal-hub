@@ -174,6 +174,66 @@ class QuestionHubDatabase extends Dexie {
       features: "++id, projectId, versionId, title, status, createdAt",
       versions: "++id, projectId, name, createdAt",
     });
+
+    this.version(10)
+      .stores({
+        projects: "id",
+        questions: "id, projectId, parentId",
+        answers: "id, questionId, projectId",
+        contentIdeas:
+          "++id, projectId, parentId, title, status, scheduledDate, createdAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+        tasks:
+          "++id, weekStart, parentId, title, priority, status, completedAt, sortOrder, createdAt",
+        features: "++id, projectId, versionId, title, status, createdAt",
+        versions: "++id, projectId, name, createdAt",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("tasks")
+          .toCollection()
+          .modify((task: Task) => {
+            if (task.parentId === undefined) {
+              task.parentId = null;
+            }
+            if (task.depth === undefined) {
+              task.depth = 0;
+            }
+            if (task.sortOrder === undefined) {
+              task.sortOrder = 0;
+            }
+          });
+
+        const tasks = await tx.table("tasks").toArray();
+        const PRIORITY_ORDER: Record<Task["priority"], number> = {
+          High: 0,
+          Medium: 1,
+          Low: 2,
+        };
+
+        const byGroup = new Map<string, Task[]>();
+        for (const task of tasks) {
+          const parentId = task.parentId ?? null;
+          const key = `${task.weekStart}\0${parentId ?? "root"}`;
+          const group = byGroup.get(key) ?? [];
+          group.push(task);
+          byGroup.set(key, group);
+        }
+
+        for (const group of byGroup.values()) {
+          group.sort((a, b) => {
+            const priorityDiff =
+              PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+            if (priorityDiff !== 0) return priorityDiff;
+            return a.createdAt - b.createdAt;
+          });
+          await Promise.all(
+            group.map((task, index) =>
+              tx.table("tasks").update(task.id!, { sortOrder: index }),
+            ),
+          );
+        }
+      });
   }
 }
 

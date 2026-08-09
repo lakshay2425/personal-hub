@@ -1,6 +1,6 @@
 # Personal Hub
 
-> A calm, local-first toolkit for projects, weekly planning, daily logs, content ideas, product feature tracking, job search tracking, outreach templates, and template links on cold emails and outreach.
+> A calm, local-first toolkit for projects, weekly planning with sub-tasks, daily logs, content ideas, product feature tracking, job search tracking, outreach templates, and template links on cold emails and outreach.
 
 Personal Hub is an installable PWA that stores user data in the browser with IndexedDB (via Dexie). It has no required account, backend sync, or analytics pipeline for user content.
 
@@ -21,7 +21,7 @@ These are crawlable app shell / marketing pages. Dynamic IDs in URLs (e.g. proje
 - `/projects/[projectId]` — Project detail (Questions, Content Ideas, and Features tabs)
 - `/content-ideas` — Standalone content ideas
 - `/content-ideas/calendar` — Content calendar (schedule ideas by date)
-- `/planner` — Weekly task planner (week navigation, backlog, Logger integration)
+- `/planner` — Weekly task planner (Today / Backlog / Upcoming tabs, sub-tasks, drag reorder, Logger integration)
 - `/logger` — Daily log entries
 - `/logger/dashboard` — Date-filtered log review
 - `/job-search` — Dashboard (stats, activity, follow-ups)
@@ -55,12 +55,17 @@ Legacy redirect: `/questions` → `/projects`.
 - Included in Projects JSON export (not a separate export)
 
 ### Planner
-- Monday-based weekly task planner with week navigation (prev/next, "This Week")
+- Monday-based weekly task planner with **Today**, **Backlog**, and **Upcoming** tabs
+- Week navigation on Today (prev/next, "This Week")
+- Sub-task hierarchy (max depth 2: root → sub-task → sub-sub-task), collapsible groups
+- Drag-and-drop reorder among siblings; manual `sortOrder` (priority badge is informational only)
+- Edit, delete, and add sub-tasks via three-dot overflow menu; read-only notes modal from notes icon
 - Tasks with priority (High / Medium / Low), optional notes with voice input
-- Backlog for incomplete past-week tasks; "Move to This Week"
-- Completing a task auto-creates a separate Logger entry for today with `source: "planner"`
-- Activity log audit trail (Task Created, Completed, Moved, Deleted)
-- Included in Projects JSON export
+- Parent tasks with sub-tasks show `X/Y` progress badge; checkbox disabled until sub-tasks drive completion
+- Backlog for incomplete past-week tasks; "Move to This Week" (moves entire subtree)
+- Completing a leaf or sub-task auto-creates a separate Logger entry for today with `source: "planner"`; parent auto-completes silently when all descendants are done
+- Activity log audit trail (Task Created, Sub-task Created, Completed, Moved, Deleted)
+- Included in Projects JSON export; older backups backfill hierarchy fields on import
 
 ### Logger
 - Multiple timestamped entries per calendar day

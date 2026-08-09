@@ -51,13 +51,21 @@ export function isCurrentWeek(weekStart: string): boolean {
   return weekStart === getCurrentWeekStart();
 }
 
-export function sortBacklogTasks(tasks: Task[]): Task[] {
+export function sortTasksByOrder<T extends Pick<Task, "sortOrder" | "createdAt">>(
+  tasks: T[],
+): T[] {
   return [...tasks].sort((a, b) => {
-    const priorityDiff =
-      PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-    if (priorityDiff !== 0) return priorityDiff;
-    return a.weekStart.localeCompare(b.weekStart);
+    const orderA = a.sortOrder ?? 0;
+    const orderB = b.sortOrder ?? 0;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    return a.createdAt - b.createdAt;
   });
+}
+
+export function sortBacklogTasks(tasks: Task[]): Task[] {
+  return sortTasksByOrder(tasks);
 }
 
 export function groupTasksByWeek(tasks: Task[]): Map<string, Task[]> {
@@ -70,7 +78,7 @@ export function groupTasksByWeek(tasks: Task[]): Map<string, Task[]> {
   }
 
   for (const [weekStart, weekTasks] of groups) {
-    groups.set(weekStart, sortTasksByPriority(weekTasks));
+    groups.set(weekStart, sortTasksByOrder(weekTasks));
   }
 
   return new Map(

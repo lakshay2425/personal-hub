@@ -12,6 +12,59 @@ import { assertBackupShape } from "@/lib/export/validateBackup";
 import type { Answer, Project, Question } from "../types";
 import { getDB } from "./db";
 
+const PRIORITY_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
+
+function backfillTaskFields(task: Task, allTasks: Task[]): Task {
+  const parentId = task.parentId ?? null;
+  const depth =
+    task.depth ??
+    (parentId === null
+      ? 0
+      : ((allTasks.find((item) => item.id === parentId)?.depth ?? 0) +
+          1) as Task["depth"]);
+
+  return {
+    ...task,
+    parentId,
+    depth,
+    sortOrder: task.sortOrder ?? 0,
+  };
+}
+
+function assignTaskSortOrders(tasks: Task[]): Task[] {
+  const byGroup = new Map<string, Task[]>();
+
+  for (const task of tasks) {
+    const key = `${task.weekStart}\0${task.parentId ?? "root"}`;
+    const group = byGroup.get(key) ?? [];
+    group.push(task);
+    byGroup.set(key, group);
+  }
+
+  const sortOrderById = new Map<number, number>();
+
+  for (const group of byGroup.values()) {
+    group.sort((a, b) => {
+      const priorityDiff =
+        PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+      if (priorityDiff !== 0) return priorityDiff;
+      return a.createdAt - b.createdAt;
+    });
+    group.forEach((task, index) => {
+      if (task.id !== undefined) {
+        sortOrderById.set(task.id, index);
+      }
+    });
+  }
+
+  return tasks.map((task) => ({
+    ...task,
+    sortOrder:
+      task.sortOrder ??
+      (task.id !== undefined ? sortOrderById.get(task.id) ?? 0 : 0),
+  }));
+}
+
 const REQUIRED_ARRAYS = [
   "projects",
   "questions",
@@ -46,7 +99,11 @@ export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
       scheduledDate: idea.scheduledDate ?? null,
     })),
     activityLogs: arrays.activityLogs as QuestionHubActivityLog[],
-    tasks: Array.isArray(record.tasks) ? (record.tasks as Task[]) : [],
+    tasks: Array.isArray(record.tasks)
+      ? (record.tasks as Task[]).map((task, index, tasks) =>
+          backfillTaskFields(task, tasks),
+        )
+      : [],
     features: Array.isArray(record.features)
       ? (record.features as ProjectFeature[])
       : [],
@@ -60,7 +117,11 @@ export async function importProjectsData(
   payload: ProjectsBackupPayload,
 ): Promise<void> {
   const db = getDB();
-  const tasks = payload.tasks ?? [];
+  const tasks = assignTaskSortOrders(
+    (payload.tasks ?? []).map((task, index, tasks) =>
+      backfillTaskFields(task, tasks),
+    ),
+  );
   const features = payload.features ?? [];
   const versions = payload.versions ?? [];
 

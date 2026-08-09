@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  createSubTask as createSubTaskRepo,
   createTask as createTaskRepo,
   deleteTask as deleteTaskRepo,
   getBacklogTasks,
   getTasksForWeek,
   getUpcomingTasks,
   moveTaskToWeek as moveTaskToWeekRepo,
+  reorderTasks as reorderTasksRepo,
   toggleTaskComplete as toggleTaskCompleteRepo,
   updateTask as updateTaskRepo,
 } from "../lib/tasksRepository";
@@ -17,9 +19,14 @@ import {
   groupTasksByWeek,
   sortBacklogTasks,
   sortCompletedTasks,
-  sortTasksByPriority,
+  sortTasksByOrder,
 } from "../lib/weekUtils";
-import type { CreateTaskInput, Task, UpdateTaskInput } from "../types";
+import type {
+  CreateSubTaskInput,
+  CreateTaskInput,
+  Task,
+  UpdateTaskInput,
+} from "../types";
 
 export function useTasks(viewedWeekStart: string) {
   const [weekTasks, setWeekTasks] = useState<Task[]>([]);
@@ -78,13 +85,21 @@ export function useTasks(viewedWeekStart: string) {
     };
   }, [viewedWeekStart]);
 
-  const activeTasks = sortTasksByPriority(
-    weekTasks.filter((task) => task.status === "Todo"),
+  const activeTasks = useMemo(
+    () => sortTasksByOrder(weekTasks.filter((task) => task.status === "Todo")),
+    [weekTasks],
   );
-  const completedTasks = sortCompletedTasks(
-    weekTasks.filter((task) => task.status === "Done"),
+  const completedTasks = useMemo(
+    () =>
+      sortCompletedTasks(
+        weekTasks.filter((task) => task.status === "Done"),
+      ),
+    [weekTasks],
   );
-  const sortedBacklog = sortBacklogTasks(backlogTasks);
+  const sortedBacklog = useMemo(
+    () => sortBacklogTasks(backlogTasks),
+    [backlogTasks],
+  );
   const upcomingByWeek = useMemo(
     () => groupTasksByWeek(upcomingTasks),
     [upcomingTasks],
@@ -93,6 +108,15 @@ export function useTasks(viewedWeekStart: string) {
   const createTask = useCallback(
     async (input: CreateTaskInput) => {
       const created = await createTaskRepo(input);
+      await loadAll();
+      return created;
+    },
+    [loadAll],
+  );
+
+  const createSubTask = useCallback(
+    async (parentId: number, input: CreateSubTaskInput) => {
+      const created = await createSubTaskRepo(parentId, input);
       await loadAll();
       return created;
     },
@@ -126,6 +150,18 @@ export function useTasks(viewedWeekStart: string) {
     [loadAll],
   );
 
+  const reorderTasks = useCallback(
+    async (
+      parentId: number | null,
+      weekStart: string,
+      orderedIds: number[],
+    ) => {
+      await reorderTasksRepo(parentId, weekStart, orderedIds);
+      await loadAll();
+    },
+    [loadAll],
+  );
+
   const deleteTask = useCallback(
     async (taskId: number) => {
       await deleteTaskRepo(taskId);
@@ -135,6 +171,7 @@ export function useTasks(viewedWeekStart: string) {
   );
 
   return {
+    weekTasks,
     activeTasks,
     completedTasks,
     backlogTasks: sortedBacklog,
@@ -144,9 +181,11 @@ export function useTasks(viewedWeekStart: string) {
     error,
     currentWeekStart,
     createTask,
+    createSubTask,
     updateTask,
     toggleComplete,
     moveToWeek,
+    reorderTasks,
     deleteTask,
     reload: loadAll,
   };
