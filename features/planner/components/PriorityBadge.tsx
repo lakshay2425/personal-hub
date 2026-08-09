@@ -8,10 +8,12 @@ const PRIORITY_STYLES: Record<TaskPriority, string> = {
 };
 
 interface PriorityBadgeProps {
-  priority: TaskPriority;
+  priority: TaskPriority | null;
 }
 
 export function PriorityBadge({ priority }: PriorityBadgeProps) {
+  if (!priority) return null;
+
   return (
     <span
       className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLES[priority]}`}

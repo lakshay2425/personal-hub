@@ -14,6 +14,11 @@ import { getDB } from "./db";
 
 const PRIORITY_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
 
+function taskPriorityOrder(priority: Task["priority"]): number {
+  if (!priority) return 3;
+  return PRIORITY_ORDER[priority];
+}
+
 function backfillTaskFields(task: Task, allTasks: Task[]): Task {
   const parentId = task.parentId ?? null;
   const depth =
@@ -46,7 +51,7 @@ function assignTaskSortOrders(tasks: Task[]): Task[] {
   for (const group of byGroup.values()) {
     group.sort((a, b) => {
       const priorityDiff =
-        PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+        taskPriorityOrder(a.priority) - taskPriorityOrder(b.priority);
       if (priorityDiff !== 0) return priorityDiff;
       return a.createdAt - b.createdAt;
     });

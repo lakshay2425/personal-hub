@@ -4,7 +4,7 @@ import type {
   ContentIdea,
   QuestionHubActivityLog,
 } from "@/features/content-ideas/types";
-import type { Task } from "@/features/planner/types";
+import type { Task, TaskPriority } from "@/features/planner/types";
 import type {
   ProjectFeature,
   ProjectVersion,
@@ -205,7 +205,7 @@ class QuestionHubDatabase extends Dexie {
           });
 
         const tasks = await tx.table("tasks").toArray();
-        const PRIORITY_ORDER: Record<Task["priority"], number> = {
+        const PRIORITY_ORDER: Record<TaskPriority, number> = {
           High: 0,
           Medium: 1,
           Low: 2,
@@ -222,8 +222,9 @@ class QuestionHubDatabase extends Dexie {
 
         for (const group of byGroup.values()) {
           group.sort((a, b) => {
-            const priorityDiff =
-              PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+            const orderA = a.priority ? PRIORITY_ORDER[a.priority] : 3;
+            const orderB = b.priority ? PRIORITY_ORDER[b.priority] : 3;
+            const priorityDiff = orderA - orderB;
             if (priorityDiff !== 0) return priorityDiff;
             return a.createdAt - b.createdAt;
           });

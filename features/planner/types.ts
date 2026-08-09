@@ -9,7 +9,7 @@ export interface Task {
   depth: TaskDepth;
   sortOrder: number;
   title: string;
-  priority: TaskPriority;
+  priority: TaskPriority | null;
   status: TaskStatus;
   completedAt: number | null;
   notes: string;
@@ -29,13 +29,13 @@ export interface CreateTaskInput {
 
 export interface CreateSubTaskInput {
   title: string;
-  priority?: TaskPriority;
+  priority?: TaskPriority | null;
   notes?: string;
 }
 
 export interface UpdateTaskInput {
   title?: string;
-  priority?: TaskPriority;
+  priority?: TaskPriority | null;
   notes?: string;
   weekStart?: string;
 }

@@ -135,7 +135,7 @@ Weekly planner tasks (Monday-based weeks).
 | `depth` | `0 \| 1 \| 2` | Hierarchy depth (max 2 levels of nesting) |
 | `sortOrder` | `number` | Manual order among siblings (same `parentId` + `weekStart`) |
 | `title` | `string` | Required |
-| `priority` | `"High" \| "Medium" \| "Low"` | Default `Medium` |
+| `priority` | `"High" \| "Medium" \| "Low" \| null` | Root tasks default `Medium`; sub-tasks default `null` (optional) |
 | `status` | `"Todo" \| "Done"` | |
 | `completedAt` | `number \| null` | Unix ms when marked done; `null` otherwise |
 | `notes` | `string` | Optional |

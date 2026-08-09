@@ -86,12 +86,13 @@ export function groupTasksByWeek(tasks: Task[]): Map<string, Task[]> {
   );
 }
 
-export function sortTasksByPriority<T extends Pick<Task, "priority" | "createdAt">>(
-  tasks: T[],
-): T[] {
+export function sortTasksByPriority<
+  T extends Pick<Task, "priority" | "createdAt">,
+>(tasks: T[]): T[] {
   return [...tasks].sort((a, b) => {
-    const priorityDiff =
-      PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+    const orderA = a.priority ? PRIORITY_ORDER[a.priority] : 3;
+    const orderB = b.priority ? PRIORITY_ORDER[b.priority] : 3;
+    const priorityDiff = orderA - orderB;
     if (priorityDiff !== 0) return priorityDiff;
     return a.createdAt - b.createdAt;
   });

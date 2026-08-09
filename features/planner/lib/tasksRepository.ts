@@ -123,7 +123,7 @@ export async function createSubTask(
     depth,
     sortOrder,
     title: input.title.trim(),
-    priority: input.priority ?? "Medium",
+    priority: input.priority ?? null,
     status: "Todo",
     completedAt: null,
     notes: input.notes?.trim() ?? "",
