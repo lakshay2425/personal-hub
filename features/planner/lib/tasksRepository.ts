@@ -14,15 +14,24 @@ export async function getTasksForWeek(weekStart: string): Promise<Task[]> {
 }
 
 export async function getBacklogTasks(
-  viewedWeekStart: string,
+  currentWeekStart: string,
 ): Promise<Task[]> {
   const db = getDB();
   const tasks = await db.tasks
     .where("status")
     .equals("Todo")
-    .filter((task) => task.weekStart < viewedWeekStart)
+    .filter((task) => task.weekStart < currentWeekStart)
     .toArray();
   return tasks;
+}
+
+export async function getUpcomingTasks(
+  currentWeekStart: string,
+): Promise<Task[]> {
+  const db = getDB();
+  return db.tasks
+    .filter((task) => task.weekStart > currentWeekStart)
+    .toArray();
 }
 
 export async function createTask(input: CreateTaskInput): Promise<Task> {

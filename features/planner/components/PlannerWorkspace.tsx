@@ -8,14 +8,17 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useTasks } from "../hooks/useTasks";
 import { getCurrentWeekStart } from "../lib/weekUtils";
 import type { Task } from "../types";
-import { BacklogSection } from "./BacklogSection";
+import { BacklogTab } from "./BacklogTab";
 import { CompletedTasksSection } from "./CompletedTasksSection";
+import { PlannerTabNav, type PlannerTab } from "./PlannerTabNav";
 import { TaskFormModal } from "./TaskFormModal";
 import { TaskList } from "./TaskList";
+import { UpcomingTab } from "./UpcomingTab";
 import { WeekNavigation } from "./WeekNavigation";
 
 export function PlannerWorkspace() {
   const [weekStart, setWeekStart] = useState(getCurrentWeekStart);
+  const [activeTab, setActiveTab] = useState<PlannerTab>("today");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -24,8 +27,11 @@ export function PlannerWorkspace() {
     activeTasks,
     completedTasks,
     backlogTasks,
+    backlogCount,
+    upcomingByWeek,
     isLoading,
     error,
+    currentWeekStart,
     createTask,
     toggleComplete,
     moveToWeek,
@@ -49,13 +55,13 @@ export function PlannerWorkspace() {
   const handleMoveToWeek = useCallback(
     async (task: Task) => {
       try {
-        await moveToWeek(task.id!, weekStart);
+        await moveToWeek(task.id!, currentWeekStart);
         toast.success("Task moved to this week");
       } catch {
         toast.error("Failed to move task");
       }
     },
-    [moveToWeek, weekStart],
+    [moveToWeek, currentWeekStart],
   );
 
   const handleFormSubmit = useCallback(
@@ -86,6 +92,9 @@ export function PlannerWorkspace() {
     }
   }, [deleteTask, deletingTask]);
 
+  const defaultFormWeek =
+    activeTab === "today" ? weekStart : currentWeekStart;
+
   if (error) {
     return (
       <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -94,44 +103,69 @@ export function PlannerWorkspace() {
 
   return (
     <>
-      <WeekNavigation
-        weekStart={weekStart}
-        onWeekChange={setWeekStart}
-        onAddTask={() => setIsFormOpen(true)}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            Planner
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Plan your week, track backlog, and log completions automatically.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsFormOpen(true)}
+          className="w-full shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+          Add Task
+        </button>
+      </div>
+
+      <PlannerTabNav
+        activeTab={activeTab}
+        backlogCount={backlogCount}
+        onTabChange={setActiveTab}
       />
 
-      <section>
-        <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          This Week
-        </h2>
+      {isLoading ? (
+        <p className="py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          Loading tasks…
+        </p>
+      ) : (
+        <>
+          {activeTab === "today" && (
+            <>
+              <WeekNavigation weekStart={weekStart} onWeekChange={setWeekStart} />
+              <TaskList
+                tasks={activeTasks}
+                onToggle={handleToggle}
+                onDelete={setDeletingTask}
+              />
+              <CompletedTasksSection
+                tasks={completedTasks}
+                onToggle={handleToggle}
+                onDelete={setDeletingTask}
+              />
+            </>
+          )}
 
-        {isLoading ? (
-          <p className="py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Loading tasks…
-          </p>
-        ) : (
-          <>
-            <TaskList
-              tasks={activeTasks}
+          {activeTab === "backlog" && (
+            <BacklogTab
+              tasks={backlogTasks}
+              onToggle={handleToggle}
+              onDelete={setDeletingTask}
+              onMoveToWeek={handleMoveToWeek}
+            />
+          )}
+
+          {activeTab === "upcoming" && (
+            <UpcomingTab
+              tasksByWeek={upcomingByWeek}
               onToggle={handleToggle}
               onDelete={setDeletingTask}
             />
-            <CompletedTasksSection
-              tasks={completedTasks}
-              onToggle={handleToggle}
-              onDelete={setDeletingTask}
-            />
-          </>
-        )}
-      </section>
-
-      {!isLoading && (
-        <BacklogSection
-          tasks={backlogTasks}
-          onToggle={handleToggle}
-          onDelete={setDeletingTask}
-          onMoveToWeek={handleMoveToWeek}
-        />
+          )}
+        </>
       )}
 
       <TaskFormModal
@@ -139,7 +173,7 @@ export function PlannerWorkspace() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleFormSubmit}
-        defaultWeekStart={weekStart}
+        defaultWeekStart={defaultFormWeek}
       />
 
       <ConfirmDialog

@@ -1,27 +1,46 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   createTask as createTaskRepo,
   deleteTask as deleteTaskRepo,
   getBacklogTasks,
   getTasksForWeek,
+  getUpcomingTasks,
   moveTaskToWeek as moveTaskToWeekRepo,
   toggleTaskComplete as toggleTaskCompleteRepo,
   updateTask as updateTaskRepo,
 } from "../lib/tasksRepository";
 import {
+  getCurrentWeekStart,
+  groupTasksByWeek,
+  sortBacklogTasks,
   sortCompletedTasks,
   sortTasksByPriority,
 } from "../lib/weekUtils";
 import type { CreateTaskInput, Task, UpdateTaskInput } from "../types";
 
-export function useTasks(weekStart: string) {
+export function useTasks(viewedWeekStart: string) {
   const [weekTasks, setWeekTasks] = useState<Task[]>([]);
   const [backlogTasks, setBacklogTasks] = useState<Task[]>([]);
+  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const currentWeekStart = getCurrentWeekStart();
+
+  const loadAll = useCallback(async () => {
+    const currentWeek = getCurrentWeekStart();
+    const [week, backlog, upcoming] = await Promise.all([
+      getTasksForWeek(viewedWeekStart),
+      getBacklogTasks(currentWeek),
+      getUpcomingTasks(currentWeek),
+    ]);
+    setWeekTasks(week);
+    setBacklogTasks(backlog);
+    setUpcomingTasks(upcoming);
+  }, [viewedWeekStart]);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,13 +48,16 @@ export function useTasks(weekStart: string) {
     async function load() {
       try {
         setIsLoading(true);
-        const [week, backlog] = await Promise.all([
-          getTasksForWeek(weekStart),
-          getBacklogTasks(weekStart),
+        const currentWeek = getCurrentWeekStart();
+        const [week, backlog, upcoming] = await Promise.all([
+          getTasksForWeek(viewedWeekStart),
+          getBacklogTasks(currentWeek),
+          getUpcomingTasks(currentWeek),
         ]);
         if (!cancelled) {
           setWeekTasks(week);
           setBacklogTasks(backlog);
+          setUpcomingTasks(upcoming);
           setError(null);
         }
       } catch (err) {
@@ -54,16 +76,7 @@ export function useTasks(weekStart: string) {
     return () => {
       cancelled = true;
     };
-  }, [weekStart]);
-
-  const reload = useCallback(async () => {
-    const [week, backlog] = await Promise.all([
-      getTasksForWeek(weekStart),
-      getBacklogTasks(weekStart),
-    ]);
-    setWeekTasks(week);
-    setBacklogTasks(backlog);
-  }, [weekStart]);
+  }, [viewedWeekStart]);
 
   const activeTasks = sortTasksByPriority(
     weekTasks.filter((task) => task.status === "Todo"),
@@ -71,63 +84,70 @@ export function useTasks(weekStart: string) {
   const completedTasks = sortCompletedTasks(
     weekTasks.filter((task) => task.status === "Done"),
   );
-  const sortedBacklog = sortTasksByPriority(backlogTasks);
+  const sortedBacklog = sortBacklogTasks(backlogTasks);
+  const upcomingByWeek = useMemo(
+    () => groupTasksByWeek(upcomingTasks),
+    [upcomingTasks],
+  );
 
   const createTask = useCallback(
     async (input: CreateTaskInput) => {
       const created = await createTaskRepo(input);
-      await reload();
+      await loadAll();
       return created;
     },
-    [reload],
+    [loadAll],
   );
 
   const updateTask = useCallback(
     async (id: number, input: UpdateTaskInput) => {
       const updated = await updateTaskRepo(id, input);
-      await reload();
+      await loadAll();
       return updated;
     },
-    [reload],
+    [loadAll],
   );
 
   const toggleComplete = useCallback(
     async (task: Task, markDone: boolean) => {
       const updated = await toggleTaskCompleteRepo(task, markDone);
-      await reload();
+      await loadAll();
       return updated;
     },
-    [reload],
+    [loadAll],
   );
 
   const moveToWeek = useCallback(
     async (taskId: number, targetWeekStart: string) => {
       const updated = await moveTaskToWeekRepo(taskId, targetWeekStart);
-      await reload();
+      await loadAll();
       return updated;
     },
-    [reload],
+    [loadAll],
   );
 
   const deleteTask = useCallback(
     async (taskId: number) => {
       await deleteTaskRepo(taskId);
-      await reload();
+      await loadAll();
     },
-    [reload],
+    [loadAll],
   );
 
   return {
     activeTasks,
     completedTasks,
     backlogTasks: sortedBacklog,
+    backlogCount: sortedBacklog.length,
+    upcomingByWeek,
     isLoading,
     error,
+    currentWeekStart,
     createTask,
     updateTask,
     toggleComplete,
     moveToWeek,
     deleteTask,
-    reload,
+    reload: loadAll,
   };
 }

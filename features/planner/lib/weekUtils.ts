@@ -51,6 +51,33 @@ export function isCurrentWeek(weekStart: string): boolean {
   return weekStart === getCurrentWeekStart();
 }
 
+export function sortBacklogTasks(tasks: Task[]): Task[] {
+  return [...tasks].sort((a, b) => {
+    const priorityDiff =
+      PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+    if (priorityDiff !== 0) return priorityDiff;
+    return a.weekStart.localeCompare(b.weekStart);
+  });
+}
+
+export function groupTasksByWeek(tasks: Task[]): Map<string, Task[]> {
+  const groups = new Map<string, Task[]>();
+
+  for (const task of tasks) {
+    const existing = groups.get(task.weekStart) ?? [];
+    existing.push(task);
+    groups.set(task.weekStart, existing);
+  }
+
+  for (const [weekStart, weekTasks] of groups) {
+    groups.set(weekStart, sortTasksByPriority(weekTasks));
+  }
+
+  return new Map(
+    [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)),
+  );
+}
+
 export function sortTasksByPriority<T extends Pick<Task, "priority" | "createdAt">>(
   tasks: T[],
 ): T[] {
