@@ -18,8 +18,13 @@ import {
   mobileActionClass,
 } from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
+import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
-import { formatTimestamp } from "@/features/job-search/lib/dateUtils";
+import {
+  formatTimestamp,
+  getCurrentWeekStart,
+  isTimestampInWeek,
+} from "@/features/job-search/lib/dateUtils";
 import type { Company, CompanyWithCounts } from "@/features/job-search/types";
 
 type SortField = "companyName" | "createdAt";
@@ -38,6 +43,7 @@ export default function CompaniesPage() {
   const [sectorFilter, setSectorFilter] = useState("");
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortAsc, setSortAsc] = useState(false);
+  const [weekFilter, setWeekFilter] = useState<string | null>(getCurrentWeekStart());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [deletingCompany, setDeletingCompany] =
@@ -55,6 +61,9 @@ export default function CompaniesPage() {
     if (sectorFilter) {
       result = result.filter((c) => c.sector === sectorFilter);
     }
+    if (weekFilter) {
+      result = result.filter((c) => isTimestampInWeek(c.createdAt, weekFilter));
+    }
     result.sort((a, b) => {
       const cmp =
         sortField === "companyName"
@@ -63,7 +72,7 @@ export default function CompaniesPage() {
       return sortAsc ? cmp : -cmp;
     });
     return result;
-  }, [companiesWithCounts, search, sectorFilter, sortField, sortAsc]);
+  }, [companiesWithCounts, search, sectorFilter, weekFilter, sortField, sortAsc]);
 
   const handleSubmit = async (
     data: Omit<Company, "id" | "createdAt" | "updatedAt">,
@@ -115,6 +124,13 @@ export default function CompaniesPage() {
             Add Company
           </button>
         }
+      />
+
+      <WeekFilter
+        label="Added week"
+        weekStart={weekFilter}
+        onWeekChange={setWeekFilter}
+        count={filtered.length}
       />
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">

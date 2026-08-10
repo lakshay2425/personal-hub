@@ -18,10 +18,15 @@ import {
 } from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
+import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import { APPLICATION_STATUSES } from "@/features/job-search/constants";
 import { useApplications } from "@/features/job-search/hooks/useApplications";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
-import { formatDate } from "@/features/job-search/lib/dateUtils";
+import {
+  formatDate,
+  getCurrentWeekStart,
+  isDateInWeek,
+} from "@/features/job-search/lib/dateUtils";
 import type { Application } from "@/features/job-search/types";
 
 export default function ApplicationsPage() {
@@ -33,6 +38,7 @@ export default function ApplicationsPage() {
   const [companyFilter, setCompanyFilter] = useState("");
   const [portalFilter, setPortalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [weekFilter, setWeekFilter] = useState<string | null>(getCurrentWeekStart());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [deletingApp, setDeletingApp] = useState<Application | null>(null);
@@ -63,8 +69,11 @@ export default function ApplicationsPage() {
     if (statusFilter) {
       result = result.filter((a) => a.status === statusFilter);
     }
+    if (weekFilter) {
+      result = result.filter((a) => isDateInWeek(a.appliedDate, weekFilter));
+    }
     return result;
-  }, [applications, search, companyFilter, portalFilter, statusFilter]);
+  }, [applications, search, companyFilter, portalFilter, statusFilter, weekFilter]);
 
   const handleSubmit = async (data: Omit<Application, "id" | "createdAt">) => {
     try {
@@ -115,6 +124,13 @@ export default function ApplicationsPage() {
             Add Application
           </button>
         }
+      />
+
+      <WeekFilter
+        label="Applied week"
+        weekStart={weekFilter}
+        onWeekChange={setWeekFilter}
+        count={filtered.length}
       />
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">

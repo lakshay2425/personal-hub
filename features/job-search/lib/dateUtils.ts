@@ -1,4 +1,12 @@
-import { format, startOfDay, subDays } from "date-fns";
+import {
+  addWeeks as addWeeksFns,
+  endOfWeek,
+  format,
+  parseISO,
+  startOfDay,
+  startOfWeek,
+  subDays,
+} from "date-fns";
 
 import type { TimeFilter } from "../types";
 
@@ -47,4 +55,35 @@ export function isWithinTimeFilter(
 export function isDateToday(dateStr: string): boolean {
   if (!dateStr) return false;
   return dateStr === getTodayDateString();
+}
+
+export function getCurrentWeekStart(): string {
+  return format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+}
+
+export function addWeeks(weekStart: string, delta: number): string {
+  return format(addWeeksFns(parseISO(weekStart), delta), "yyyy-MM-dd");
+}
+
+export function formatWeekRange(weekStart: string): string {
+  const monday = parseISO(weekStart);
+  const sunday = endOfWeek(monday, { weekStartsOn: 1 });
+  return `${format(monday, "EEE dd MMM")} - ${format(sunday, "EEE dd MMM")}`;
+}
+
+export function isCurrentWeek(weekStart: string): boolean {
+  return weekStart === getCurrentWeekStart();
+}
+
+export function isDateInWeek(dateStr: string, weekStart: string): boolean {
+  if (!dateStr?.trim()) return false;
+  const monday = parseISO(weekStart);
+  const sunday = endOfWeek(monday, { weekStartsOn: 1 });
+  const startOnly = format(monday, "yyyy-MM-dd");
+  const endOnly = format(sunday, "yyyy-MM-dd");
+  return dateStr >= startOnly && dateStr <= endOnly;
+}
+
+export function isTimestampInWeek(timestamp: number, weekStart: string): boolean {
+  return isDateInWeek(format(new Date(timestamp), "yyyy-MM-dd"), weekStart);
 }

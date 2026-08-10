@@ -22,6 +22,7 @@ import {
 } from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
+import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import {
   DEFAULT_LEADS_PAGE_CHANNEL,
   isOutreachChannel,
@@ -31,7 +32,11 @@ import {
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
 import { useTemplates } from "@/features/job-search/hooks/useTemplates";
-import { formatDate } from "@/features/job-search/lib/dateUtils";
+import {
+  formatDate,
+  getCurrentWeekStart,
+  isTimestampInWeek,
+} from "@/features/job-search/lib/dateUtils";
 import {
   buildTemplateMap,
   getTemplateTitle,
@@ -53,6 +58,7 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [channelFilter, setChannelFilter] = useState("");
   const [roleTypeFilter, setRoleTypeFilter] = useState("");
+  const [weekFilter, setWeekFilter] = useState<string | null>(getCurrentWeekStart());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
@@ -87,6 +93,9 @@ export default function LeadsPage() {
           l.type.toLowerCase().includes(lower),
       );
     }
+    if (weekFilter) {
+      result = result.filter((l) => isTimestampInWeek(l.createdAt, weekFilter));
+    }
     return result;
   }, [
     leads,
@@ -95,6 +104,7 @@ export default function LeadsPage() {
     statusFilter,
     channelFilter,
     roleTypeFilter,
+    weekFilter,
   ]);
 
   const handleCreateCompany = async (companyName: string) => {
@@ -156,6 +166,13 @@ export default function LeadsPage() {
             Add Lead
           </button>
         }
+      />
+
+      <WeekFilter
+        label="Added week"
+        weekStart={weekFilter}
+        onWeekChange={setWeekFilter}
+        count={filtered.length}
       />
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">

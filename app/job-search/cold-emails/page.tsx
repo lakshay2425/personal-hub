@@ -18,12 +18,17 @@ import {
 } from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
+import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import { COLD_EMAIL_STATUSES } from "@/features/job-search/constants";
 import { useColdEmails } from "@/features/job-search/hooks/useColdEmails";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
 import { useTemplates } from "@/features/job-search/hooks/useTemplates";
-import { formatDate } from "@/features/job-search/lib/dateUtils";
+import {
+  formatDate,
+  getCurrentWeekStart,
+  isDateInWeek,
+} from "@/features/job-search/lib/dateUtils";
 import {
   buildTemplateMap,
   getTemplateTitle,
@@ -45,6 +50,7 @@ export default function ColdEmailsPage() {
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [weekFilter, setWeekFilter] = useState<string | null>(getCurrentWeekStart());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEmail, setEditingEmail] = useState<ColdEmail | null>(null);
   const [deletingEmail, setDeletingEmail] = useState<ColdEmail | null>(null);
@@ -76,8 +82,11 @@ export default function ColdEmailsPage() {
     if (statusFilter) {
       result = result.filter((e) => e.status === statusFilter);
     }
+    if (weekFilter) {
+      result = result.filter((e) => isDateInWeek(e.sentDate, weekFilter));
+    }
     return result;
-  }, [coldEmails, search, companyFilter, statusFilter, companyMap, leadMap]);
+  }, [coldEmails, search, companyFilter, statusFilter, weekFilter, companyMap, leadMap]);
 
   const handleSubmit = async (data: Omit<ColdEmail, "id" | "createdAt">) => {
     try {
@@ -128,6 +137,13 @@ export default function ColdEmailsPage() {
             Add Cold Email
           </button>
         }
+      />
+
+      <WeekFilter
+        label="Sent week"
+        weekStart={weekFilter}
+        onWeekChange={setWeekFilter}
+        count={filtered.length}
       />
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
