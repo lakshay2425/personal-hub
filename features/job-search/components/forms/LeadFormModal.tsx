@@ -9,7 +9,7 @@ import {
   LEAD_CHANNELS,
   LEAD_STATUSES,
 } from "../../constants";
-import { getLeadProfileLabel } from "../../lib/leadProfileUtils";
+import { backfillLeadProfileFields } from "../../lib/leadProfileUtils";
 import { getOutreachTemplateTypeForChannel } from "../../lib/templateUtils";
 import {
   getUniqueLeadRoles,
@@ -74,7 +74,9 @@ function LeadFormFields({
   const [role, setRole] = useState(lead?.role ?? "");
   const [type, setType] = useState(lead?.type ?? "");
   const [email, setEmail] = useState(lead?.email ?? "");
-  const [linkedin, setLinkedin] = useState(lead?.linkedin ?? "");
+  const initialProfiles = lead ? backfillLeadProfileFields(lead) : null;
+  const [linkedin, setLinkedin] = useState(initialProfiles?.linkedin ?? "");
+  const [xProfile, setXProfile] = useState(initialProfiles?.xProfile ?? "");
   const [channel, setChannel] = useState<Lead["channel"]>(
     lead?.channel ?? defaultChannel,
   );
@@ -163,6 +165,7 @@ function LeadFormFields({
         type,
         email,
         linkedin,
+        xProfile,
         channel,
         status,
         firstFollowUpDate: isEmailChannel ? firstFollowUpDate || null : null,
@@ -237,15 +240,19 @@ function LeadFormFields({
             type="email"
           />
         </FormField>
-        <FormField label={getLeadProfileLabel(channel)}>
+        <FormField label="LinkedIn Profile">
           <TextInput
             value={linkedin}
             onChange={setLinkedin}
-            placeholder={
-              channel === "X"
-                ? "https://x.com/username"
-                : "https://linkedin.com/in/..."
-            }
+            placeholder="https://linkedin.com/in/..."
+            type="url"
+          />
+        </FormField>
+        <FormField label="X Profile">
+          <TextInput
+            value={xProfile}
+            onChange={setXProfile}
+            placeholder="https://x.com/username"
             type="url"
           />
         </FormField>

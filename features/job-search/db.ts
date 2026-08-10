@@ -108,6 +108,37 @@ class JobSearchDatabase extends Dexie {
             }
           });
       });
+
+    this.version(5)
+      .stores({
+        companies:
+          "++id, companyName, sector, createdAt",
+        leads:
+          "++id, companyId, name, role, type, channel, status, firstFollowUpDate, secondFollowUpDate, templateId, followUpTemplateId, createdAt",
+        applications:
+          "++id, companyId, role, portal, status, appliedDate, createdAt",
+        coldEmails:
+          "++id, companyId, leadId, role, status, sentDate, firstFollowUpDate, secondFollowUpDate, templateId, followUpTemplateId, createdAt",
+        templates: "++id, type, title, createdAt, updatedAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+      })
+      .upgrade(async (transaction) => {
+        await transaction
+          .table("leads")
+          .toCollection()
+          .modify((lead: Lead) => {
+            if (lead.xProfile === undefined) {
+              lead.xProfile = "";
+            }
+            if (
+              lead.channel === "X" &&
+              !lead.xProfile.trim() &&
+              lead.linkedin?.trim()
+            ) {
+              lead.xProfile = lead.linkedin;
+            }
+          });
+      });
   }
 }
 

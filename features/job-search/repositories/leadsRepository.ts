@@ -46,6 +46,8 @@ export async function createLead(
   const normalizedData = clearNonEmailFollowUps({
     ...data,
     channel,
+    linkedin: data.linkedin ?? "",
+    xProfile: data.xProfile ?? "",
   });
   const id = await database.leads.add({
     ...normalizedData,

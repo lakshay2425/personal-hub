@@ -2,6 +2,7 @@ import { InvalidBackupError } from "@/lib/export/validateBackup";
 
 import { isLeadChannel, LEGACY_LEAD_CHANNEL } from "../constants";
 import { getDB } from "../db";
+import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
 import type {
   ActivityLog,
   Application,
@@ -71,7 +72,7 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
         ? lead.channel
         : LEGACY_LEAD_CHANNEL;
 
-      return {
+      return backfillLeadProfileFields({
         ...lead,
         channel,
         firstFollowUpDate:
@@ -80,7 +81,8 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
           channel === "Email" ? lead.secondFollowUpDate || null : null,
         templateId: normalizeTemplateRef(lead.templateId),
         followUpTemplateId: normalizeTemplateRef(lead.followUpTemplateId),
-      };
+        xProfile: lead.xProfile ?? "",
+      });
     }),
     applications: arrays.applications as Application[],
     coldEmails: (arrays.coldEmails as ColdEmail[]).map((coldEmail) => ({

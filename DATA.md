@@ -282,7 +282,7 @@ Import is full overwrite of `logEntries`.
 ## `job-search-tracker-db`
 
 **Source:** `features/job-search/db.ts`  
-**Current version:** 4
+**Current version:** 5
 
 ### Migration history (`job-search-tracker-db`)
 
@@ -292,6 +292,7 @@ Import is full overwrite of `logEntries`.
 | 2 | Add `channel` index on leads; backfill missing `channel` with `"Email"` |
 | 3 | Add `templates` table (no data migration; existing rows preserved) |
 | 4 | Add `templateId` and `followUpTemplateId` on `leads` and `coldEmails`; backfill with `null` |
+| 5 | Add `xProfile` on leads; backfill from existing `linkedin` for X-channel leads (keeps `linkedin` unchanged) |
 
 ### `companies`
 
@@ -319,7 +320,8 @@ Import is full overwrite of `logEntries`.
 | `role` | `string` | |
 | `type` | `string` | |
 | `email` | `string` | |
-| `linkedin` | `string` | |
+| `linkedin` | `string` | LinkedIn profile URL |
+| `xProfile` | `string` | X profile URL |
 | `channel` | `"Email" \| "LinkedIn" \| "X" \| "Other"` | Required; defaults to `"LinkedIn"` for new leads |
 | `status` | `"New" \| "Contacted" \| "Replied" \| "Inactive"` | |
 | `firstFollowUpDate` | `string \| null` | Date string for Email leads; `null` otherwise |
@@ -451,6 +453,7 @@ Import is full overwrite of all six tables.
 | 1–2 | No `templates` array → imports with empty templates; no template FK fields → `null` |
 | 3 | Has templates; template FK fields on leads/coldEmails default to `null` if missing |
 | 4 | Full schema including `templateId` and `followUpTemplateId` |
+| 5 | Adds `xProfile`; older backups import with `xProfile: ""` and backfill from `linkedin` for X-channel leads |
 
 ---
 

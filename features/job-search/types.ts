@@ -48,6 +48,7 @@ export interface Lead {
   type: string;
   email: string;
   linkedin: string;
+  xProfile: string;
   channel: LeadChannel;
   status: LeadStatus;
   firstFollowUpDate: string | null;

@@ -8,9 +8,14 @@ export function normalizeProfileUrl(url: string): string {
 }
 
 export function getLeadProfileUrl(lead: Lead): string | null {
-  const raw = lead.linkedin?.trim();
-  if (!raw) return null;
   if (lead.channel !== "LinkedIn" && lead.channel !== "X") return null;
+
+  const raw =
+    lead.channel === "LinkedIn"
+      ? lead.linkedin?.trim()
+      : lead.xProfile?.trim() || lead.linkedin?.trim();
+
+  if (!raw) return null;
   return normalizeProfileUrl(raw);
 }
 
@@ -23,4 +28,19 @@ export function getLeadProfileLabel(channel: Lead["channel"]): string {
     default:
       return "LinkedIn";
   }
+}
+
+export function backfillLeadProfileFields(lead: Lead): Lead {
+  const linkedin = lead.linkedin ?? "";
+  let xProfile = lead.xProfile ?? "";
+
+  if (lead.channel === "X" && !xProfile.trim() && linkedin.trim()) {
+    xProfile = linkedin;
+  }
+
+  return {
+    ...lead,
+    linkedin,
+    xProfile,
+  };
 }
