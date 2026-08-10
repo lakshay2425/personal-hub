@@ -18,7 +18,7 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 | **Content Ideas** | Capture ideas standalone or per-project; sub-ideas (up to 3 levels), status (Draft / Ready / Published), publish links, list/table/card views. Drag-and-drop, reparent, activity log. **Content Calendar** to schedule publish dates (month/week views). Included in Projects export. |
 | **Planner** | Monday-based weekly task planner with Today / Backlog / Upcoming tabs. Sub-tasks (up to 3 levels), drag-and-drop reorder, edit/delete via overflow menu, read-only notes viewer, priority badges, and backlog with "Move to This Week". Parent tasks show sub-task progress; completing a leaf or sub-task auto-creates a Logger entry. Tasks included in Projects JSON export. |
 | **Logger** | Timestamped daily entries — log multiple times per day. Dashboard view to filter and review entries by date. Future dates blocked on add/edit. JSON export/import. |
-| **Job Search Tracker** | Companies, leads, outreach (LinkedIn/X), applications, cold emails, and **outreach templates**. Create reusable templates (cold email, LinkedIn, X DM, follow-up) with copy-to-clipboard and `{{name}}` / `{{company}}` / `{{role}}` placeholders. **Link templates** to cold emails, outreach leads, and email follow-ups so you know which message was used. Global search, voice-to-text on forms, company detail pages, lead channels (Email / LinkedIn / X / Other) with conditional follow-up dates. JSON export/import (v4). |
+| **Job Search Tracker** | Companies, leads, outreach (LinkedIn/X), applications, cold emails, and **outreach templates**. **Leads** page: copy email to clipboard, view company info modal. **Outreach** page: overflow menu (Link to profile, Edit, Delete) with separate LinkedIn and X profile URLs. Reusable templates with copy-to-clipboard and placeholders. Link templates to cold emails, outreach leads, and email follow-ups. Global search, voice-to-text, company detail pages. JSON export/import (v5). |
 
 Shared across tools: light/dark theme (system default, persisted in localStorage), toast notifications, and responsive sidebar layout.
 
@@ -39,8 +39,8 @@ All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three 
 | `/job-search` | Dashboard — stats, recent activity, follow-ups |
 | `/job-search/companies` | Company list |
 | `/job-search/companies/[id]` | Company detail |
-| `/job-search/leads` | Email and other leads — follow-up dates and follow-up template links (Email channel) |
-| `/job-search/outreach` | LinkedIn and X outreach leads — outreach and follow-up template links |
+| `/job-search/leads` | Email and other leads — copy email, company info modal, follow-up dates and templates (Email channel) |
+| `/job-search/outreach` | LinkedIn and X outreach — profile link in overflow menu, outreach and follow-up template links |
 | `/job-search/applications` | Applications |
 | `/job-search/cold-emails` | Cold emails — outreach and follow-up template links |
 | `/job-search/templates` | Outreach message library (cold email, LinkedIn, X DM, follow-up) |
@@ -110,7 +110,7 @@ features/
 ├── planner/               # Weekly task planner — sub-tasks, reorder (shared question-hub-db)
 ├── project-features/      # Per-project features + versions (shared question-hub-db)
 ├── logger/                # Log entries (Dexie)
-└── job-search/            # Companies, leads, applications, cold emails, templates (Dexie v4)
+└── job-search/            # Companies, leads, applications, cold emails, templates (Dexie v5)
 lib/
 ├── site.ts                # Site name, description, keywords, URLs
 └── export/                # Shared JSON download / validation helpers

@@ -6,6 +6,9 @@ import toast from "react-hot-toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ChannelBadge } from "@/features/job-search/components/ChannelBadge";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
+import { CompanyInfoModal } from "@/features/job-search/components/CompanyInfoModal";
+import { LeadCompanyButton } from "@/features/job-search/components/LeadCompanyButton";
+import { LeadEmailButton } from "@/features/job-search/components/LeadEmailButton";
 import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
 import {
@@ -33,7 +36,7 @@ import {
   buildTemplateMap,
   getTemplateTitle,
 } from "@/features/job-search/lib/templateUtils";
-import type { Lead } from "@/features/job-search/types";
+import type { Company, Lead } from "@/features/job-search/types";
 
 export default function LeadsPage() {
   const { companies, addCompany } = useCompanies();
@@ -53,10 +56,11 @@ export default function LeadsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
+  const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const companyMap = useMemo(
-    () => new Map(companies.map((c) => [c.id, c.companyName])),
+  const companyById = useMemo(
+    () => new Map(companies.map((company) => [company.id!, company])),
     [companies],
   );
 
@@ -228,7 +232,12 @@ export default function LeadsPage() {
               <MobileListItem key={lead.id}>
                 <MobileCardHeader
                   title={lead.name}
-                  subtitle={companyMap.get(lead.companyId) ?? "—"}
+                  subtitle={
+                    <LeadCompanyButton
+                      company={companyById.get(lead.companyId)}
+                      onView={setViewingCompany}
+                    />
+                  }
                   badge={<StatusBadge status={lead.status} />}
                 />
                 <MobileCardMeta>
@@ -238,6 +247,10 @@ export default function LeadsPage() {
                   {lead.type ? (
                     <MobileCardMetaRow label="Type" value={lead.type} />
                   ) : null}
+                  <MobileCardMetaRow
+                    label="Email"
+                    value={<LeadEmailButton email={lead.email} />}
+                  />
                   <MobileCardMetaRow
                     label="Channel"
                     value={<ChannelBadge channel={lead.channel} />}
@@ -291,6 +304,7 @@ export default function LeadsPage() {
             <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
               <tr>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
+                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Email</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Company</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
@@ -306,8 +320,14 @@ export default function LeadsPage() {
               {filtered.map((lead) => (
                 <tr key={lead.id}>
                   <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{lead.name}</td>
+                  <td className="max-w-[220px] px-4 py-3">
+                    <LeadEmailButton email={lead.email} />
+                  </td>
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {companyMap.get(lead.companyId) ?? "—"}
+                    <LeadCompanyButton
+                      company={companyById.get(lead.companyId)}
+                      onView={setViewingCompany}
+                    />
                   </td>
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.role || "—"}</td>
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.type || "—"}</td>
@@ -372,6 +392,12 @@ export default function LeadsPage() {
         defaultChannel={DEFAULT_LEADS_PAGE_CHANNEL}
         channelOptions={LEADS_PAGE_CHANNELS}
         onCreateCompany={handleCreateCompany}
+      />
+
+      <CompanyInfoModal
+        isOpen={viewingCompany !== null}
+        onClose={() => setViewingCompany(null)}
+        company={viewingCompany}
       />
 
       <ConfirmDialog

@@ -35,9 +35,9 @@ export function MobileCardHeader({
           {title}
         </p>
         {subtitle ? (
-          <p className="mt-0.5 break-words text-sm text-zinc-500 dark:text-zinc-400">
+          <div className="mt-0.5 break-words text-sm text-zinc-500 dark:text-zinc-400">
             {subtitle}
-          </p>
+          </div>
         ) : null}
       </div>
       {badge ? <div className="shrink-0">{badge}</div> : null}

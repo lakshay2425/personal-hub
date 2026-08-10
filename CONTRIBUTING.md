@@ -50,7 +50,7 @@ features/
   planner/           # Weekly task planner — sub-tasks, reorder, overflow menu (shared question-hub-db)
   project-features/  # Per-project features + versions (shared question-hub-db)
   logger/            # Daily log entries (Dexie)
-  job-search/        # Job search tracker — companies, leads, templates, template FK links (Dexie v4)
+  job-search/        # Job search tracker — companies, leads, templates, template FK links (Dexie v5)
 lib/                 # Site-wide constants
 public/              # Static assets and PWA icons
 ```

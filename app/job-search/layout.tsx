@@ -5,7 +5,7 @@ import { JobSearchShell } from "@/features/job-search/components/JobSearchShell"
 export const metadata: Metadata = {
   title: "Job Search Tracker",
   description:
-    "Track companies, leads, applications, cold emails, and outreach templates — link templates to each outreach and follow-up. Stored locally.",
+    "Track companies, leads, applications, cold emails, and outreach templates — copy lead emails, view company info, open LinkedIn/X profiles, and link templates to each touchpoint. Stored locally.",
 };
 
 export default function JobSearchLayout({

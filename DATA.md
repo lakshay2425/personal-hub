@@ -333,12 +333,14 @@ Import is full overwrite of `logEntries`.
 
 **Indexes:** `id`, `companyId`, `name`, `role`, `type`, `channel`, `status`, `firstFollowUpDate`, `secondFollowUpDate`, `templateId`, `followUpTemplateId`, `createdAt`
 
-**UI routing by channel (same table, filtered views):**
+| Page | Route | Channels shown | In-list actions |
+|------|-------|----------------|-----------------|
+| Leads | `/job-search/leads` | Email, Other | Click email → copy to clipboard; click company → company info modal |
+| Outreach | `/job-search/outreach` | LinkedIn, X | Overflow menu: Link (profile URL), Edit, Delete |
 
-| Page | Route | Channels shown | Template fields in UI |
-|------|-------|----------------|----------------------|
-| Leads | `/job-search/leads` | Email, Other | Follow-up template (Email channel only) |
-| Outreach | `/job-search/outreach` | LinkedIn, X | Outreach template + follow-up template |
+**Leads page** also shows follow-up template (Email channel) and follow-up dates (Email only).
+
+**Outreach page** stores separate `linkedin` and `xProfile` fields; Link opens the URL for the lead's channel (`xProfile` with legacy fallback to `linkedin`).
 
 Follow-up **date** columns appear on the Leads page for Email-channel leads only. Outreach leads omit follow-up dates but support follow-up **template** links.
 

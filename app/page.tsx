@@ -114,7 +114,7 @@ const FEATURES = [
     href: "/job-search",
     title: "Job Search Tracker",
     description:
-      "Track companies, leads, applications, and cold emails. Link reusable outreach and follow-up templates to each touchpoint.",
+      "Track companies, leads, and outreach. Copy emails, view company info, open LinkedIn/X profiles, and link templates to each touchpoint.",
     cta: "Open Tracker",
     icon: (
       <svg
