@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { NAV_ITEMS } from "../constants";
+import { getNavItems } from "../constants";
+import { useJobSearchPreferences } from "../hooks/useJobSearchPreferences";
 
 export function JobSearchSubNav() {
   const pathname = usePathname();
+  const { showApplications } = useJobSearchPreferences();
+  const navItems = getNavItems(showApplications);
 
   return (
     <nav className="-mx-4 flex gap-1 overflow-x-auto border-b border-zinc-200 px-4 pb-3 sm:mx-0 sm:px-0 dark:border-zinc-800">
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const isActive = item.exact
           ? pathname === item.href
           : pathname.startsWith(item.href);

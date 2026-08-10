@@ -18,6 +18,7 @@ import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { TimeFilterPills } from "@/features/job-search/components/TimeFilterPills";
 import { useDashboard } from "@/features/job-search/hooks/useDashboard";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
+import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
 import { formatDate, formatTimestamp } from "@/features/job-search/lib/dateUtils";
 import type { TimeFilter } from "@/features/job-search/types";
@@ -31,6 +32,7 @@ function getCompanyName(
 
 export default function DashboardPage() {
   const [filter, setFilter] = useState<TimeFilter>("last30");
+  const { showApplications } = useJobSearchPreferences();
   const {
     stats,
     recentCompanies,
@@ -56,12 +58,20 @@ export default function DashboardPage() {
         <TimeFilterPills value={filter} onChange={setFilter} />
       </div>
 
-      <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div
+        className={`mb-10 grid gap-4 sm:grid-cols-2 ${
+          showApplications ? "lg:grid-cols-5" : "lg:grid-cols-2"
+        }`}
+      >
         <StatsCard label="Total Companies" value={stats.totalCompanies} />
         <StatsCard label="Total Leads" value={stats.totalLeads} />
-        <StatsCard label="Applications" value={stats.totalApplications} />
-        <StatsCard label="Interviews" value={stats.interviews} />
-        <StatsCard label="Offers" value={stats.offers} />
+        {showApplications ? (
+          <>
+            <StatsCard label="Applications" value={stats.totalApplications} />
+            <StatsCard label="Interviews" value={stats.interviews} />
+            <StatsCard label="Offers" value={stats.offers} />
+          </>
+        ) : null}
       </div>
 
       <section className="mb-10">
@@ -163,7 +173,11 @@ export default function DashboardPage() {
         )}
       </section>
 
-      <div className="mb-10 grid gap-8 lg:grid-cols-3">
+      <div
+        className={`mb-10 grid gap-8 ${
+          showApplications ? "lg:grid-cols-3" : "lg:grid-cols-2"
+        }`}
+      >
         <RecentSection title="Recently Added Companies">
           {recentCompanies.length === 0 ? (
             <EmptyState
@@ -227,34 +241,36 @@ export default function DashboardPage() {
           )}
         </RecentSection>
 
-        <RecentSection title="Recently Applied Jobs">
-          {recentApplications.length === 0 ? (
-            <EmptyState
-              title="No applications yet"
-              description="Track your job applications here."
-            />
-          ) : (
-            <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-              {recentApplications.map((a) => (
-                <li
-                  key={a.id}
-                  className="flex items-center justify-between gap-3 px-4 py-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="break-words font-medium text-zinc-900 dark:text-zinc-50">
-                      {a.role}
-                    </p>
-                    <p className="break-words text-xs text-zinc-500">
-                      {getCompanyName(a.companyId, companies)} ·{" "}
-                      {formatDate(a.appliedDate)}
-                    </p>
-                  </div>
-                  <StatusBadge status={a.status} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </RecentSection>
+        {showApplications ? (
+          <RecentSection title="Recently Applied Jobs">
+            {recentApplications.length === 0 ? (
+              <EmptyState
+                title="No applications yet"
+                description="Track your job applications here."
+              />
+            ) : (
+              <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+                {recentApplications.map((a) => (
+                  <li
+                    key={a.id}
+                    className="flex items-center justify-between gap-3 px-4 py-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words font-medium text-zinc-900 dark:text-zinc-50">
+                        {a.role}
+                      </p>
+                      <p className="break-words text-xs text-zinc-500">
+                        {getCompanyName(a.companyId, companies)} ·{" "}
+                        {formatDate(a.appliedDate)}
+                      </p>
+                    </div>
+                    <StatusBadge status={a.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </RecentSection>
+        ) : null}
       </div>
 
       <section>

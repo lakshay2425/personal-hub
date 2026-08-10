@@ -1,15 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { useGlobalSearch } from "../hooks/useGlobalSearch";
+import { useJobSearchPreferences } from "../hooks/useJobSearchPreferences";
 
 export function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const { results, isSearching } = useGlobalSearch(query);
+  const { showApplications } = useJobSearchPreferences();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const filteredResults = useMemo(
+    () =>
+      showApplications
+        ? results
+        : results.filter((result) => result.type !== "application"),
+    [results, showApplications],
+  );
 
   const showResults = isFocused && query.trim().length > 0;
 
@@ -28,10 +38,10 @@ export function GlobalSearch() {
         <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
           {isSearching ? (
             <p className="px-4 py-3 text-sm text-zinc-500">Searching...</p>
-          ) : results.length === 0 ? (
+          ) : filteredResults.length === 0 ? (
             <p className="px-4 py-3 text-sm text-zinc-500">No results found</p>
           ) : (
-            results.map((result) => (
+            filteredResults.map((result) => (
               <Link
                 key={`${result.type}-${result.id}`}
                 href={result.href}

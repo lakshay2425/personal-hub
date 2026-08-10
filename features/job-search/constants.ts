@@ -91,4 +91,12 @@ export const NAV_ITEMS = [
   { href: "/job-search/applications", label: "Applications", exact: false },
   { href: "/job-search/cold-emails", label: "Cold Emails", exact: false },
   { href: "/job-search/templates", label: "Templates", exact: false },
+  { href: "/job-search/settings", label: "Settings", exact: false },
 ] as const;
+
+export function getNavItems(showApplications: boolean) {
+  return NAV_ITEMS.filter(
+    (item) =>
+      showApplications || item.href !== "/job-search/applications",
+  );
+}

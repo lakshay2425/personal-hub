@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -22,6 +23,7 @@ import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import { APPLICATION_STATUSES } from "@/features/job-search/constants";
 import { useApplications } from "@/features/job-search/hooks/useApplications";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
+import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
 import {
   formatDate,
   getCurrentWeekStart,
@@ -30,6 +32,8 @@ import {
 import type { Application } from "@/features/job-search/types";
 
 export default function ApplicationsPage() {
+  const router = useRouter();
+  const { showApplications } = useJobSearchPreferences();
   const { companies } = useCompanies();
   const { applications, isLoading, addApplication, editApplication, removeApplication } =
     useApplications();
@@ -43,6 +47,12 @@ export default function ApplicationsPage() {
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [deletingApp, setDeletingApp] = useState<Application | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!showApplications) {
+      router.replace("/job-search/settings");
+    }
+  }, [showApplications, router]);
 
   const companyMap = useMemo(
     () => new Map(companies.map((c) => [c.id, c.companyName])),
@@ -104,6 +114,7 @@ export default function ApplicationsPage() {
     }
   };
 
+  if (!showApplications) return null;
   if (isLoading) return <LoadingState message="Loading applications..." />;
 
   return (

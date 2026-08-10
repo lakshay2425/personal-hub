@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -18,6 +18,7 @@ import {
 } from "@/features/job-search/components/MobileListCard";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { useCompany, useCompanies } from "@/features/job-search/hooks/useCompanies";
+import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
 import { formatDate, formatTimestamp } from "@/features/job-search/lib/dateUtils";
 import type { Company } from "@/features/job-search/types";
 
@@ -30,11 +31,18 @@ export default function CompanyDetailPage() {
   const { company, leads, applications, coldEmails, isLoading } =
     useCompany(id);
   const { editCompany, removeCompany } = useCompanies();
+  const { showApplications } = useJobSearchPreferences();
 
   const [activeTab, setActiveTab] = useState<Tab>("leads");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!showApplications && activeTab === "applications") {
+      setActiveTab("leads");
+    }
+  }, [showApplications, activeTab]);
 
   const handleSubmit = async (
     data: Omit<Company, "id" | "createdAt" | "updatedAt">,
@@ -82,7 +90,15 @@ export default function CompanyDetailPage() {
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: "leads", label: "Leads", count: leads.length },
-    { key: "applications", label: "Applications", count: applications.length },
+    ...(showApplications
+      ? [
+          {
+            key: "applications" as const,
+            label: "Applications",
+            count: applications.length,
+          },
+        ]
+      : []),
     { key: "coldEmails", label: "Cold Emails", count: coldEmails.length },
   ];
 
@@ -202,7 +218,7 @@ export default function CompanyDetailPage() {
         </>
       )}
 
-      {activeTab === "applications" && (
+      {showApplications && activeTab === "applications" && (
         <>
           {applications.length === 0 ? (
             <EmptyState title="No applications" description="No applications for this company yet." />

@@ -20,6 +20,7 @@ import {
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
+import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
 import {
   formatTimestamp,
   getCurrentWeekStart,
@@ -30,6 +31,7 @@ import type { Company, CompanyWithCounts } from "@/features/job-search/types";
 type SortField = "companyName" | "createdAt";
 
 export default function CompaniesPage() {
+  const { showApplications } = useJobSearchPreferences();
   const {
     companiesWithCounts,
     sectors,
@@ -205,10 +207,12 @@ export default function CompaniesPage() {
                     label="Leads"
                     value={company.leadsCount}
                   />
-                  <MobileCardMetaRow
-                    label="Applications"
-                    value={company.applicationsCount}
-                  />
+                  {showApplications ? (
+                    <MobileCardMetaRow
+                      label="Applications"
+                      value={company.applicationsCount}
+                    />
+                  ) : null}
                   <MobileCardMetaRow
                     label="Created"
                     value={formatTimestamp(company.createdAt)}
@@ -273,9 +277,11 @@ export default function CompaniesPage() {
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
                   Leads
                 </th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                  Apps
-                </th>
+                {showApplications ? (
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Apps
+                  </th>
+                ) : null}
                 <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
                   Created At
                 </th>
@@ -315,9 +321,11 @@ export default function CompaniesPage() {
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
                     {company.leadsCount}
                   </td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {company.applicationsCount}
-                  </td>
+                  {showApplications ? (
+                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                      {company.applicationsCount}
+                    </td>
+                  ) : null}
                   <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
                     {formatTimestamp(company.createdAt)}
                   </td>
