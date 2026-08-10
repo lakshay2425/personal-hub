@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -38,11 +38,8 @@ export default function CompanyDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (!showApplications && activeTab === "applications") {
-      setActiveTab("leads");
-    }
-  }, [showApplications, activeTab]);
+  const visibleTab =
+    !showApplications && activeTab === "applications" ? "leads" : activeTab;
 
   const handleSubmit = async (
     data: Omit<Company, "id" | "createdAt" | "updatedAt">,
@@ -156,7 +153,7 @@ export default function CompanyDetailPage() {
             type="button"
             onClick={() => setActiveTab(tab.key)}
             className={`shrink-0 px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab.key
+              visibleTab === tab.key
                 ? "border-b-2 border-zinc-900 text-zinc-900 dark:border-zinc-50 dark:text-zinc-50"
                 : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
             }`}
@@ -166,7 +163,7 @@ export default function CompanyDetailPage() {
         ))}
       </div>
 
-      {activeTab === "leads" && (
+      {visibleTab === "leads" && (
         <>
           {leads.length === 0 ? (
             <EmptyState
@@ -218,7 +215,7 @@ export default function CompanyDetailPage() {
         </>
       )}
 
-      {showApplications && activeTab === "applications" && (
+      {visibleTab === "applications" && (
         <>
           {applications.length === 0 ? (
             <EmptyState title="No applications" description="No applications for this company yet." />
@@ -268,7 +265,7 @@ export default function CompanyDetailPage() {
         </>
       )}
 
-      {activeTab === "coldEmails" && (
+      {visibleTab === "coldEmails" && (
         <>
           {coldEmails.length === 0 ? (
             <EmptyState title="No cold emails" description="No cold emails for this company yet." />
