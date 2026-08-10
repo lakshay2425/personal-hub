@@ -9,6 +9,7 @@ import {
   LEAD_CHANNELS,
   LEAD_STATUSES,
 } from "../../constants";
+import { getLeadProfileLabel } from "../../lib/leadProfileUtils";
 import { getOutreachTemplateTypeForChannel } from "../../lib/templateUtils";
 import {
   getUniqueLeadRoles,
@@ -236,11 +237,15 @@ function LeadFormFields({
             type="email"
           />
         </FormField>
-        <FormField label="LinkedIn">
+        <FormField label={getLeadProfileLabel(channel)}>
           <TextInput
             value={linkedin}
             onChange={setLinkedin}
-            placeholder="https://linkedin.com/in/..."
+            placeholder={
+              channel === "X"
+                ? "https://x.com/username"
+                : "https://linkedin.com/in/..."
+            }
             type="url"
           />
         </FormField>

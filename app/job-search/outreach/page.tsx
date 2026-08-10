@@ -8,6 +8,7 @@ import { ChannelBadge } from "@/features/job-search/components/ChannelBadge";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
+import { OutreachLeadOverflowMenu } from "@/features/job-search/components/OutreachLeadOverflowMenu";
 import {
   MobileCardActions,
   MobileCardHeader,
@@ -15,7 +16,6 @@ import {
   MobileCardMetaRow,
   MobileList,
   MobileListItem,
-  mobileActionClass,
 } from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
@@ -214,23 +214,16 @@ export default function OutreachPage() {
                   />
                 </MobileCardMeta>
                 <MobileCardActions>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingLead(lead);
-                      setIsFormOpen(true);
-                    }}
-                    className={mobileActionClass.edit}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeletingLead(lead)}
-                    className={mobileActionClass.delete}
-                  >
-                    Delete
-                  </button>
+                  <div className="ml-auto">
+                    <OutreachLeadOverflowMenu
+                      lead={lead}
+                      onEdit={() => {
+                        setEditingLead(lead);
+                        setIsFormOpen(true);
+                      }}
+                      onDelete={() => setDeletingLead(lead)}
+                    />
+                  </div>
                 </MobileCardActions>
               </MobileListItem>
             ))}
@@ -296,25 +289,14 @@ export default function OutreachPage() {
                       <StatusBadge status={lead.status} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingLead(lead);
-                            setIsFormOpen(true);
-                          }}
-                          className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingLead(lead)}
-                          className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      <OutreachLeadOverflowMenu
+                        lead={lead}
+                        onEdit={() => {
+                          setEditingLead(lead);
+                          setIsFormOpen(true);
+                        }}
+                        onDelete={() => setDeletingLead(lead)}
+                      />
                     </td>
                   </tr>
                 ))}
