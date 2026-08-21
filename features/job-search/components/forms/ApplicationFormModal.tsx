@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Modal } from "@/components/ui/Modal";
 
 import { APPLICATION_STATUSES } from "../../constants";
+import { getUniquePortals } from "../../repositories/applicationsRepository";
 import type { Application, Company } from "../../types";
 import { CompanyCombobox } from "./CompanyCombobox";
+import { CreatableSelectInput } from "./CreatableSelectInput";
 import {
   FormActions,
   FormField,
@@ -57,8 +59,26 @@ function ApplicationFormFields({
     application?.status ?? "Applied",
   );
   const [notes, setNotes] = useState(application?.notes ?? "");
+  const [portalOptions, setPortalOptions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyError, setCompanyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPortals() {
+      const portals = await getUniquePortals();
+      if (!cancelled) {
+        setPortalOptions(portals);
+      }
+    }
+
+    void loadPortals();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,10 +136,13 @@ function ApplicationFormFields({
           />
         </FormField>
         <FormField label="Portal">
-          <TextInput
+          <CreatableSelectInput
             value={portal}
             onChange={setPortal}
-            placeholder="LinkedIn, Naukri, Company Site..."
+            options={portalOptions}
+            placeholder="Select portal..."
+            createLabel="Add new portal..."
+            newValuePlaceholder="LinkedIn, Naukri, Company Site..."
           />
         </FormField>
         <FormField label="Applied Date">

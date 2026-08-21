@@ -1,6 +1,7 @@
 import { getDB } from "../db";
 import { logActivity } from "../lib/activityLog";
 import { deleteApplicationWithLogs } from "../lib/cascade";
+import { getUniqueStringValues } from "../lib/uniqueValues";
 import type { Application, ApplicationStatus } from "../types";
 
 export async function getAllApplications(): Promise<Application[]> {
@@ -103,4 +104,10 @@ export async function searchApplications(
   const lower = query.toLowerCase();
   const all = await database.applications.toArray();
   return all.filter((a: Application) => a.role.toLowerCase().includes(lower));
+}
+
+export async function getUniquePortals(): Promise<string[]> {
+  const database = getDB();
+  const applications = await database.applications.toArray();
+  return getUniqueStringValues(applications.map((application) => application.portal));
 }
