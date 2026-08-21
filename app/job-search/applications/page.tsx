@@ -34,7 +34,7 @@ import type { Application } from "@/features/job-search/types";
 export default function ApplicationsPage() {
   const router = useRouter();
   const { showApplications } = useJobSearchPreferences();
-  const { companies } = useCompanies();
+  const { companies, addCompany } = useCompanies();
   const { applications, isLoading, addApplication, editApplication, removeApplication } =
     useApplications();
 
@@ -85,6 +85,17 @@ export default function ApplicationsPage() {
     return result;
   }, [applications, search, companyFilter, portalFilter, statusFilter, weekFilter]);
 
+  const handleCreateCompany = async (companyName: string) => {
+    const company = await addCompany({
+      companyName: companyName.trim(),
+      sector: "",
+      website: "",
+      notes: "",
+    });
+    toast.success("Company created. You can fill in details later.");
+    return company;
+  };
+
   const handleSubmit = async (data: Omit<Application, "id" | "createdAt">) => {
     try {
       if (editingApp?.id) {
@@ -129,8 +140,7 @@ export default function ApplicationsPage() {
               setEditingApp(null);
               setIsFormOpen(true);
             }}
-            disabled={companies.length === 0}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Add Application
           </button>
@@ -189,15 +199,13 @@ export default function ApplicationsPage() {
           title="No applications found"
           description="Track your job applications here."
           action={
-            companies.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(true)}
-                className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-50 dark:text-zinc-900"
-              >
-                Add Application
-              </button>
-            ) : undefined
+            <button
+              type="button"
+              onClick={() => setIsFormOpen(true)}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-50 dark:text-zinc-900"
+            >
+              Add Application
+            </button>
           }
         />
       ) : (
@@ -301,6 +309,7 @@ export default function ApplicationsPage() {
         onSubmit={handleSubmit}
         application={editingApp}
         companies={companies}
+        onCreateCompany={handleCreateCompany}
       />
 
       <ConfirmDialog

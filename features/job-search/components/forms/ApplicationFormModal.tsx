@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 
 import { APPLICATION_STATUSES } from "../../constants";
 import type { Application, Company } from "../../types";
+import { CompanyCombobox } from "./CompanyCombobox";
 import {
   FormActions,
   FormField,
@@ -21,6 +22,7 @@ interface ApplicationFormModalProps {
   application?: Application | null;
   companies: Company[];
   defaultCompanyId?: number;
+  onCreateCompany: (companyName: string) => Promise<Company>;
 }
 
 interface ApplicationFormFieldsProps {
@@ -29,6 +31,7 @@ interface ApplicationFormFieldsProps {
   defaultCompanyId?: number;
   onClose: () => void;
   onSubmit: (data: Omit<Application, "id" | "createdAt">) => Promise<void>;
+  onCreateCompany: (companyName: string) => Promise<Company>;
 }
 
 function ApplicationFormFields({
@@ -37,6 +40,7 @@ function ApplicationFormFields({
   defaultCompanyId,
   onClose,
   onSubmit,
+  onCreateCompany,
 }: ApplicationFormFieldsProps) {
   const [companyId, setCompanyId] = useState(
     application
@@ -54,9 +58,16 @@ function ApplicationFormFields({
   );
   const [notes, setNotes] = useState(application?.notes ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companyError, setCompanyError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!companyId) {
+      setCompanyError("Select or create a company");
+      return;
+    }
+
+    setCompanyError(null);
     setIsSubmitting(true);
     try {
       await onSubmit({
@@ -78,16 +89,23 @@ function ApplicationFormFields({
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label="Company" required>
-          <SelectInput
+          <CompanyCombobox
             value={companyId}
-            onChange={setCompanyId}
-            placeholder="Select company"
-            required
-            options={companies.map((c) => ({
-              value: c.id!,
-              label: c.companyName,
-            }))}
+            onChange={(nextCompanyId) => {
+              setCompanyId(nextCompanyId);
+              if (nextCompanyId) {
+                setCompanyError(null);
+              }
+            }}
+            companies={companies}
+            onCreateCompany={onCreateCompany}
+            placeholder="Search or add company..."
           />
+          {companyError ? (
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+              {companyError}
+            </p>
+          ) : null}
         </FormField>
         <FormField label="Role" required>
           <TextInput
@@ -151,6 +169,7 @@ export function ApplicationFormModal({
   application,
   companies,
   defaultCompanyId,
+  onCreateCompany,
 }: ApplicationFormModalProps) {
   return (
     <Modal
@@ -166,6 +185,7 @@ export function ApplicationFormModal({
         defaultCompanyId={defaultCompanyId}
         onClose={onClose}
         onSubmit={onSubmit}
+        onCreateCompany={onCreateCompany}
       />
     </Modal>
   );
