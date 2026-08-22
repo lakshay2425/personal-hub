@@ -18,7 +18,9 @@ import {
   MobileListItem,
 } from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
+import { StatsCard } from "@/features/job-search/components/StatsCard";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
+import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import {
   DEFAULT_LEAD_CHANNEL,
   LEAD_STATUSES,
@@ -27,6 +29,11 @@ import {
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
 import { useTemplates } from "@/features/job-search/hooks/useTemplates";
+import {
+  formatWeekRange,
+  getCurrentWeekStart,
+  isTimestampInWeek,
+} from "@/features/job-search/lib/dateUtils";
 import {
   buildTemplateMap,
   getTemplateTitle,
@@ -46,6 +53,7 @@ export default function OutreachPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [channelFilter, setChannelFilter] = useState("");
+  const [weekFilter, setWeekFilter] = useState<string | null>(getCurrentWeekStart());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
@@ -55,6 +63,20 @@ export default function OutreachPage() {
     () => new Map(companies.map((c) => [c.id, c.companyName])),
     [companies],
   );
+
+  const currentWeekStart = getCurrentWeekStart();
+
+  const outreachThisWeek = useMemo(() => {
+    const outreachLeads = leads.filter((l) => OUTREACH_CHANNELS.includes(l.channel));
+    const inWeek = outreachLeads.filter((l) =>
+      isTimestampInWeek(l.createdAt, currentWeekStart),
+    );
+    return {
+      total: inWeek.length,
+      linkedIn: inWeek.filter((l) => l.channel === "LinkedIn").length,
+      x: inWeek.filter((l) => l.channel === "X").length,
+    };
+  }, [leads, currentWeekStart]);
 
   const filtered = useMemo(() => {
     let result = leads.filter((l) => OUTREACH_CHANNELS.includes(l.channel));
@@ -68,8 +90,11 @@ export default function OutreachPage() {
     if (channelFilter) {
       result = result.filter((l) => l.channel === channelFilter);
     }
+    if (weekFilter) {
+      result = result.filter((l) => isTimestampInWeek(l.createdAt, weekFilter));
+    }
     return result;
-  }, [leads, search, statusFilter, channelFilter]);
+  }, [leads, search, statusFilter, channelFilter, weekFilter]);
 
   const handleCreateCompany = async (companyName: string) => {
     const company = await addCompany({
@@ -130,6 +155,29 @@ export default function OutreachPage() {
             Add Lead
           </button>
         }
+      />
+
+      <section className="mb-6">
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Outreach This Week
+          </h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {formatWeekRange(currentWeekStart)}
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatsCard label="Total Outreach" value={outreachThisWeek.total} />
+          <StatsCard label="LinkedIn" value={outreachThisWeek.linkedIn} />
+          <StatsCard label="X" value={outreachThisWeek.x} />
+        </div>
+      </section>
+
+      <WeekFilter
+        label="Added week"
+        weekStart={weekFilter}
+        onWeekChange={setWeekFilter}
+        count={filtered.length}
       />
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
