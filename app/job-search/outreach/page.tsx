@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ChannelBadge } from "@/features/job-search/components/ChannelBadge";
+import { CompanyFilterCombobox } from "@/features/job-search/components/CompanyFilterCombobox";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
@@ -51,6 +52,7 @@ export default function OutreachPage() {
   );
 
   const [search, setSearch] = useState("");
+  const [companyFilter, setCompanyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [channelFilter, setChannelFilter] = useState("");
   const [weekFilter, setWeekFilter] = useState<string | null>(getCurrentWeekStart());
@@ -84,6 +86,9 @@ export default function OutreachPage() {
       const lower = search.toLowerCase();
       result = result.filter((l) => l.name.toLowerCase().includes(lower));
     }
+    if (companyFilter) {
+      result = result.filter((l) => l.companyId === Number(companyFilter));
+    }
     if (statusFilter) {
       result = result.filter((l) => l.status === statusFilter);
     }
@@ -94,7 +99,7 @@ export default function OutreachPage() {
       result = result.filter((l) => isTimestampInWeek(l.createdAt, weekFilter));
     }
     return result;
-  }, [leads, search, statusFilter, channelFilter, weekFilter]);
+  }, [leads, search, companyFilter, statusFilter, channelFilter, weekFilter]);
 
   const handleCreateCompany = async (companyName: string) => {
     const company = await addCompany({
@@ -187,6 +192,11 @@ export default function OutreachPage() {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name..."
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:min-w-[200px] sm:flex-1 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+        />
+        <CompanyFilterCombobox
+          value={companyFilter}
+          onChange={setCompanyFilter}
+          companies={companies}
         />
         <select
           value={channelFilter}

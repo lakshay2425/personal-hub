@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ChannelBadge } from "@/features/job-search/components/ChannelBadge";
+import { CompanyFilterCombobox } from "@/features/job-search/components/CompanyFilterCombobox";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { CompanyInfoModal } from "@/features/job-search/components/CompanyInfoModal";
 import { LeadCompanyButton } from "@/features/job-search/components/LeadCompanyButton";
@@ -183,18 +184,11 @@ export default function LeadsPage() {
           placeholder="Search by name..."
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:min-w-[200px] sm:flex-1 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
         />
-        <select
+        <CompanyFilterCombobox
           value={companyFilter}
-          onChange={(e) => setCompanyFilter(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        >
-          <option value="">All Companies</option>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.companyName}
-            </option>
-          ))}
-        </select>
+          onChange={setCompanyFilter}
+          companies={companies}
+        />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}

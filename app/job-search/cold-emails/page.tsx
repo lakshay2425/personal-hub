@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { CompanyFilterCombobox } from "@/features/job-search/components/CompanyFilterCombobox";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { ColdEmailFormModal } from "@/features/job-search/components/forms/ColdEmailFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
@@ -70,10 +71,8 @@ export default function ColdEmailsPage() {
     if (search) {
       const lower = search.toLowerCase();
       result = result.filter((e) => {
-        const companyName =
-          companyMap.get(e.companyId)?.toLowerCase() ?? "";
         const leadName = leadMap.get(e.leadId)?.toLowerCase() ?? "";
-        return companyName.includes(lower) || leadName.includes(lower);
+        return leadName.includes(lower);
       });
     }
     if (companyFilter) {
@@ -151,19 +150,14 @@ export default function ColdEmailsPage() {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by company or lead..."
+          placeholder="Search by lead..."
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:min-w-[200px] sm:flex-1 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
         />
-        <select
+        <CompanyFilterCombobox
           value={companyFilter}
-          onChange={(e) => setCompanyFilter(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        >
-          <option value="">All Companies</option>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>{c.companyName}</option>
-          ))}
-        </select>
+          onChange={setCompanyFilter}
+          companies={companies}
+        />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
