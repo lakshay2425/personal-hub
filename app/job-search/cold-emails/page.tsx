@@ -85,7 +85,7 @@ export default function ColdEmailsPage() {
       result = result.filter((e) => isDateInWeek(e.sentDate, weekFilter));
     }
     return result;
-  }, [coldEmails, search, companyFilter, statusFilter, weekFilter, companyMap, leadMap]);
+  }, [coldEmails, search, companyFilter, statusFilter, weekFilter, leadMap]);
 
   const handleSubmit = async (data: Omit<ColdEmail, "id" | "createdAt">) => {
     try {

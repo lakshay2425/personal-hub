@@ -53,22 +53,40 @@ export function PriorityConfigSection() {
     index: number;
     name: string;
   } | null>(null);
-
-  const load = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const settings = await getPriorities();
-      setSlots(slotsToState(settings.slots));
-    } catch {
-      toast.error("Failed to load priorities");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setIsLoading(true);
+
+      try {
+        const settings = await getPriorities();
+        if (!cancelled) {
+          setSlots(slotsToState(settings.slots));
+        }
+      } catch {
+        if (!cancelled) {
+          toast.error("Failed to load priorities");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
     void load();
-  }, [load]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadToken]);
+
+  const reload = useCallback(() => {
+    setReloadToken((token) => token + 1);
+  }, []);
 
   const updateSlot = (index: number, patch: Partial<SlotState>) => {
     setSlots((current) =>
@@ -108,7 +126,7 @@ export function PriorityConfigSection() {
 
     try {
       await deletePriority(deleteTarget.name);
-      await load();
+      reload();
       toast.success(`"${deleteTarget.name}" removed; items moved to Unassigned`);
     } catch (err) {
       toast.error(

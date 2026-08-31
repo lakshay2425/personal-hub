@@ -45,7 +45,7 @@ export function LogEntryOverflowMenu({
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        aria-label={`Options for log entry`}
+        aria-label={`Options for log entry on ${entry.date}`}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         className="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"

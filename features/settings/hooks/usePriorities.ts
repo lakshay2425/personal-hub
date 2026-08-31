@@ -17,23 +17,43 @@ export function usePriorities() {
   const [settings, setSettings] = useState<PrioritiesSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await getPriorities();
-      setSettings(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load priorities");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await getPriorities();
+        if (!cancelled) {
+          setSettings(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load priorities",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
     void load();
-  }, [load]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadToken]);
+
+  const refresh = useCallback(async () => {
+    setReloadToken((token) => token + 1);
+  }, []);
 
   const activePriorities: PriorityArea[] = settings
     ? getActivePriorities(settings)
@@ -59,7 +79,7 @@ export function usePriorities() {
     activePriorities,
     isLoading,
     error,
-    refresh: load,
+    refresh,
     getColor,
     getDisplayName,
     UNASSIGNED,

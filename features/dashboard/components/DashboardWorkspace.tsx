@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { WeekNavigation } from "@/features/planner/components/WeekNavigation";
 import { getCurrentWeekStart } from "@/features/planner/lib/weekUtils";
@@ -18,24 +18,39 @@ export function DashboardWorkspace() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    try {
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
       setIsLoading(true);
       setError(null);
-      const weekData = await getDashboardWeekData(weekStart);
-      setData(weekData);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load dashboard data",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [weekStart]);
 
-  useEffect(() => {
+      try {
+        const weekData = await getDashboardWeekData(weekStart);
+        if (!cancelled) {
+          setData(weekData);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load dashboard data",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
     void load();
-  }, [load]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [weekStart]);
 
   if (isLoading) {
     return (
