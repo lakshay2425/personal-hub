@@ -148,7 +148,6 @@ export function TaskTreeItem({
                     total={progress.total}
                   />
                 ) : null}
-                <PriorityBadge priority={node.priority} />
                 {node.depth === 0 ? (
                   <CategoryBadge
                     category={node.category}
@@ -156,6 +155,7 @@ export function TaskTreeItem({
                     displayName={getDisplayName(node.category)}
                   />
                 ) : null}
+                <PriorityBadge priority={node.priority} />
                 <NotesIcon
                   notes={node.notes}
                   onClick={() => onViewNotes(node)}

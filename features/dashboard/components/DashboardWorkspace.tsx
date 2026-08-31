@@ -68,6 +68,20 @@ export function DashboardWorkspace() {
     return null;
   }
 
+  const totalTasks = data.categories.reduce(
+    (sum, category) => sum + category.completedTasks.length,
+    0,
+  );
+  const totalLogs = data.categories.reduce(
+    (sum, category) => sum + category.logEntries.length,
+    0,
+  );
+  const activeAreas = data.categories.filter(
+    (category) =>
+      category.completedTasks.length + category.logEntries.length > 0,
+  ).length;
+  const weekTotal = totalTasks + totalLogs;
+
   return (
     <div className="space-y-6">
       <WeekNavigation weekStart={weekStart} onWeekChange={setWeekStart} />
@@ -98,11 +112,25 @@ export function DashboardWorkspace() {
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+        <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
           Activity by priority
         </h3>
+        {weekTotal > 0 ? (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {totalTasks} task{totalTasks === 1 ? "" : "s"} completed this week
+            across {activeAreas} area{activeAreas === 1 ? "" : "s"}
+          </p>
+        ) : (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            No activity this week yet.
+          </p>
+        )}
         {data.categories.map((categoryData) => (
-          <PriorityWeekRow key={categoryData.category} data={categoryData} />
+          <PriorityWeekRow
+            key={categoryData.category}
+            data={categoryData}
+            weekTotal={weekTotal}
+          />
         ))}
       </div>
     </div>

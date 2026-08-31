@@ -9,25 +9,47 @@ import type { CategoryWeekData } from "../lib/dashboardRepository";
 
 interface PriorityWeekRowProps {
   data: CategoryWeekData;
+  weekTotal: number;
 }
 
-export function PriorityWeekRow({ data }: PriorityWeekRowProps) {
+export function PriorityWeekRow({ data, weekTotal }: PriorityWeekRowProps) {
   const { getColor, getDisplayName } = usePriorities();
   const taskCount = data.completedTasks.length;
   const logCount = data.logEntries.length;
+  const areaTotal = taskCount + logCount;
+  const widthPercent =
+    weekTotal > 0 ? (areaTotal / weekTotal) * 100 : 0;
+  const color = getColor(data.category) ?? "#a1a1aa";
+  const displayName = getDisplayName(data.category);
 
   return (
     <details className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
-        <CategoryBadge
-          category={data.category}
-          color={getColor(data.category)}
-          displayName={getDisplayName(data.category)}
-        />
-        <span className="text-sm text-zinc-600 dark:text-zinc-400">
-          {taskCount} task{taskCount === 1 ? "" : "s"} · {logCount} log
-          {logCount === 1 ? "" : "s"}
-        </span>
+      <summary className="cursor-pointer list-none px-4 py-3 [&::-webkit-details-marker]:hidden">
+        <div className="space-y-2">
+          <CategoryBadge
+            category={data.category}
+            color={getColor(data.category)}
+            displayName={displayName}
+          />
+          <div
+            className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800"
+            title={`${displayName}: ${taskCount} tasks, ${logCount} logs`}
+          >
+            {areaTotal > 0 ? (
+              <div
+                className="h-full min-w-[4px] rounded-full transition-all"
+                style={{
+                  width: `${widthPercent}%`,
+                  backgroundColor: color,
+                }}
+              />
+            ) : null}
+          </div>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            {taskCount} task{taskCount === 1 ? "" : "s"} · {logCount} log
+            {logCount === 1 ? "" : "s"}
+          </p>
+        </div>
       </summary>
 
       <div className="space-y-4 border-t border-zinc-200 px-4 py-3 dark:border-zinc-800">

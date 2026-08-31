@@ -89,13 +89,16 @@ export function KanbanTaskBoard({
           key={category}
           className="flex w-[min(100%,280px)] min-w-[280px] max-w-[320px] shrink-0 snap-start flex-col rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50"
         >
-          <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div
+            className="sticky top-0 z-10 flex items-center gap-2 border-b border-l-4 border-zinc-200 bg-white px-3 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+            style={{ borderLeftColor: getColor(category) ?? "#a1a1aa" }}
+          >
             <CategoryBadge
               category={category}
               color={getColor(category)}
               displayName={getDisplayName(category)}
             />
-            <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
               {count}
             </span>
           </div>

@@ -1,10 +1,9 @@
 import type { TaskPriority } from "../types";
 
-const PRIORITY_STYLES: Record<TaskPriority, string> = {
-  High: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  Medium:
-    "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-  Low: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+const PRIORITY_DOT_COLORS: Record<TaskPriority, string> = {
+  High: "text-red-400 dark:text-red-500",
+  Medium: "text-amber-400 dark:text-amber-500",
+  Low: "text-zinc-400 dark:text-zinc-500",
 };
 
 interface PriorityBadgeProps {
@@ -15,9 +14,10 @@ export function PriorityBadge({ priority }: PriorityBadgeProps) {
   if (!priority) return null;
 
   return (
-    <span
-      className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLES[priority]}`}
-    >
+    <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+      <span className={PRIORITY_DOT_COLORS[priority]} aria-hidden="true">
+        ●
+      </span>
       {priority}
     </span>
   );
