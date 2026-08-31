@@ -4,7 +4,7 @@ import { getDB } from "./db";
 export async function createLogEntry(
   date: string,
   text: string,
-  options?: { source?: "planner" },
+  options?: { source?: "planner"; category?: string },
 ): Promise<LogEntry> {
   const db = getDB();
   const now = Date.now();
@@ -14,6 +14,7 @@ export async function createLogEntry(
     date,
     text,
     ...(options?.source && { source: options.source }),
+    ...(options?.category && { category: options.category }),
     createdAt: now,
     updatedAt: now,
   };
@@ -32,6 +33,7 @@ export async function updateLogEntry(
   id: string,
   date: string,
   text: string,
+  category?: string,
 ): Promise<LogEntry> {
   const db = getDB();
   const existing = await db.logEntries.get(id);
@@ -44,6 +46,7 @@ export async function updateLogEntry(
     ...existing,
     date,
     text,
+    category: category || undefined,
     updatedAt: Date.now(),
   };
 

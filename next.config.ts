@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
         destination: "/projects",
         permanent: true,
       },
+      {
+        source: "/logger",
+        destination: "/planner/logger",
+        permanent: true,
+      },
+      {
+        source: "/logger/dashboard",
+        destination: "/planner/logger/daily",
+        permanent: true,
+      },
     ];
   },
 };

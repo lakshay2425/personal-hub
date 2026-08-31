@@ -37,3 +37,5 @@ export function getDB(): LoggerDatabase {
   }
   return db;
 }
+
+export const getLoggerDB = getDB;

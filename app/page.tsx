@@ -7,7 +7,7 @@ const NAV_LINKS = [
   { href: "/projects", label: "Projects" },
   { href: "/content-ideas", label: "Content Ideas" },
   { href: "/planner", label: "Planner" },
-  { href: "/logger", label: "Logger" },
+  { href: "/planner/logger", label: "Logger" },
   { href: "/job-search", label: "Job Search" },
 ] as const;
 
@@ -88,7 +88,7 @@ const FEATURES = [
     ),
   },
   {
-    href: "/logger",
+    href: "/planner/logger",
     title: "Logger",
     description:
       "Log what you did as separate entries — multiple times per day, all timestamped.",
@@ -437,7 +437,7 @@ export default function Home() {
               <Link href="/projects" className={buttonPrimaryClassName}>
                 Open Projects
               </Link>
-              <Link href="/logger" className={buttonSecondaryClassName}>
+              <Link href="/planner/logger" className={buttonSecondaryClassName}>
                 Open Logger
               </Link>
             </div>

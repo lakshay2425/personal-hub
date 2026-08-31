@@ -2,8 +2,12 @@
 
 import { useMemo } from "react";
 
+import { CategoryBadge } from "@/features/settings/components/CategoryBadge";
+import { usePriorities } from "@/features/settings/hooks/usePriorities";
+
 import { formatLogDate } from "../lib/dateUtils";
 import type { LogEntry } from "../types";
+import { LogEntryOverflowMenu } from "./LogEntryOverflowMenu";
 
 interface LogEntryListProps {
   entries: LogEntry[];
@@ -48,6 +52,7 @@ export function LogEntryList({
   emptyTitle = "No log entries yet",
   emptyDescription = 'Click "New Entry" to log what you did.',
 }: LogEntryListProps) {
+  const { getColor, getDisplayName } = usePriorities();
   const groupedEntries = useMemo(() => groupEntriesByDate(entries), [entries]);
 
   if (isLoading) {
@@ -87,28 +92,28 @@ export function LogEntryList({
   const renderEntry = (entry: LogEntry) => (
     <li
       key={entry.id}
-      className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+      className="group rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
     >
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <p className="min-w-0 flex-1 break-words text-sm text-zinc-900 dark:text-zinc-50">
-          {entry.text}
-        </p>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onEdit(entry)}
-            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(entry)}
-            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"
-          >
-            Delete
-          </button>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          {entry.category ? (
+            <div className="mb-2">
+              <CategoryBadge
+                category={entry.category}
+                color={getColor(entry.category)}
+                displayName={getDisplayName(entry.category)}
+              />
+            </div>
+          ) : null}
+          <p className="break-words text-sm text-zinc-900 dark:text-zinc-50">
+            {entry.text}
+          </p>
         </div>
+        <LogEntryOverflowMenu
+          entry={entry}
+          onEdit={() => onEdit(entry)}
+          onDelete={() => onDelete(entry)}
+        />
       </div>
     </li>
   );

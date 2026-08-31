@@ -2,7 +2,7 @@
 
 import { formatWeekRange } from "../lib/weekUtils";
 import type { Task } from "../types";
-import { SortableTaskTree } from "./SortableTaskTree";
+import { CategorizedTaskSections } from "./CategorizedTaskSections";
 
 interface UpcomingTabProps {
   tasksByWeek: Map<string, Task[]>;
@@ -10,6 +10,7 @@ interface UpcomingTabProps {
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
   onAddSubTask: (task: Task) => void;
+  onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
   onReorder: (
     parentId: number | null,
@@ -24,6 +25,7 @@ export function UpcomingTab({
   onEdit,
   onDelete,
   onAddSubTask,
+  onMoveToCategory,
   onViewNotes,
   onReorder,
 }: UpcomingTabProps) {
@@ -42,13 +44,14 @@ export function UpcomingTab({
           <h2 className="mb-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
             {formatWeekRange(weekStart)}
           </h2>
-          <SortableTaskTree
+          <CategorizedTaskSections
             tasks={tasks}
             reorderOnlyTodo
             onToggle={onToggle}
             onEdit={onEdit}
             onDelete={onDelete}
             onAddSubTask={onAddSubTask}
+            onMoveToCategory={onMoveToCategory}
             onViewNotes={onViewNotes}
             onReorder={onReorder}
             emptyMessage="No todo tasks for this week."

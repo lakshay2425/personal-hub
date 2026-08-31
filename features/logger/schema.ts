@@ -15,6 +15,7 @@ export const logEntryFormSchema = z.object({
     .trim()
     .min(1, "Entry text is required")
     .max(2000, "Entry must be under 2000 characters"),
+  category: z.string().optional(),
 });
 
 export type LogEntryFormValues = z.infer<typeof logEntryFormSchema>;

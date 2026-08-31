@@ -32,6 +32,7 @@ interface SortableTaskTreeProps {
   onDelete: (task: Task) => void;
   onAddSubTask: (task: Task) => void;
   onMoveToWeek?: (task: Task) => void;
+  onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
   onReorder: (
     parentId: number | null,
@@ -53,6 +54,7 @@ export function SortableTaskTree({
   onDelete,
   onAddSubTask,
   onMoveToWeek,
+  onMoveToCategory,
   onViewNotes,
   onReorder,
   emptyMessage = "No tasks.",
@@ -162,6 +164,7 @@ export function SortableTaskTree({
           onDelete={onDelete}
           onAddSubTask={onAddSubTask}
           onMoveToWeek={onMoveToWeek}
+          onMoveToCategory={onMoveToCategory}
           onViewNotes={onViewNotes}
           collapsedTaskIds={collapsedTaskIds}
         />

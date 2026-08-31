@@ -46,17 +46,22 @@ export function useLogEntries() {
     };
   }, []);
 
-  const createEntry = useCallback(async (date: string, text: string) => {
-    const created = await createLogEntryRepo(date, text);
-    setEntries((prev) =>
-      [created, ...prev].sort((a, b) => b.createdAt - a.createdAt),
-    );
-    return created;
-  }, []);
+  const createEntry = useCallback(
+    async (date: string, text: string, category?: string) => {
+      const created = await createLogEntryRepo(date, text, {
+        category: category || undefined,
+      });
+      setEntries((prev) =>
+        [created, ...prev].sort((a, b) => b.createdAt - a.createdAt),
+      );
+      return created;
+    },
+    [],
+  );
 
   const updateEntry = useCallback(
-    async (id: string, date: string, text: string) => {
-      const updated = await updateLogEntryRepo(id, date, text);
+    async (id: string, date: string, text: string, category?: string) => {
+      const updated = await updateLogEntryRepo(id, date, text, category);
       setEntries((prev) =>
         prev
           .map((entry) => (entry.id === id ? updated : entry))

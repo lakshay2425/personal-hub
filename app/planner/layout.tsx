@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 
+import { PlannerShell } from "@/features/planner/components/PlannerShell";
+
 export const metadata: Metadata = {
   title: "Planner",
   description:
-    "Monday-based weekly task planner with sub-tasks, drag reorder, Today / Backlog / Upcoming tabs, read-only notes, and automatic Logger entries when you complete tasks.",
+    "Plan your week, log your progress, and track activity by priority.",
 };
 
 export default function PlannerLayout({
@@ -11,5 +13,5 @@ export default function PlannerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <PlannerShell>{children}</PlannerShell>;
 }

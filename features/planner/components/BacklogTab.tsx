@@ -2,7 +2,7 @@
 
 import { formatWeekLabel } from "../lib/weekUtils";
 import type { Task } from "../types";
-import { SortableTaskTree } from "./SortableTaskTree";
+import { CategorizedTaskSections } from "./CategorizedTaskSections";
 
 interface BacklogTabProps {
   tasks: Task[];
@@ -11,6 +11,7 @@ interface BacklogTabProps {
   onDelete: (task: Task) => void;
   onAddSubTask: (task: Task) => void;
   onMoveToWeek: (task: Task) => void;
+  onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
   onReorder: (
     parentId: number | null,
@@ -26,11 +27,12 @@ export function BacklogTab({
   onDelete,
   onAddSubTask,
   onMoveToWeek,
+  onMoveToCategory,
   onViewNotes,
   onReorder,
 }: BacklogTabProps) {
   return (
-    <SortableTaskTree
+    <CategorizedTaskSections
       tasks={tasks}
       showMoveToWeek
       getWeekLabel={(task) => formatWeekLabel(task.weekStart)}
@@ -39,6 +41,7 @@ export function BacklogTab({
       onDelete={onDelete}
       onAddSubTask={onAddSubTask}
       onMoveToWeek={onMoveToWeek}
+      onMoveToCategory={onMoveToCategory}
       onViewNotes={onViewNotes}
       onReorder={onReorder}
       emptyMessage="No backlog. You're all caught up."

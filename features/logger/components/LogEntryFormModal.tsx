@@ -30,7 +30,13 @@ export function LogEntryFormModal({
       <LogEntryForm
         key={entry?.id ?? "create"}
         defaultValues={
-          entry ? { date: entry.date, text: entry.text } : undefined
+          entry
+            ? {
+                date: entry.date,
+                text: entry.text,
+                category: entry.category ?? "",
+              }
+            : undefined
         }
         onSubmit={onSubmit}
         onCancel={onClose}

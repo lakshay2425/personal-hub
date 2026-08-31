@@ -13,6 +13,7 @@ import {
   reorderTasks as reorderTasksRepo,
   toggleTaskComplete as toggleTaskCompleteRepo,
   updateTask as updateTaskRepo,
+  updateTaskCategory as updateTaskCategoryRepo,
 } from "../lib/tasksRepository";
 import {
   getCurrentWeekStart,
@@ -170,6 +171,15 @@ export function useTasks(viewedWeekStart: string) {
     [loadAll],
   );
 
+  const updateTaskCategory = useCallback(
+    async (taskId: number, category: string) => {
+      const updated = await updateTaskCategoryRepo(taskId, category);
+      await loadAll();
+      return updated;
+    },
+    [loadAll],
+  );
+
   return {
     weekTasks,
     activeTasks,
@@ -187,6 +197,7 @@ export function useTasks(viewedWeekStart: string) {
     moveToWeek,
     reorderTasks,
     deleteTask,
+    updateTaskCategory,
     reload: loadAll,
   };
 }

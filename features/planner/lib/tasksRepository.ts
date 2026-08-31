@@ -1,6 +1,7 @@
 import { getTodayDateString } from "@/features/logger/lib/dateUtils";
 import { createLogEntry } from "@/features/logger/lib/loggerRepository";
 import { getDB } from "@/features/questions/lib/db";
+import { UNASSIGNED } from "@/features/settings/types";
 
 import {
   deleteActivityLogsForTask,
@@ -86,6 +87,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     sortOrder,
     title: input.title.trim(),
     priority: input.priority ?? "Medium",
+    category: input.category ?? UNASSIGNED,
     status: "Todo",
     completedAt: null,
     notes: input.notes?.trim() ?? "",
@@ -124,6 +126,7 @@ export async function createSubTask(
     sortOrder,
     title: input.title.trim(),
     priority: input.priority ?? null,
+    category: parent.category,
     status: "Todo",
     completedAt: null,
     notes: input.notes?.trim() ?? "",
@@ -151,6 +154,7 @@ export async function updateTask(
     ...existing,
     ...(input.title !== undefined && { title: input.title.trim() }),
     ...(input.priority !== undefined && { priority: input.priority }),
+    ...(input.category !== undefined && { category: input.category }),
     ...(input.notes !== undefined && { notes: input.notes.trim() }),
     ...(input.weekStart !== undefined && { weekStart: input.weekStart }),
   };
@@ -260,7 +264,11 @@ export async function toggleTaskComplete(
     await createLogEntry(
       getTodayDateString(),
       `✓ Completed task: ${task.title}`,
-      { source: "planner" },
+      {
+        source: "planner",
+        category:
+          task.category !== UNASSIGNED ? task.category : undefined,
+      },
     );
     await logTaskActivity(id, "Task Completed");
 
@@ -313,6 +321,31 @@ export async function moveTaskToWeek(
   }
 
   await logTaskActivity(taskId, "Task Moved to This Week");
+  return updated;
+}
+
+export async function updateTaskCategory(
+  taskId: number,
+  category: string,
+): Promise<Task> {
+  const db = getDB();
+  const existing = await db.tasks.get(taskId);
+
+  if (!existing) {
+    throw new Error("Task not found");
+  }
+
+  const descendantIds = await collectDescendantIdsFromDb(taskId);
+  const updated: Task = { ...existing, category };
+  await db.tasks.put(updated);
+
+  for (const descendantId of descendantIds) {
+    const descendant = await db.tasks.get(descendantId);
+    if (descendant) {
+      await db.tasks.put({ ...descendant, category });
+    }
+  }
+
   return updated;
 }
 

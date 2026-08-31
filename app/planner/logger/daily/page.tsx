@@ -2,6 +2,6 @@
 
 import { LoggerDashboard } from "@/features/logger/components/LoggerDashboard";
 
-export default function LoggerDashboardPage() {
+export default function PlannerLoggerDailyPage() {
   return <LoggerDashboard />;
 }

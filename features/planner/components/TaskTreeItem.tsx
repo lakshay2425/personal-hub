@@ -4,6 +4,9 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { GripVertical } from "lucide-react";
 import type { CSSProperties, HTMLAttributes } from "react";
 
+import { CategoryBadge } from "@/features/settings/components/CategoryBadge";
+import { usePriorities } from "@/features/settings/hooks/usePriorities";
+
 import {
   countAllDescendants,
   getDescendantProgress,
@@ -37,6 +40,7 @@ interface TaskTreeItemProps {
   onDelete: (task: Task) => void;
   onAddSubTask: (task: Task) => void;
   onMoveToWeek?: (task: Task) => void;
+  onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
   collapsedTaskIds: Set<number>;
   itemRef?: (element: HTMLElement | null) => void;
@@ -59,12 +63,14 @@ export function TaskTreeItem({
   onDelete,
   onAddSubTask,
   onMoveToWeek,
+  onMoveToCategory,
   onViewNotes,
   collapsedTaskIds,
   itemRef,
   style,
   dragHandleProps,
 }: TaskTreeItemProps) {
+  const { getColor, getDisplayName } = usePriorities();
   const hasChildren = node.children.length > 0;
   const canAddSubTask = node.depth < 2;
   const descendantCount = countAllDescendants(node);
@@ -75,7 +81,7 @@ export function TaskTreeItem({
   return (
     <li ref={itemRef} style={style} className={DEPTH_PADDING[node.depth]}>
       <div
-        className={`flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-900 ${
+        className={`group flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-900 ${
           completed ? "opacity-75" : ""
         }`}
       >
@@ -127,6 +133,13 @@ export function TaskTreeItem({
                   />
                 ) : null}
                 <PriorityBadge priority={node.priority} />
+                {node.depth === 0 ? (
+                  <CategoryBadge
+                    category={node.category}
+                    color={getColor(node.category)}
+                    displayName={getDisplayName(node.category)}
+                  />
+                ) : null}
                 <NotesIcon
                   notes={node.notes}
                   onClick={() => onViewNotes(node)}
@@ -150,6 +163,11 @@ export function TaskTreeItem({
           onDelete={() => onDelete(node)}
           onMoveToWeek={
             onMoveToWeek ? () => onMoveToWeek(node) : undefined
+          }
+          onMoveToCategory={
+            onMoveToCategory
+              ? (category) => onMoveToCategory(node, category)
+              : undefined
           }
         />
       </div>
@@ -178,6 +196,7 @@ export function TaskTreeItem({
                 onDelete={onDelete}
                 onAddSubTask={onAddSubTask}
                 onMoveToWeek={onMoveToWeek}
+                onMoveToCategory={onMoveToCategory}
                 onViewNotes={onViewNotes}
                 collapsedTaskIds={collapsedTaskIds}
               />

@@ -31,7 +31,12 @@ export function LoggerDashboard() {
       }
 
       try {
-        await updateEntry(editingEntry.id, values.date, values.text);
+        await updateEntry(
+          editingEntry.id,
+          values.date,
+          values.text,
+          values.category?.trim() || undefined,
+        );
         toast.success("Entry updated");
         setEditingEntry(null);
       } catch {

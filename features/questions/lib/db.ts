@@ -4,6 +4,7 @@ import type {
   ContentIdea,
   QuestionHubActivityLog,
 } from "@/features/content-ideas/types";
+import type { PrioritiesSettings } from "@/features/settings/types";
 import type { Task, TaskPriority } from "@/features/planner/types";
 import type {
   ProjectFeature,
@@ -21,6 +22,7 @@ class QuestionHubDatabase extends Dexie {
   tasks!: EntityTable<Task, "id">;
   features!: EntityTable<ProjectFeature, "id">;
   versions!: EntityTable<ProjectVersion, "id">;
+  settings!: EntityTable<PrioritiesSettings, "key">;
 
   constructor() {
     super("question-hub-db");
@@ -234,6 +236,31 @@ class QuestionHubDatabase extends Dexie {
             ),
           );
         }
+      });
+
+    this.version(11)
+      .stores({
+        projects: "id",
+        questions: "id, projectId, parentId",
+        answers: "id, questionId, projectId",
+        contentIdeas:
+          "++id, projectId, parentId, title, status, scheduledDate, createdAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+        tasks:
+          "++id, weekStart, parentId, title, priority, category, status, completedAt, sortOrder, createdAt",
+        features: "++id, projectId, versionId, title, status, createdAt",
+        versions: "++id, projectId, name, createdAt",
+        settings: "key",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("tasks")
+          .toCollection()
+          .modify((task: Task) => {
+            if (task.category === undefined) {
+              task.category = "unassigned";
+            }
+          });
       });
   }
 }

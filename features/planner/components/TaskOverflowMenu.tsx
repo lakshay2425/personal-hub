@@ -3,6 +3,9 @@
 import { MoreVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { usePriorities } from "@/features/settings/hooks/usePriorities";
+import { UNASSIGNED } from "@/features/settings/types";
+
 import type { Task } from "../types";
 
 interface TaskOverflowMenuProps {
@@ -13,6 +16,7 @@ interface TaskOverflowMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onMoveToWeek?: () => void;
+  onMoveToCategory?: (category: string) => void;
 }
 
 export function TaskOverflowMenu({
@@ -23,9 +27,12 @@ export function TaskOverflowMenu({
   onEdit,
   onDelete,
   onMoveToWeek,
+  onMoveToCategory,
 }: TaskOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { activePriorities } = usePriorities();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -36,6 +43,7 @@ export function TaskOverflowMenu({
         !menuRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
+        setShowCategoryPicker(false);
       }
     }
 
@@ -43,10 +51,24 @@ export function TaskOverflowMenu({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const closeMenu = () => setIsOpen(false);
+  const closeMenu = () => {
+    setIsOpen(false);
+    setShowCategoryPicker(false);
+  };
+
+  const categoryOptions = [
+    { value: UNASSIGNED, label: "Unassigned" },
+    ...activePriorities.map((priority) => ({
+      value: priority.name,
+      label: priority.name,
+    })),
+  ];
 
   return (
-    <div ref={menuRef} className="relative">
+    <div
+      ref={menuRef}
+      className="relative shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100"
+    >
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
@@ -88,6 +110,38 @@ export function TaskOverflowMenu({
           >
             Edit
           </button>
+
+          {onMoveToCategory ? (
+            <>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => setShowCategoryPicker((value) => !value)}
+                className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Move to Category…
+              </button>
+              {showCategoryPicker ? (
+                <div className="border-t border-zinc-100 dark:border-zinc-800">
+                  {categoryOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        onMoveToCategory(option.value);
+                        closeMenu();
+                      }}
+                      disabled={task.category === option.value}
+                      className="w-full px-4 py-2 text-left text-xs text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </>
+          ) : null}
 
           {showMoveToWeek && onMoveToWeek ? (
             <button

@@ -7,6 +7,9 @@ import type {
   ProjectFeature,
   ProjectVersion,
 } from "@/features/project-features/types";
+import type { PrioritiesSettings } from "@/features/settings/types";
+import { UNASSIGNED } from "@/features/settings/types";
+
 import { assertBackupShape } from "@/lib/export/validateBackup";
 
 import type { Answer, Project, Question } from "../types";
@@ -33,6 +36,7 @@ function backfillTaskFields(task: Task, allTasks: Task[]): Task {
     parentId,
     depth,
     sortOrder: task.sortOrder ?? 0,
+    category: task.category ?? UNASSIGNED,
   };
 }
 
@@ -88,6 +92,7 @@ export type ProjectsBackupPayload = {
   tasks?: Task[];
   features?: ProjectFeature[];
   versions?: ProjectVersion[];
+  settings?: PrioritiesSettings[];
 };
 
 export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
@@ -115,6 +120,9 @@ export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
     versions: Array.isArray(record.versions)
       ? (record.versions as ProjectVersion[])
       : [],
+    settings: Array.isArray(record.settings)
+      ? (record.settings as PrioritiesSettings[])
+      : [],
   };
 }
 
@@ -129,6 +137,7 @@ export async function importProjectsData(
   );
   const features = payload.features ?? [];
   const versions = payload.versions ?? [];
+  const settings = payload.settings ?? [];
 
   await db.transaction(
     "rw",
@@ -141,6 +150,7 @@ export async function importProjectsData(
       db.tasks,
       db.features,
       db.versions,
+      db.settings,
     ],
     async () => {
       await Promise.all([
@@ -152,6 +162,7 @@ export async function importProjectsData(
         db.tasks.clear(),
         db.features.clear(),
         db.versions.clear(),
+        db.settings.clear(),
       ]);
 
       await Promise.all([
@@ -163,6 +174,7 @@ export async function importProjectsData(
         db.tasks.bulkPut(tasks),
         db.features.bulkPut(features),
         db.versions.bulkPut(versions),
+        db.settings.bulkPut(settings),
       ]);
     },
   );

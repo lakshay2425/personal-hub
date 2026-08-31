@@ -46,8 +46,8 @@ export function useLogEntriesByDate(date: string) {
   }, [date]);
 
   const updateEntry = useCallback(
-    async (id: string, entryDate: string, text: string) => {
-      const updated = await updateLogEntryRepo(id, entryDate, text);
+    async (id: string, entryDate: string, text: string, category?: string) => {
+      const updated = await updateLogEntryRepo(id, entryDate, text, category);
       setEntries((prev) => {
         if (entryDate !== date) {
           return prev.filter((entry) => entry.id !== id);

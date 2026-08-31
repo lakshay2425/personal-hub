@@ -33,8 +33,16 @@ const NAV_ITEMS: NavItem[] = [
       { href: "/content-ideas/calendar", label: "Calendar" },
     ],
   },
-  { href: "/planner", label: "Planner" },
-  { href: "/logger", label: "Logger" },
+  {
+    label: "Planner",
+    href: "/planner",
+    children: [
+      { href: "/planner", label: "Tasks" },
+      { href: "/planner/logger", label: "Logger" },
+      { href: "/planner/dashboard", label: "Dashboard" },
+      { href: "/planner/settings", label: "Settings" },
+    ],
+  },
   { href: "/job-search", label: "Job Search" },
 ];
 
@@ -92,7 +100,9 @@ function NavLinkItem({
   const isActive =
     href === "/content-ideas"
       ? pathname === "/content-ideas"
-      : pathname.startsWith(href);
+      : href === "/planner"
+        ? pathname === "/planner"
+        : pathname.startsWith(href);
 
   return (
     <Link
@@ -171,7 +181,9 @@ export function AppSidebar({ isOpen, onOpen, onClose }: AppSidebarProps) {
               const isGroupActive = item.children.some((child) =>
                 child.href === "/content-ideas"
                   ? pathname === "/content-ideas"
-                  : pathname.startsWith(child.href),
+                  : child.href === "/planner"
+                    ? pathname === "/planner"
+                    : pathname.startsWith(child.href),
               );
 
               return (

@@ -1,7 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+
+import { CategoryPicker } from "@/features/settings/components/CategoryPicker";
+import { usePriorities } from "@/features/settings/hooks/usePriorities";
 
 import { getTodayDateString } from "../lib/dateUtils";
 import { logEntryFormSchema, type LogEntryFormValues } from "../schema";
@@ -19,13 +22,19 @@ export function LogEntryForm({
   onCancel,
   submitLabel = "Save",
 }: LogEntryFormProps) {
+  const { activePriorities } = usePriorities();
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
   } = useForm<LogEntryFormValues>({
     resolver: zodResolver(logEntryFormSchema),
-    defaultValues: defaultValues ?? { date: getTodayDateString(), text: "" },
+    defaultValues: defaultValues ?? {
+      date: getTodayDateString(),
+      text: "",
+      category: "",
+    },
     mode: "onChange",
   });
 
@@ -74,21 +83,35 @@ export function LogEntryForm({
         )}
       </div>
 
+      <Controller
+        name="category"
+        control={control}
+        render={({ field }) => (
+          <CategoryPicker
+            value={field.value ?? ""}
+            onChange={field.onChange}
+            priorities={activePriorities}
+            includeNone
+            noneLabel="None"
+            label="Category (optional)"
+          />
+        )}
+      />
+
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSubmitting}
-          className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 sm:w-auto dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={isSubmitting || !isValid}
-          className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          disabled={!isValid || isSubmitting}
+          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
         >
-          {isSubmitting ? "Saving..." : submitLabel}
+          {isSubmitting ? "Saving…" : submitLabel}
         </button>
       </div>
     </form>

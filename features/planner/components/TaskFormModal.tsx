@@ -11,6 +11,10 @@ import {
   TextInput,
 } from "@/features/job-search/components/forms/FormFields";
 
+import { CategoryPicker } from "@/features/settings/components/CategoryPicker";
+import { usePriorities } from "@/features/settings/hooks/usePriorities";
+import { UNASSIGNED } from "@/features/settings/types";
+
 import { getMondayOfWeek } from "../lib/weekUtils";
 import type {
   CreateSubTaskInput,
@@ -23,12 +27,13 @@ import type {
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
   { value: "High", label: "High" },
   { value: "Medium", label: "Medium" },
-  { value: "Low", label: "Low" },
 ];
 
 const SUB_TASK_PRIORITY_OPTIONS = [
   { value: "", label: "None" },
-  ...PRIORITY_OPTIONS,
+  { value: "High", label: "High" },
+  { value: "Medium", label: "Medium" },
+  { value: "Low", label: "Low" },
 ];
 
 interface TaskFormModalProps {
@@ -60,11 +65,14 @@ export function TaskFormModal({
   const isSubTaskForm =
     isSubTaskCreate || (isEdit && task !== null && task !== undefined && task.depth > 0);
   const showWeekPicker = !isSubTaskCreate && (!task || task.depth === 0);
+  const showCategoryPicker = !isSubTaskForm;
+  const { activePriorities } = usePriorities();
 
   const [title, setTitle] = useState(task?.title ?? "");
   const [rootPriority, setRootPriority] = useState<TaskPriority>(
     task?.priority ?? "Medium",
   );
+  const [category, setCategory] = useState(task?.category ?? UNASSIGNED);
   const [subTaskPriority, setSubTaskPriority] = useState<TaskPriority | null>(
     task?.priority ?? null,
   );
@@ -90,6 +98,9 @@ export function TaskFormModal({
           notes: notes.trim(),
           priority: isSubTaskForm ? subTaskPriority : rootPriority,
         };
+        if (showCategoryPicker) {
+          input.category = category;
+        }
         if (showWeekPicker) {
           input.weekStart = getMondayOfWeek(new Date(weekDate + "T00:00:00"));
         }
@@ -106,6 +117,7 @@ export function TaskFormModal({
           weekStart,
           title: title.trim(),
           priority: rootPriority,
+          category,
           notes: notes.trim(),
         });
       }
@@ -138,7 +150,7 @@ export function TaskFormModal({
             />
           </FormField>
 
-          <FormField label={isSubTaskForm ? "Priority (optional)" : "Priority"}>
+          <FormField label={isSubTaskForm ? "Urgency (optional)" : "Urgency"}>
             {isSubTaskForm ? (
               <SelectInput
                 value={subTaskPriority ?? ""}
@@ -155,6 +167,15 @@ export function TaskFormModal({
               />
             )}
           </FormField>
+
+          {showCategoryPicker ? (
+            <CategoryPicker
+              value={category}
+              onChange={setCategory}
+              priorities={activePriorities}
+              label="Category"
+            />
+          ) : null}
 
           <FormField label="Notes">
             <TextArea

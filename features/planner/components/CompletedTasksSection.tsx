@@ -5,7 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 
 import { countDescendantsInList } from "../lib/taskTree";
 import type { Task } from "../types";
-import { SortableTaskTree } from "./SortableTaskTree";
+import { CategorizedTaskSections } from "./CategorizedTaskSections";
 
 interface CompletedTasksSectionProps {
   tasks: Task[];
@@ -13,6 +13,7 @@ interface CompletedTasksSectionProps {
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
   onAddSubTask: (task: Task) => void;
+  onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
 }
 
@@ -22,6 +23,7 @@ export function CompletedTasksSection({
   onEdit,
   onDelete,
   onAddSubTask,
+  onMoveToCategory,
   onViewNotes,
 }: CompletedTasksSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -44,7 +46,7 @@ export function CompletedTasksSection({
       </button>
 
       {isExpanded ? (
-        <SortableTaskTree
+        <CategorizedTaskSections
           tasks={tasks}
           sortable={false}
           completed
@@ -52,6 +54,7 @@ export function CompletedTasksSection({
           onEdit={onEdit}
           onDelete={onDelete}
           onAddSubTask={onAddSubTask}
+          onMoveToCategory={onMoveToCategory}
           onViewNotes={onViewNotes}
           onReorder={async () => {}}
           emptyMessage="No completed tasks."
