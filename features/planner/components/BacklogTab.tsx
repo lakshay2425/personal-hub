@@ -2,10 +2,13 @@
 
 import { formatWeekLabel } from "../lib/weekUtils";
 import type { Task } from "../types";
-import { CategorizedTaskSections } from "./CategorizedTaskSections";
+import { KanbanTaskBoard } from "./KanbanTaskBoard";
 
 interface BacklogTabProps {
   tasks: Task[];
+  selectionMode?: boolean;
+  selectedIds?: Set<number>;
+  onSelectionToggle?: (taskId: number) => void;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
@@ -22,6 +25,9 @@ interface BacklogTabProps {
 
 export function BacklogTab({
   tasks,
+  selectionMode,
+  selectedIds,
+  onSelectionToggle,
   onToggle,
   onEdit,
   onDelete,
@@ -32,8 +38,11 @@ export function BacklogTab({
   onReorder,
 }: BacklogTabProps) {
   return (
-    <CategorizedTaskSections
+    <KanbanTaskBoard
       tasks={tasks}
+      selectionMode={selectionMode}
+      selectedIds={selectedIds}
+      onSelectionToggle={onSelectionToggle}
       showMoveToWeek
       getWeekLabel={(task) => formatWeekLabel(task.weekStart)}
       onToggle={onToggle}

@@ -9,8 +9,8 @@ import {
   getDashboardWeekData,
   type DashboardWeekData,
 } from "../lib/dashboardRepository";
+import { CategoryDistributionChart } from "./CategoryDistributionChart";
 import { PriorityWeekRow } from "./PriorityWeekRow";
-import { WeekDistributionBar } from "./WeekDistributionBar";
 
 export function DashboardWorkspace() {
   const [weekStart, setWeekStart] = useState(getCurrentWeekStart);
@@ -72,10 +72,30 @@ export function DashboardWorkspace() {
     <div className="space-y-6">
       <WeekNavigation weekStart={weekStart} onWeekChange={setWeekStart} />
 
-      <WeekDistributionBar
-        categories={data.categories}
-        totalCompletedTasks={data.totalCompletedTasks}
-      />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <CategoryDistributionChart
+          title="Completed this week"
+          categories={data.categories}
+          getCount={(categoryData) =>
+            categoryData.completedTasks.filter(
+              (task) => (task.parentId ?? null) === null,
+            ).length
+          }
+          total={data.totalCompletedTasks}
+          emptyMessage="No completed tasks this week yet."
+        />
+        <CategoryDistributionChart
+          title="Pending this week"
+          categories={data.categories}
+          getCount={(categoryData) =>
+            categoryData.pendingTasks.filter(
+              (task) => (task.parentId ?? null) === null,
+            ).length
+          }
+          total={data.totalPendingTasks}
+          emptyMessage="No pending tasks scheduled for this week."
+        />
+      </div>
 
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-50">

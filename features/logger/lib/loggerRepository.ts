@@ -64,3 +64,27 @@ export async function deleteLogEntry(id: string): Promise<void> {
   const db = getDB();
   await db.logEntries.delete(id);
 }
+
+export async function bulkUpdateLogEntryCategory(
+  ids: string[],
+  category?: string,
+): Promise<void> {
+  const db = getDB();
+
+  await Promise.all(
+    ids.map(async (id) => {
+      const existing = await db.logEntries.get(id);
+      if (!existing) {
+        throw new Error("Log entry not found");
+      }
+
+      const updated: LogEntry = {
+        ...existing,
+        category: category || undefined,
+        updatedAt: Date.now(),
+      };
+
+      await db.logEntries.put(updated);
+    }),
+  );
+}

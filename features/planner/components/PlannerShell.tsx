@@ -36,7 +36,7 @@ export function PlannerShell({ children }: { children: ReactNode }) {
   const showLoggerSubNav = pathname.startsWith("/planner/logger");
 
   return (
-    <div className="mx-auto min-h-full w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+    <div className="mx-auto min-h-full w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-8">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">

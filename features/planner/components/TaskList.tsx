@@ -1,10 +1,13 @@
 "use client";
 
 import type { Task } from "../types";
-import { CategorizedTaskSections } from "./CategorizedTaskSections";
+import { KanbanTaskBoard } from "./KanbanTaskBoard";
 
 interface TaskListProps {
   tasks: Task[];
+  selectionMode?: boolean;
+  selectedIds?: Set<number>;
+  onSelectionToggle?: (taskId: number) => void;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
@@ -20,6 +23,9 @@ interface TaskListProps {
 
 export function TaskList({
   tasks,
+  selectionMode,
+  selectedIds,
+  onSelectionToggle,
   onToggle,
   onEdit,
   onDelete,
@@ -29,8 +35,11 @@ export function TaskList({
   onReorder,
 }: TaskListProps) {
   return (
-    <CategorizedTaskSections
+    <KanbanTaskBoard
       tasks={tasks}
+      selectionMode={selectionMode}
+      selectedIds={selectedIds}
+      onSelectionToggle={onSelectionToggle}
       onToggle={onToggle}
       onEdit={onEdit}
       onDelete={onDelete}

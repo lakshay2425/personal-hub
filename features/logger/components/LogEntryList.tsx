@@ -16,6 +16,9 @@ interface LogEntryListProps {
   onEdit: (entry: LogEntry) => void;
   onDelete: (entry: LogEntry) => void;
   groupByDate?: boolean;
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onSelectionToggle?: (entryId: string) => void;
   emptyTitle?: string;
   emptyDescription?: string;
 }
@@ -49,6 +52,9 @@ export function LogEntryList({
   onEdit,
   onDelete,
   groupByDate = true,
+  selectionMode = false,
+  selectedIds,
+  onSelectionToggle,
   emptyTitle = "No log entries yet",
   emptyDescription = 'Click "New Entry" to log what you did.',
 }: LogEntryListProps) {
@@ -95,6 +101,15 @@ export function LogEntryList({
       className="group rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div className="flex items-start gap-3">
+        {selectionMode ? (
+          <input
+            type="checkbox"
+            checked={selectedIds?.has(entry.id) ?? false}
+            onChange={() => onSelectionToggle?.(entry.id)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800"
+            aria-label={`Select log entry on ${entry.date}`}
+          />
+        ) : null}
         <div className="min-w-0 flex-1">
           {entry.category ? (
             <div className="mb-2">

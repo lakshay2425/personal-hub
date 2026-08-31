@@ -10,6 +10,7 @@ import { UNASSIGNED } from "@/features/settings/types";
 export interface CategoryWeekData {
   category: string;
   completedTasks: Task[];
+  pendingTasks: Task[];
   logEntries: LogEntry[];
 }
 
@@ -18,6 +19,7 @@ export interface DashboardWeekData {
   weekEnd: string;
   categories: CategoryWeekData[];
   totalCompletedTasks: number;
+  totalPendingTasks: number;
 }
 
 function getWeekEnd(weekStart: string): string {
@@ -37,6 +39,10 @@ function normalizeCategory(category?: string): string {
   return category && category.trim() !== "" ? category : UNASSIGNED;
 }
 
+function countRootTasks(tasks: Task[]): number {
+  return tasks.filter((task) => (task.parentId ?? null) === null).length;
+}
+
 export async function getDashboardWeekData(
   weekStart: string,
 ): Promise<DashboardWeekData> {
@@ -52,6 +58,10 @@ export async function getDashboardWeekData(
       task.status === "Done" &&
       task.completedAt !== null &&
       isDateInWeek(completedAtToDate(task.completedAt), weekStart, weekEnd),
+  );
+
+  const pendingTasks = tasks.filter(
+    (task) => task.status === "Todo" && task.weekStart === weekStart,
   );
 
   const weekLogs = logEntries.filter((entry) =>
@@ -70,6 +80,9 @@ export async function getDashboardWeekData(
     completedTasks: completedTasks.filter(
       (task) => normalizeCategory(task.category) === category,
     ),
+    pendingTasks: pendingTasks.filter(
+      (task) => normalizeCategory(task.category) === category,
+    ),
     logEntries: weekLogs.filter(
       (entry) => normalizeCategory(entry.category) === category,
     ),
@@ -79,6 +92,7 @@ export async function getDashboardWeekData(
     weekStart,
     weekEnd,
     categories,
-    totalCompletedTasks: completedTasks.length,
+    totalCompletedTasks: countRootTasks(completedTasks),
+    totalPendingTasks: countRootTasks(pendingTasks),
   };
 }

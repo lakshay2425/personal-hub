@@ -42,6 +42,9 @@ interface TaskTreeItemProps {
   onMoveToWeek?: (task: Task) => void;
   onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onSelectionToggle?: () => void;
   collapsedTaskIds: Set<number>;
   itemRef?: (element: HTMLElement | null) => void;
   style?: CSSProperties;
@@ -65,6 +68,9 @@ export function TaskTreeItem({
   onMoveToWeek,
   onMoveToCategory,
   onViewNotes,
+  selectionMode = false,
+  isSelected = false,
+  onSelectionToggle,
   collapsedTaskIds,
   itemRef,
   style,
@@ -96,6 +102,16 @@ export function TaskTreeItem({
           </button>
         ) : sortable ? (
           <span className="w-6 shrink-0" aria-hidden />
+        ) : null}
+
+        {selectionMode && node.depth === 0 ? (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onSelectionToggle}
+            className="h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800"
+            aria-label={`Select ${node.title}`}
+          />
         ) : null}
 
         <input

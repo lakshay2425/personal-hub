@@ -349,6 +349,15 @@ export async function updateTaskCategory(
   return updated;
 }
 
+export async function bulkUpdateTaskCategory(
+  taskIds: number[],
+  category: string,
+): Promise<void> {
+  for (const taskId of taskIds) {
+    await updateTaskCategory(taskId, category);
+  }
+}
+
 export async function reorderTasks(
   parentId: number | null,
   weekStart: string,

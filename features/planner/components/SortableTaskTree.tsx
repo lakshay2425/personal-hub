@@ -34,6 +34,9 @@ interface SortableTaskTreeProps {
   onMoveToWeek?: (task: Task) => void;
   onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
+  selectionMode?: boolean;
+  selectedIds?: Set<number>;
+  onSelectionToggle?: (taskId: number) => void;
   onReorder: (
     parentId: number | null,
     weekStart: string,
@@ -56,6 +59,9 @@ export function SortableTaskTree({
   onMoveToWeek,
   onMoveToCategory,
   onViewNotes,
+  selectionMode,
+  selectedIds,
+  onSelectionToggle,
   onReorder,
   emptyMessage = "No tasks.",
 }: SortableTaskTreeProps) {
@@ -166,6 +172,13 @@ export function SortableTaskTree({
           onMoveToWeek={onMoveToWeek}
           onMoveToCategory={onMoveToCategory}
           onViewNotes={onViewNotes}
+          selectionMode={selectionMode}
+          isSelected={selectedIds?.has(node.id!)}
+          onSelectionToggle={
+            onSelectionToggle
+              ? () => onSelectionToggle(node.id!)
+              : undefined
+          }
           collapsedTaskIds={collapsedTaskIds}
         />
       ))}

@@ -6,6 +6,7 @@ import {
   createLogEntry as createLogEntryRepo,
   deleteLogEntry as deleteLogEntryRepo,
   getAllLogEntries,
+  bulkUpdateLogEntryCategory as bulkUpdateLogEntryCategoryRepo,
   updateLogEntry as updateLogEntryRepo,
 } from "../lib/loggerRepository";
 import type { LogEntry } from "../types";
@@ -77,6 +78,26 @@ export function useLogEntries() {
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
   }, []);
 
+  const bulkUpdateCategory = useCallback(
+    async (ids: string[], category?: string) => {
+      await bulkUpdateLogEntryCategoryRepo(ids, category);
+      setEntries((prev) =>
+        prev
+          .map((entry) =>
+            ids.includes(entry.id)
+              ? {
+                  ...entry,
+                  category: category || undefined,
+                  updatedAt: Date.now(),
+                }
+              : entry,
+          )
+          .sort((a, b) => b.createdAt - a.createdAt),
+      );
+    },
+    [],
+  );
+
   return {
     entries,
     isLoading,
@@ -84,5 +105,6 @@ export function useLogEntries() {
     createEntry,
     updateEntry,
     deleteEntry,
+    bulkUpdateCategory,
   };
 }

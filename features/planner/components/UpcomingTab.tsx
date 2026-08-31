@@ -2,10 +2,13 @@
 
 import { formatWeekRange } from "../lib/weekUtils";
 import type { Task } from "../types";
-import { CategorizedTaskSections } from "./CategorizedTaskSections";
+import { KanbanTaskBoard } from "./KanbanTaskBoard";
 
 interface UpcomingTabProps {
   tasksByWeek: Map<string, Task[]>;
+  selectionMode?: boolean;
+  selectedIds?: Set<number>;
+  onSelectionToggle?: (taskId: number) => void;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
@@ -21,6 +24,9 @@ interface UpcomingTabProps {
 
 export function UpcomingTab({
   tasksByWeek,
+  selectionMode,
+  selectedIds,
+  onSelectionToggle,
   onToggle,
   onEdit,
   onDelete,
@@ -44,8 +50,11 @@ export function UpcomingTab({
           <h2 className="mb-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
             {formatWeekRange(weekStart)}
           </h2>
-          <CategorizedTaskSections
+          <KanbanTaskBoard
             tasks={tasks}
+            selectionMode={selectionMode}
+            selectedIds={selectedIds}
+            onSelectionToggle={onSelectionToggle}
             reorderOnlyTodo
             onToggle={onToggle}
             onEdit={onEdit}

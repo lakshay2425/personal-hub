@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   getLogEntriesByDate,
+  bulkUpdateLogEntryCategory as bulkUpdateLogEntryCategoryRepo,
   updateLogEntry as updateLogEntryRepo,
   deleteLogEntry as deleteLogEntryRepo,
 } from "../lib/loggerRepository";
@@ -66,11 +67,32 @@ export function useLogEntriesByDate(date: string) {
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
   }, []);
 
+  const bulkUpdateCategory = useCallback(
+    async (ids: string[], category?: string) => {
+      await bulkUpdateLogEntryCategoryRepo(ids, category);
+      setEntries((prev) =>
+        prev
+          .map((entry) =>
+            ids.includes(entry.id)
+              ? {
+                  ...entry,
+                  category: category || undefined,
+                  updatedAt: Date.now(),
+                }
+              : entry,
+          )
+          .sort((a, b) => b.createdAt - a.createdAt),
+      );
+    },
+    [],
+  );
+
   return {
     entries,
     isLoading,
     error,
     updateEntry,
     deleteEntry,
+    bulkUpdateCategory,
   };
 }

@@ -14,6 +14,7 @@ import {
   toggleTaskComplete as toggleTaskCompleteRepo,
   updateTask as updateTaskRepo,
   updateTaskCategory as updateTaskCategoryRepo,
+  bulkUpdateTaskCategory as bulkUpdateTaskCategoryRepo,
 } from "../lib/tasksRepository";
 import {
   getCurrentWeekStart,
@@ -180,6 +181,14 @@ export function useTasks(viewedWeekStart: string) {
     [loadAll],
   );
 
+  const bulkUpdateTaskCategory = useCallback(
+    async (taskIds: number[], category: string) => {
+      await bulkUpdateTaskCategoryRepo(taskIds, category);
+      await loadAll();
+    },
+    [loadAll],
+  );
+
   return {
     weekTasks,
     activeTasks,
@@ -198,6 +207,7 @@ export function useTasks(viewedWeekStart: string) {
     reorderTasks,
     deleteTask,
     updateTaskCategory,
+    bulkUpdateTaskCategory,
     reload: loadAll,
   };
 }

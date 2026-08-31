@@ -5,10 +5,13 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 
 import { countDescendantsInList } from "../lib/taskTree";
 import type { Task } from "../types";
-import { CategorizedTaskSections } from "./CategorizedTaskSections";
+import { KanbanTaskBoard } from "./KanbanTaskBoard";
 
 interface CompletedTasksSectionProps {
   tasks: Task[];
+  selectionMode?: boolean;
+  selectedIds?: Set<number>;
+  onSelectionToggle?: (taskId: number) => void;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
@@ -19,6 +22,9 @@ interface CompletedTasksSectionProps {
 
 export function CompletedTasksSection({
   tasks,
+  selectionMode,
+  selectedIds,
+  onSelectionToggle,
   onToggle,
   onEdit,
   onDelete,
@@ -46,10 +52,13 @@ export function CompletedTasksSection({
       </button>
 
       {isExpanded ? (
-        <CategorizedTaskSections
+        <KanbanTaskBoard
           tasks={tasks}
           sortable={false}
           completed
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onSelectionToggle={onSelectionToggle}
           onToggle={onToggle}
           onEdit={onEdit}
           onDelete={onDelete}
