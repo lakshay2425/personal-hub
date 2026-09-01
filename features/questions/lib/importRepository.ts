@@ -107,6 +107,7 @@ export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
     contentIdeas: (arrays.contentIdeas as ContentIdea[]).map((idea) => ({
       ...idea,
       scheduledDate: idea.scheduledDate ?? null,
+      contentType: idea.contentType ?? "Post",
     })),
     activityLogs: arrays.activityLogs as QuestionHubActivityLog[],
     tasks: Array.isArray(record.tasks)

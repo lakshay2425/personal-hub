@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import type { ContentIdea, ContentIdeaTreeNode } from "../types";
 import { ContentIdeaOverflowMenu } from "./ContentIdeaOverflowMenu";
 import { PublishedLinksSummary } from "./PublishedLinksSummary";
+import { ContentTypeBadge } from "./ContentTypeBadge";
 import { StatusBadge } from "./StatusBadge";
 
 interface ContentIdeasCardsProps {
@@ -39,8 +40,9 @@ export function ContentIdeasCards({
             <h3 className="min-w-0 flex-1 break-words text-sm font-medium text-zinc-900 dark:text-zinc-50">
               {idea.title}
             </h3>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-1.5">
               <StatusBadge status={idea.status} />
+              <ContentTypeBadge contentType={idea.contentType} />
               <ContentIdeaOverflowMenu
                 idea={idea}
                 allIdeas={allIdeas}

@@ -10,6 +10,7 @@ import type { ContentIdea, ContentIdeaTreeNode } from "../types";
 import { ContentIdeaOverflowMenu } from "./ContentIdeaOverflowMenu";
 import { PublishedLinksSummary } from "./PublishedLinksSummary";
 import { SortableContentIdeaListItem } from "./SortableContentIdeaListItem";
+import { ContentTypeBadge } from "./ContentTypeBadge";
 import { StatusBadge } from "./StatusBadge";
 import { SubIdeaHeader } from "./SubIdeaHeader";
 
@@ -85,7 +86,10 @@ export function ContentIdeaListItem({
               onToggleChildrenCollapse={() => onToggleChildrenCollapse(id!)}
               meta={
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <StatusBadge status={node.status} />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusBadge status={node.status} />
+                    <ContentTypeBadge contentType={node.contentType} />
+                  </div>
                   <PublishedLinksSummary links={node.publishedLinks} />
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
                     Created {format(node.createdAt, "MMM d, yyyy")}

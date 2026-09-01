@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import type { ContentIdea, ContentIdeaTreeNode } from "../types";
 import { ContentIdeaOverflowMenu } from "./ContentIdeaOverflowMenu";
 import { PublishedLinksSummary } from "./PublishedLinksSummary";
+import { ContentTypeBadge } from "./ContentTypeBadge";
 import { StatusBadge } from "./StatusBadge";
 
 const DEPTH_PADDING = {
@@ -63,7 +64,10 @@ export function ContentIdeasTable({
                 {idea.title}
               </td>
               <td className="px-4 py-3">
-                <StatusBadge status={idea.status} />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <StatusBadge status={idea.status} />
+                  <ContentTypeBadge contentType={idea.contentType} />
+                </div>
               </td>
               <td className="hidden px-4 py-3 md:table-cell">
                 <PublishedLinksSummary links={idea.publishedLinks} />

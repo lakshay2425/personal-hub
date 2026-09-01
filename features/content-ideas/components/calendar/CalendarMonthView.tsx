@@ -10,6 +10,7 @@ import {
   WEEKDAY_LABELS,
   WEEKDAY_LABELS_SHORT,
 } from "../../lib/calendarDateUtils";
+import { ContentTypeDot } from "./ContentTypeDot";
 import { StatusDot } from "./StatusDot";
 
 interface CalendarMonthViewProps {
@@ -103,6 +104,7 @@ export function CalendarMonthView({
                     className="flex min-w-0 items-center gap-1 rounded px-1 py-0.5 text-left text-xs text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   >
                     <StatusDot status={idea.status} />
+                    <ContentTypeDot contentType={idea.contentType} />
                     <span className="truncate">{idea.title}</span>
                   </div>
                 ))}
@@ -116,7 +118,10 @@ export function CalendarMonthView({
               {hasContent ? (
                 <div className="mt-1 flex flex-wrap gap-0.5 sm:hidden">
                   {dayIdeas.slice(0, 3).map((idea) => (
-                    <StatusDot key={idea.id} status={idea.status} />
+                    <span key={idea.id} className="flex gap-0.5">
+                      <StatusDot status={idea.status} />
+                      <ContentTypeDot contentType={idea.contentType} />
+                    </span>
                   ))}
                 </div>
               ) : null}

@@ -1,5 +1,7 @@
 export type ContentIdeaStatus = "Draft" | "Ready" | "Published";
 
+export type ContentIdeaType = "Blog" | "Reel" | "Post" | "YT Video" | "Other";
+
 export type ContentIdeasViewMode = "table" | "cards" | "list";
 
 export type ContentIdeaDepth = 0 | 1 | 2;
@@ -19,6 +21,7 @@ export interface ContentIdea {
   sortOrder: number;
   title: string;
   status: ContentIdeaStatus;
+  contentType: ContentIdeaType;
   publishedLinks: PublishedLinks;
   notes: string;
   /** YYYY-MM-DD date string, or null if not scheduled */
@@ -53,4 +56,4 @@ export const EMPTY_PUBLISHED_LINKS: PublishedLinks = {
   blog: "",
   other: "",
 };
-
+

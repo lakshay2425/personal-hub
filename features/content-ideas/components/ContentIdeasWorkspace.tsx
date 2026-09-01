@@ -8,11 +8,11 @@ import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 
-import { CONTENT_IDEA_STATUSES } from "../constants";
+import { CONTENT_IDEA_STATUSES, CONTENT_IDEA_TYPES } from "../constants";
 import { useContentIdeas } from "../hooks/useContentIdeas";
 import { useContentIdeasViewMode } from "../hooks/useContentIdeasViewMode";
 import { countDescendantsInList } from "../lib/contentIdeaTree";
-import type { ContentIdea, ContentIdeaStatus, ContentIdeaTreeNode } from "../types";
+import type { ContentIdea, ContentIdeaStatus, ContentIdeaTreeNode, ContentIdeaType } from "../types";
 import { ContentIdeasCards } from "./ContentIdeasCards";
 import { ContentIdeasTable } from "./ContentIdeasTable";
 import { ContentIdeasViewToggle } from "./ContentIdeasViewToggle";
@@ -52,6 +52,7 @@ export function ContentIdeasWorkspace({
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContentIdeaStatus | "">("");
+  const [contentTypeFilter, setContentTypeFilter] = useState<ContentIdeaType | "">("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<ContentIdea | null>(null);
   const [subIdeaParent, setSubIdeaParent] = useState<ContentIdeaTreeNode | null>(null);
@@ -74,10 +75,14 @@ export function ContentIdeasWorkspace({
       result = result.filter((idea) => idea.status === statusFilter);
     }
 
-    return result;
-  }, [ideas, search, statusFilter]);
+    if (contentTypeFilter) {
+      result = result.filter((idea) => idea.contentType === contentTypeFilter);
+    }
 
-  const hasActiveFilter = Boolean(search.trim() || statusFilter);
+    return result;
+  }, [ideas, search, statusFilter, contentTypeFilter]);
+
+  const hasActiveFilter = Boolean(search.trim() || statusFilter || contentTypeFilter);
   const showEmpty = viewMode === "list" ? ideas.length === 0 : filtered.length === 0;
 
   const openCreateForm = () => {
@@ -267,12 +272,26 @@ export function ContentIdeasWorkspace({
             </option>
           ))}
         </select>
+        <select
+          value={contentTypeFilter}
+          onChange={(event) =>
+            setContentTypeFilter(event.target.value as ContentIdeaType | "")
+          }
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+        >
+          <option value="">All types</option>
+          {CONTENT_IDEA_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
         <ContentIdeasViewToggle value={viewMode} onChange={setViewMode} className="w-full sm:w-auto" />
       </div>
 
       {viewMode === "list" && hasActiveFilter ? (
         <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
-          Search and status filters apply to table and card views. List view shows all ideas.
+          Search and status/type filters apply to table and card views. List view shows all ideas.
         </p>
       ) : null}
 

@@ -11,8 +11,12 @@ import {
   TextInput,
 } from "@/features/job-search/components/forms/FormFields";
 
-import { CONTENT_IDEA_STATUSES } from "../../constants";
-import type { ContentIdea, ContentIdeaStatus } from "../../types";
+import {
+  CONTENT_IDEA_STATUSES,
+  CONTENT_IDEA_TYPES,
+  DEFAULT_CONTENT_IDEA_TYPE,
+} from "../../constants";
+import type { ContentIdea, ContentIdeaStatus, ContentIdeaType } from "../../types";
 import { EMPTY_PUBLISHED_LINKS } from "../../types";
 import type { ContentIdeaInput } from "../../lib/contentIdeasRepository";
 
@@ -38,6 +42,9 @@ function ContentIdeaFormFields({
 }) {
   const [title, setTitle] = useState(idea?.title ?? "");
   const [status, setStatus] = useState<ContentIdeaStatus>(idea?.status ?? "Draft");
+  const [contentType, setContentType] = useState<ContentIdeaType>(
+    idea?.contentType ?? DEFAULT_CONTENT_IDEA_TYPE,
+  );
   const [publishedLinks, setPublishedLinks] = useState(
     idea?.publishedLinks ?? EMPTY_PUBLISHED_LINKS,
   );
@@ -58,6 +65,7 @@ function ContentIdeaFormFields({
           projectId,
           title,
           status,
+          contentType,
           publishedLinks,
           notes,
           scheduledDate: scheduledDate.trim() || null,
@@ -82,16 +90,29 @@ function ContentIdeaFormFields({
           />
         </FormField>
 
-        <FormField label="Status">
-          <SelectInput
-            value={status}
-            onChange={(value) => setStatus(value as ContentIdeaStatus)}
-            options={CONTENT_IDEA_STATUSES.map((item) => ({
-              value: item,
-              label: item,
-            }))}
-          />
-        </FormField>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField label="Status">
+            <SelectInput
+              value={status}
+              onChange={(value) => setStatus(value as ContentIdeaStatus)}
+              options={CONTENT_IDEA_STATUSES.map((item) => ({
+                value: item,
+                label: item,
+              }))}
+            />
+          </FormField>
+
+          <FormField label="Type">
+            <SelectInput
+              value={contentType}
+              onChange={(value) => setContentType(value as ContentIdeaType)}
+              options={CONTENT_IDEA_TYPES.map((item) => ({
+                value: item,
+                label: item,
+              }))}
+            />
+          </FormField>
+        </div>
 
         <div
           className={`grid transition-all duration-300 ease-in-out ${

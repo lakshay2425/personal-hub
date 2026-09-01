@@ -4,6 +4,7 @@ import type {
   ContentIdea,
   ContentIdeaDepth,
   ContentIdeaStatus,
+  ContentIdeaType,
   PublishedLinks,
 } from "../types";
 import { EMPTY_PUBLISHED_LINKS } from "../types";
@@ -20,6 +21,7 @@ export type ContentIdeaInput = {
   projectId: string | null;
   title: string;
   status: ContentIdeaStatus;
+  contentType: ContentIdeaType;
   publishedLinks: PublishedLinks;
   notes: string;
   scheduledDate: string | null;
@@ -130,6 +132,7 @@ export async function createContentIdea(
     sortOrder,
     title: input.title.trim(),
     status: input.status,
+    contentType: input.contentType,
     publishedLinks: normalizePublishedLinks(
       input.status === "Published" ? input.publishedLinks : EMPTY_PUBLISHED_LINKS,
     ),
@@ -148,6 +151,7 @@ export async function createContentIdea(
     sortOrder,
     title: input.title.trim(),
     status: input.status,
+    contentType: input.contentType,
     publishedLinks: normalizePublishedLinks(
       input.status === "Published" ? input.publishedLinks : EMPTY_PUBLISHED_LINKS,
     ),
@@ -173,6 +177,7 @@ export async function updateContentIdea(
     projectId: input.projectId,
     title: input.title.trim(),
     status: input.status,
+    contentType: input.contentType,
     publishedLinks: normalizePublishedLinks(
       input.status === "Published" ? input.publishedLinks : EMPTY_PUBLISHED_LINKS,
     ),

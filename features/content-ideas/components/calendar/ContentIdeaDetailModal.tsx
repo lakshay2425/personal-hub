@@ -10,6 +10,7 @@ import { parseDateString } from "../../lib/calendarDateUtils";
 import type { ContentIdea, ContentIdeaStatus } from "../../types";
 import type { ContentIdeaInput } from "../../lib/contentIdeasRepository";
 import { PublishedLinksSummary } from "../PublishedLinksSummary";
+import { ContentTypeBadge } from "../ContentTypeBadge";
 import { StatusBadge } from "../StatusBadge";
 import { ContentIdeaFormModal } from "../forms/ContentIdeaFormModal";
 
@@ -66,8 +67,9 @@ export function ContentIdeaDetailModal({
         size="md"
       >
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <StatusBadge status={idea.status} />
+            <ContentTypeBadge contentType={idea.contentType} />
             <span className="text-xs text-zinc-500 dark:text-zinc-400">
               {project ? project.name : "Standalone"}
             </span>

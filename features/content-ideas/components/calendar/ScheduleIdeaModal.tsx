@@ -8,6 +8,7 @@ import type { Project } from "@/features/questions/types";
 import { Modal } from "@/components/ui/Modal";
 import { parseDateString } from "../../lib/calendarDateUtils";
 import type { ContentIdea } from "../../types";
+import { ContentTypeDot } from "./ContentTypeDot";
 import { StatusDot } from "./StatusDot";
 
 interface ScheduleIdeaModalProps {
@@ -102,7 +103,13 @@ export function ScheduleIdeaModal({
                     onClick={() => void handleSchedule(idea.id!)}
                     className="flex w-full items-start gap-3 rounded-lg border border-zinc-200 bg-white p-3 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
                   >
-                    <StatusDot status={idea.status} className="mt-1.5" />
+                    <div className="flex items-start gap-1">
+                      <StatusDot status={idea.status} className="mt-1.5" />
+                      <ContentTypeDot
+                        contentType={idea.contentType}
+                        className="mt-1.5"
+                      />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-medium text-zinc-900 dark:text-zinc-50">
                         {idea.title}

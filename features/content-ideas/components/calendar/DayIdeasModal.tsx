@@ -7,7 +7,9 @@ import type { Project } from "@/features/questions/types";
 import { Modal } from "@/components/ui/Modal";
 import { parseDateString } from "../../lib/calendarDateUtils";
 import type { ContentIdea } from "../../types";
+import { ContentTypeBadge } from "../ContentTypeBadge";
 import { StatusBadge } from "../StatusBadge";
+import { ContentTypeDot } from "./ContentTypeDot";
 import { StatusDot } from "./StatusDot";
 
 interface DayIdeasModalProps {
@@ -54,7 +56,13 @@ export function DayIdeasModal({
                     onClick={() => onIdeaClick(idea)}
                     className="flex w-full items-start gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800/50 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
                   >
-                    <StatusDot status={idea.status} className="mt-1.5" />
+                    <div className="flex items-start gap-1">
+                      <StatusDot status={idea.status} className="mt-1.5" />
+                      <ContentTypeDot
+                        contentType={idea.contentType}
+                        className="mt-1.5"
+                      />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-medium text-zinc-900 dark:text-zinc-50">
                         {idea.title}
@@ -62,8 +70,9 @@ export function DayIdeasModal({
                       <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                         {project ? project.name : "Standalone"}
                       </p>
-                      <div className="mt-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <StatusBadge status={idea.status} />
+                        <ContentTypeBadge contentType={idea.contentType} />
                       </div>
                     </div>
                   </button>

@@ -11,7 +11,9 @@ import {
   WEEKDAY_LABELS,
   WEEKDAY_LABELS_SHORT,
 } from "../../lib/calendarDateUtils";
+import { ContentTypeBadge } from "../ContentTypeBadge";
 import { StatusBadge } from "../StatusBadge";
+import { ContentTypeDot } from "./ContentTypeDot";
 import { StatusDot } from "./StatusDot";
 
 interface CalendarWeekViewProps {
@@ -91,8 +93,12 @@ export function CalendarWeekView({
                         onClick={() => onIdeaClick(idea)}
                         className="w-full rounded-lg border border-zinc-200 bg-white p-2 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
                       >
-                        <div className="flex items-start gap-1.5">
+                        <div className="flex items-start gap-1">
                           <StatusDot status={idea.status} className="mt-1.5" />
+                          <ContentTypeDot
+                            contentType={idea.contentType}
+                            className="mt-1.5"
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-xs font-medium text-zinc-900 sm:text-sm dark:text-zinc-50">
                               {idea.title}
@@ -106,8 +112,9 @@ export function CalendarWeekView({
                                 Standalone
                               </p>
                             )}
-                            <div className="mt-1.5 hidden sm:block">
+                            <div className="mt-1.5 hidden flex-wrap items-center gap-1.5 sm:flex">
                               <StatusBadge status={idea.status} />
+                              <ContentTypeBadge contentType={idea.contentType} />
                             </div>
                           </div>
                         </div>
