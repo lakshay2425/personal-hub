@@ -56,7 +56,7 @@ function buildSlicePaths(
   cy: number,
   outerRadius: number,
   innerRadius: number,
-  getColor: (category: string) => string | undefined,
+  getColor: (category: string) => string | null,
 ) {
   const slicePaths: {
     data: CategoryWeekData;
