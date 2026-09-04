@@ -13,11 +13,15 @@ import {
 import type { Task } from "../types";
 import { SortableTaskTree } from "./SortableTaskTree";
 
+type CardVariant = "default" | "tasks";
+
 interface KanbanTaskBoardProps {
   tasks: Task[];
   sortable?: boolean;
   reorderOnlyTodo?: boolean;
   completed?: boolean;
+  cardVariant?: CardVariant;
+  showStrikethrough?: boolean;
   showMoveToWeek?: boolean;
   getWeekLabel?: (task: Task) => string | undefined;
   selectionMode?: boolean;
@@ -43,6 +47,8 @@ export function KanbanTaskBoard({
   sortable = true,
   reorderOnlyTodo = false,
   completed = false,
+  cardVariant = "default",
+  showStrikethrough = true,
   showMoveToWeek = false,
   getWeekLabel,
   selectionMode = false,
@@ -109,6 +115,8 @@ export function KanbanTaskBoard({
               sortable={sortable}
               reorderOnlyTodo={reorderOnlyTodo}
               completed={completed}
+              cardVariant={cardVariant}
+              showStrikethrough={showStrikethrough}
               showMoveToWeek={showMoveToWeek}
               getWeekLabel={getWeekLabel}
               selectionMode={selectionMode}

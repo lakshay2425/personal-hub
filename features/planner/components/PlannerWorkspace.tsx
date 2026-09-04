@@ -11,15 +11,12 @@ import { UNASSIGNED } from "@/features/settings/types";
 import { useTasks } from "../hooks/useTasks";
 import { getCurrentWeekStart } from "../lib/weekUtils";
 import type { CreateSubTaskInput, CreateTaskInput, Task } from "../types";
+import { getDeleteWarningMessage } from "../lib/deleteTaskMessage";
 import { BacklogTab } from "./BacklogTab";
-import {
-  CompletedTasksSection,
-  getDeleteWarningMessage,
-} from "./CompletedTasksSection";
 import { PlannerTabNav, type PlannerTab } from "./PlannerTabNav";
 import { TaskFormModal } from "./TaskFormModal";
-import { TaskList } from "./TaskList";
 import { TaskNotesModal } from "./TaskNotesModal";
+import { TasksView } from "./TasksView";
 import { UpcomingTab } from "./UpcomingTab";
 import { WeekNavigation } from "./WeekNavigation";
 
@@ -304,16 +301,11 @@ export function PlannerWorkspace() {
           {activeTab === "today" && (
             <>
               <WeekNavigation weekStart={weekStart} onWeekChange={setWeekStart} />
-              <TaskList tasks={activeTasks} {...treeHandlers} />
-              <CompletedTasksSection
-                tasks={completedTasks}
-                onToggle={handleToggle}
-                onEdit={handleEdit}
-                onDelete={setDeletingTask}
-                onAddSubTask={handleAddSubTask}
-                onMoveToCategory={handleMoveToCategory}
-                onViewNotes={setNotesTask}
-                {...selectionProps}
+              <TasksView
+                pendingTasks={activeTasks}
+                completedTasks={completedTasks}
+                onAddTask={openCreateForm}
+                {...treeHandlers}
               />
             </>
           )}

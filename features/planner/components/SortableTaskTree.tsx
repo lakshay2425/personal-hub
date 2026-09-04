@@ -20,11 +20,15 @@ import { buildTaskTree, compareTasks } from "../lib/taskTree";
 import type { Task } from "../types";
 import { SortableTaskTreeItem } from "./SortableTaskTreeItem";
 
+type CardVariant = "default" | "tasks";
+
 interface SortableTaskTreeProps {
   tasks: Task[];
   sortable?: boolean;
   reorderOnlyTodo?: boolean;
   completed?: boolean;
+  cardVariant?: CardVariant;
+  showStrikethrough?: boolean;
   showMoveToWeek?: boolean;
   getWeekLabel?: (task: Task) => string | undefined;
   onToggle: (task: Task, markDone: boolean) => void;
@@ -50,6 +54,8 @@ export function SortableTaskTree({
   sortable = true,
   reorderOnlyTodo = false,
   completed = false,
+  cardVariant = "default",
+  showStrikethrough = true,
   showMoveToWeek = false,
   getWeekLabel,
   onToggle,
@@ -157,6 +163,8 @@ export function SortableTaskTree({
           node={node}
           allTasks={tasks}
           completed={completed}
+          cardVariant={cardVariant}
+          showStrikethrough={showStrikethrough}
           sortable={
             sortable && (!reorderOnlyTodo || node.status === "Todo")
           }

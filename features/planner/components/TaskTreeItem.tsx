@@ -25,10 +25,14 @@ const DEPTH_PADDING = {
   2: "ml-6 sm:ml-8",
 } as const;
 
+type CardVariant = "default" | "tasks";
+
 interface TaskTreeItemProps {
   node: TaskTreeNode;
   allTasks: Task[];
   completed?: boolean;
+  cardVariant?: CardVariant;
+  showStrikethrough?: boolean;
   sortable?: boolean;
   reorderOnlyTodo?: boolean;
   showMoveToWeek?: boolean;
@@ -55,6 +59,8 @@ export function TaskTreeItem({
   node,
   allTasks,
   completed = false,
+  cardVariant = "default",
+  showStrikethrough = true,
   sortable = true,
   reorderOnlyTodo = false,
   showMoveToWeek = false,
@@ -83,12 +89,36 @@ export function TaskTreeItem({
   const progress = getDescendantProgress(node.id!, allTasks);
   const isDone = node.status === "Done";
   const checkboxDisabled = hasChildren;
+  const isTasksVariant = cardVariant === "tasks";
+  const showCompletedStyle = showStrikethrough && (completed || isDone);
+
+  const metaContent = (
+    <div className="flex flex-wrap items-center gap-2">
+      {hasChildren ? (
+        <TaskProgressBadge done={progress.done} total={progress.total} />
+      ) : null}
+      {!isTasksVariant && node.depth === 0 ? (
+        <CategoryBadge
+          category={node.category}
+          color={getColor(node.category)}
+          displayName={getDisplayName(node.category)}
+        />
+      ) : null}
+      {!isTasksVariant ? <PriorityBadge priority={node.priority} /> : null}
+      <NotesIcon notes={node.notes} onClick={() => onViewNotes(node)} />
+      {weekLabel ? (
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+          {weekLabel}
+        </span>
+      ) : null}
+    </div>
+  );
 
   return (
     <li ref={itemRef} style={style} className={DEPTH_PADDING[node.depth]}>
       <div
         className={`group flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-900 ${
-          completed ? "opacity-75" : ""
+          showCompletedStyle && !isTasksVariant ? "opacity-75" : ""
         }`}
       >
         {sortable && dragHandleProps ? (
@@ -130,45 +160,44 @@ export function TaskTreeItem({
         />
 
         <div className="flex min-w-0 flex-1 items-start gap-2">
-          <SubTaskHeader
-            title={node.title}
-            textClassName="text-sm"
-            hasChildren={hasChildren}
-            isChildrenCollapsed={isChildrenCollapsed}
-            descendantCount={descendantCount}
-            onToggleChildrenCollapse={() =>
-              onToggleChildrenCollapse(node.id!)
-            }
-            completed={completed || isDone}
-            meta={
-              <div className="flex flex-wrap items-center gap-2">
-                {hasChildren ? (
-                  <TaskProgressBadge
-                    done={progress.done}
-                    total={progress.total}
-                  />
-                ) : null}
-                {node.depth === 0 ? (
-                  <CategoryBadge
-                    category={node.category}
-                    color={getColor(node.category)}
-                    displayName={getDisplayName(node.category)}
-                  />
-                ) : null}
-                <PriorityBadge priority={node.priority} />
-                <NotesIcon
-                  notes={node.notes}
-                  onClick={() => onViewNotes(node)}
-                />
-                {weekLabel ? (
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {weekLabel}
-                  </span>
-                ) : null}
-              </div>
-            }
-          />
+          {isTasksVariant ? (
+            <div className="min-w-0 flex-1">
+              <SubTaskHeader
+                title={node.title}
+                textClassName="text-sm"
+                hasChildren={hasChildren}
+                isChildrenCollapsed={isChildrenCollapsed}
+                descendantCount={descendantCount}
+                onToggleChildrenCollapse={() =>
+                  onToggleChildrenCollapse(node.id!)
+                }
+                completed={showCompletedStyle}
+                meta={
+                  hasChildren || node.notes ? (
+                    <div className="mt-1">{metaContent}</div>
+                  ) : null
+                }
+              />
+            </div>
+          ) : (
+            <SubTaskHeader
+              title={node.title}
+              textClassName="text-sm"
+              hasChildren={hasChildren}
+              isChildrenCollapsed={isChildrenCollapsed}
+              descendantCount={descendantCount}
+              onToggleChildrenCollapse={() =>
+                onToggleChildrenCollapse(node.id!)
+              }
+              completed={showCompletedStyle}
+              meta={metaContent}
+            />
+          )}
         </div>
+
+        {isTasksVariant ? (
+          <PriorityBadge priority={node.priority} />
+        ) : null}
 
         <TaskOverflowMenu
           task={node}
@@ -200,6 +229,8 @@ export function TaskTreeItem({
                 node={child}
                 allTasks={allTasks}
                 completed={completed}
+                cardVariant={cardVariant}
+                showStrikethrough={showStrikethrough}
                 sortable={
                   sortable && (!reorderOnlyTodo || child.status === "Todo")
                 }
