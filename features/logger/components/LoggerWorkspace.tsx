@@ -3,19 +3,12 @@
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
-import { ExportButton } from "@/components/ExportButton";
-import { ImportButton } from "@/components/ImportButton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { BulkActionBar } from "@/features/shared/components/BulkActionBar";
 import { useBulkSelection } from "@/features/shared/hooks/useBulkSelection";
 import { UNASSIGNED } from "@/features/settings/types";
 
 import { useLogEntries } from "../hooks/useLogEntries";
-import { exportLoggerData } from "../lib/exportRepository";
-import {
-  importLoggerData,
-  validateLoggerBackup,
-} from "../lib/importRepository";
 import { getTodayDateString } from "../lib/dateUtils";
 import type { LogEntryFormValues } from "../schema";
 import type { LogEntry } from "../types";
@@ -137,40 +130,25 @@ export function LoggerWorkspace() {
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <ExportButton
-            onExport={exportLoggerData}
-            filenamePrefix="question-hub-logger"
-            className="w-full shrink-0 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          />
-          <ImportButton
-            onValidate={validateLoggerBackup}
-            onImport={importLoggerData}
-            onImported={() => window.location.reload()}
-            className="w-full shrink-0 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          />
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            onClick={toggleSelectionMode}
-            className={`w-full rounded-lg border px-4 py-2 text-sm font-medium transition-colors sm:w-auto ${
-              selectionMode
-                ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
-                : "border-zinc-300 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            }`}
-          >
-            {selectionMode ? "Cancel Select" : "Select"}
-          </button>
-          <button
-            type="button"
-            onClick={handleOpenCreate}
-            className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            New Entry
-          </button>
-        </div>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <button
+          type="button"
+          onClick={toggleSelectionMode}
+          className={`w-full rounded-lg border px-4 py-2 text-sm font-medium transition-colors sm:w-auto ${
+            selectionMode
+              ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
+              : "border-zinc-300 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          }`}
+        >
+          {selectionMode ? "Cancel Select" : "Select"}
+        </button>
+        <button
+          type="button"
+          onClick={handleOpenCreate}
+          className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        >
+          New Entry
+        </button>
       </div>
 
       <LogEntryList

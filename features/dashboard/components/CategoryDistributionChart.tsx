@@ -9,7 +9,78 @@ interface CategoryDistributionChartProps {
   categories: CategoryWeekData[];
   getCount: (data: CategoryWeekData) => number;
   total: number;
+  weekTotal: number;
   emptyMessage: string;
+}
+
+function donutSlice(
+  cx: number,
+  cy: number,
+  outerRadius: number,
+  innerRadius: number,
+  startAngle: number,
+  endAngle: number,
+): string {
+  const outerStart = polarToCartesian(cx, cy, outerRadius, endAngle);
+  const outerEnd = polarToCartesian(cx, cy, outerRadius, startAngle);
+  const innerStart = polarToCartesian(cx, cy, innerRadius, startAngle);
+  const innerEnd = polarToCartesian(cx, cy, innerRadius, endAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+
+  return [
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 0 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerStart.x} ${innerStart.y}`,
+    `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 1 ${innerEnd.x} ${innerEnd.y}`,
+    "Z",
+  ].join(" ");
+}
+
+function polarToCartesian(
+  cx: number,
+  cy: number,
+  radius: number,
+  angleInDegrees: number,
+) {
+  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180;
+  return {
+    x: cx + radius * Math.cos(angleInRadians),
+    y: cy + radius * Math.sin(angleInRadians),
+  };
+}
+
+function buildSlicePaths(
+  segments: { data: CategoryWeekData; count: number }[],
+  total: number,
+  cx: number,
+  cy: number,
+  outerRadius: number,
+  innerRadius: number,
+  getColor: (category: string) => string | undefined,
+) {
+  const slicePaths: {
+    data: CategoryWeekData;
+    count: number;
+    color: string;
+    path: string;
+  }[] = [];
+  let currentAngle = 0;
+
+  for (const { data, count } of segments) {
+    const sliceAngle = (count / total) * 360;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + sliceAngle;
+    currentAngle = endAngle;
+
+    slicePaths.push({
+      data,
+      count,
+      color: getColor(data.category) ?? "#a1a1aa",
+      path: donutSlice(cx, cy, outerRadius, innerRadius, startAngle, endAngle),
+    });
+  }
+
+  return slicePaths;
 }
 
 export function CategoryDistributionChart({
@@ -17,6 +88,7 @@ export function CategoryDistributionChart({
   categories,
   getCount,
   total,
+  weekTotal,
   emptyMessage,
 }: CategoryDistributionChartProps) {
   const { getColor, getDisplayName } = usePriorities();
@@ -41,7 +113,23 @@ export function CategoryDistributionChart({
     );
   }
 
-  const maxCount = Math.max(...segments.map((segment) => segment.count), 1);
+  const percentage =
+    weekTotal > 0 ? Math.round((total / weekTotal) * 100) : 0;
+  const size = 160;
+  const cx = size / 2;
+  const cy = size / 2;
+  const outerRadius = 70;
+  const innerRadius = 48;
+
+  const slicePaths = buildSlicePaths(
+    segments,
+    total,
+    cx,
+    cy,
+    outerRadius,
+    innerRadius,
+    getColor,
+  );
 
   return (
     <div className="space-y-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -49,36 +137,27 @@ export function CategoryDistributionChart({
         {title}
       </h3>
 
-      <div className="flex items-end justify-center gap-3 sm:gap-4">
-        {segments.map(({ data, count }) => {
-          const heightPercent = (count / maxCount) * 100;
-          const color = getColor(data.category) ?? "#a1a1aa";
-
-          return (
-            <div
-              key={data.category}
-              className="flex min-w-0 flex-1 max-w-24 flex-col items-center gap-2"
-            >
-              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                {count}
-              </span>
-              <div className="flex h-32 w-full items-end">
-                <div
-                  className="w-full rounded-t-md transition-all"
-                  style={{
-                    height: `${heightPercent}%`,
-                    backgroundColor: color,
-                    minHeight: count > 0 ? "8px" : "0",
-                  }}
-                  title={`${getDisplayName(data.category)}: ${count}`}
-                />
-              </div>
-              <span className="line-clamp-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                {getDisplayName(data.category)}
-              </span>
-            </div>
-          );
-        })}
+      <div className="flex justify-center">
+        <div className="relative" style={{ width: size, height: size }}>
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            {slicePaths.map(({ data, count, path, color }) => (
+              <path
+                key={data.category}
+                d={path}
+                fill={color}
+                aria-label={`${getDisplayName(data.category)}: ${count}`}
+              />
+            ))}
+          </svg>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+              {percentage}%
+            </span>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              {total} of {weekTotal}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">

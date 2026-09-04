@@ -38,11 +38,11 @@ const NAV_ITEMS: NavItem[] = [
     href: "/planner",
     children: [
       { href: "/planner", label: "Tasks" },
-      { href: "/planner/logger", label: "Logger" },
       { href: "/planner/dashboard", label: "Dashboard" },
       { href: "/planner/settings", label: "Settings" },
     ],
   },
+  { href: "/planner/logger", label: "Logger" },
   { href: "/job-search", label: "Job Search" },
 ];
 
@@ -102,7 +102,9 @@ function NavLinkItem({
       ? pathname === "/content-ideas"
       : href === "/planner"
         ? pathname === "/planner"
-        : pathname.startsWith(href);
+        : href === "/planner/logger"
+          ? pathname.startsWith("/planner/logger")
+          : pathname.startsWith(href);
 
   return (
     <Link

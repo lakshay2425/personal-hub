@@ -31,6 +31,7 @@ export function PlannerWorkspace() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [isBulkApplying, setIsBulkApplying] = useState(false);
+  const [defaultCategory, setDefaultCategory] = useState<string | undefined>();
 
   const {
     selectedIds,
@@ -81,11 +82,20 @@ export function PlannerWorkspace() {
     setIsFormOpen(false);
     setEditingTask(null);
     setSubTaskParent(null);
+    setDefaultCategory(undefined);
   }, []);
 
   const openCreateForm = useCallback(() => {
     setEditingTask(null);
     setSubTaskParent(null);
+    setDefaultCategory(undefined);
+    setIsFormOpen(true);
+  }, []);
+
+  const openCreateFormForCategory = useCallback((category: string) => {
+    setEditingTask(null);
+    setSubTaskParent(null);
+    setDefaultCategory(category);
     setIsFormOpen(true);
   }, []);
 
@@ -244,7 +254,7 @@ export function PlannerWorkspace() {
     ? `edit-${editingTask.id}`
     : subTaskParent
       ? `sub-${subTaskParent.id}`
-      : "create";
+      : `create-${defaultCategory ?? "none"}`;
 
   if (error) {
     return (
@@ -305,6 +315,7 @@ export function PlannerWorkspace() {
                 pendingTasks={activeTasks}
                 completedTasks={completedTasks}
                 onAddTask={openCreateForm}
+                onAddTaskInCategory={openCreateFormForCategory}
                 {...treeHandlers}
               />
             </>
@@ -339,6 +350,7 @@ export function PlannerWorkspace() {
         onUpdate={handleUpdateTask}
         onCreateSubTask={handleCreateSubTask}
         defaultWeekStart={defaultFormWeek}
+        defaultCategory={defaultCategory}
         task={editingTask}
         subTaskParent={subTaskParent}
       />

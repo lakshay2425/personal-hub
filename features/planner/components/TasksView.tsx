@@ -13,6 +13,7 @@ interface TasksViewProps {
   pendingTasks: Task[];
   completedTasks: Task[];
   onAddTask: () => void;
+  onAddTaskInCategory?: (category: string) => void;
   selectionMode?: boolean;
   selectedIds?: Set<number>;
   onSelectionToggle?: (taskId: number) => void;
@@ -33,6 +34,7 @@ export function TasksView({
   pendingTasks,
   completedTasks,
   onAddTask,
+  onAddTaskInCategory,
   selectionMode,
   selectedIds,
   onSelectionToggle,
@@ -101,6 +103,8 @@ export function TasksView({
         onMoveToCategory={onMoveToCategory}
         onViewNotes={onViewNotes}
         onReorder={onReorder}
+        showEmptyCategoryCta={isPending}
+        onAddTaskInCategory={onAddTaskInCategory}
       />
     </>
   );

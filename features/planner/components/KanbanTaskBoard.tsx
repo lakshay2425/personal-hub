@@ -40,6 +40,8 @@ interface KanbanTaskBoardProps {
     orderedIds: number[],
   ) => Promise<void>;
   emptyMessage?: string;
+  showEmptyCategoryCta?: boolean;
+  onAddTaskInCategory?: (category: string) => void;
 }
 
 export function KanbanTaskBoard({
@@ -63,6 +65,8 @@ export function KanbanTaskBoard({
   onViewNotes,
   onReorder,
   emptyMessage = "No tasks.",
+  showEmptyCategoryCta = false,
+  onAddTaskInCategory,
 }: KanbanTaskBoardProps) {
   const { activePriorities, getColor, getDisplayName } = usePriorities();
 
@@ -110,28 +114,38 @@ export function KanbanTaskBoard({
           </div>
 
           <div className="max-h-[min(70vh,600px)] flex-1 overflow-y-auto p-2">
-            <SortableTaskTree
-              tasks={columnTasks}
-              sortable={sortable}
-              reorderOnlyTodo={reorderOnlyTodo}
-              completed={completed}
-              cardVariant={cardVariant}
-              showStrikethrough={showStrikethrough}
-              showMoveToWeek={showMoveToWeek}
-              getWeekLabel={getWeekLabel}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onSelectionToggle={onSelectionToggle}
-              onToggle={onToggle}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onAddSubTask={onAddSubTask}
-              onMoveToWeek={onMoveToWeek}
-              onMoveToCategory={onMoveToCategory}
-              onViewNotes={onViewNotes}
-              onReorder={onReorder}
-              emptyMessage="No tasks"
-            />
+            {showEmptyCategoryCta && count === 0 && onAddTaskInCategory ? (
+              <button
+                type="button"
+                onClick={() => onAddTaskInCategory(category)}
+                className="w-full py-4 text-left text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+              >
+                + Add task in {getDisplayName(category)}
+              </button>
+            ) : (
+              <SortableTaskTree
+                tasks={columnTasks}
+                sortable={sortable}
+                reorderOnlyTodo={reorderOnlyTodo}
+                completed={completed}
+                cardVariant={cardVariant}
+                showStrikethrough={showStrikethrough}
+                showMoveToWeek={showMoveToWeek}
+                getWeekLabel={getWeekLabel}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onSelectionToggle={onSelectionToggle}
+                onToggle={onToggle}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onAddSubTask={onAddSubTask}
+                onMoveToWeek={onMoveToWeek}
+                onMoveToCategory={onMoveToCategory}
+                onViewNotes={onViewNotes}
+                onReorder={onReorder}
+                emptyMessage="No tasks"
+              />
+            )}
           </div>
         </div>
       ))}

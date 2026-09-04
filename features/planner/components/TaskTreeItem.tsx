@@ -1,16 +1,12 @@
 "use client";
 
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { GripVertical } from "lucide-react";
+import { arrayMove } from "@dnd-kit/sortable";
+import { ChevronDown, ChevronUp, GripVertical } from "lucide-react";
+import { useCallback, useMemo } from "react";
 import type { CSSProperties, HTMLAttributes } from "react";
 
-import { CategoryBadge } from "@/features/settings/components/CategoryBadge";
-import { usePriorities } from "@/features/settings/hooks/usePriorities";
-
-import {
-  countAllDescendants,
-  getDescendantProgress,
-} from "../lib/taskTree";
+import { compareTasks, countAllDescendants, getDescendantProgress } from "../lib/taskTree";
 import type { Task, TaskTreeNode } from "../types";
 import { NotesIcon } from "./NotesIcon";
 import { PriorityBadge } from "./PriorityBadge";
@@ -34,6 +30,7 @@ interface TaskTreeItemProps {
   cardVariant?: CardVariant;
   showStrikethrough?: boolean;
   sortable?: boolean;
+  useTouchReorder?: boolean;
   reorderOnlyTodo?: boolean;
   showMoveToWeek?: boolean;
   weekLabel?: string;
@@ -46,6 +43,11 @@ interface TaskTreeItemProps {
   onMoveToWeek?: (task: Task) => void;
   onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
+  onReorder?: (
+    parentId: number | null,
+    weekStart: string,
+    orderedIds: number[],
+  ) => Promise<void>;
   selectionMode?: boolean;
   isSelected?: boolean;
   onSelectionToggle?: () => void;
@@ -62,6 +64,7 @@ export function TaskTreeItem({
   cardVariant = "default",
   showStrikethrough = true,
   sortable = true,
+  useTouchReorder = false,
   reorderOnlyTodo = false,
   showMoveToWeek = false,
   weekLabel,
@@ -74,6 +77,7 @@ export function TaskTreeItem({
   onMoveToWeek,
   onMoveToCategory,
   onViewNotes,
+  onReorder,
   selectionMode = false,
   isSelected = false,
   onSelectionToggle,
@@ -82,7 +86,6 @@ export function TaskTreeItem({
   style,
   dragHandleProps,
 }: TaskTreeItemProps) {
-  const { getColor, getDisplayName } = usePriorities();
   const hasChildren = node.children.length > 0;
   const canAddSubTask = node.depth < 2;
   const descendantCount = countAllDescendants(node);
@@ -91,18 +94,51 @@ export function TaskTreeItem({
   const checkboxDisabled = hasChildren;
   const isTasksVariant = cardVariant === "tasks";
   const showCompletedStyle = showStrikethrough && (completed || isDone);
+  const itemSortable =
+    sortable && (!reorderOnlyTodo || node.status === "Todo");
+
+  const siblings = useMemo(() => {
+    const parentId = node.parentId ?? null;
+    const weekStart = node.weekStart;
+    return allTasks
+      .filter(
+        (task) =>
+          (task.parentId ?? null) === parentId &&
+          task.weekStart === weekStart,
+      )
+      .sort(compareTasks);
+  }, [allTasks, node.parentId, node.weekStart]);
+
+  const siblingIndex = siblings.findIndex((task) => task.id === node.id);
+  const canMoveUp = useTouchReorder && itemSortable && siblingIndex > 0;
+  const canMoveDown =
+    useTouchReorder &&
+    itemSortable &&
+    siblingIndex >= 0 &&
+    siblingIndex < siblings.length - 1;
+
+  const handleMove = useCallback(
+    async (direction: "up" | "down") => {
+      if (!onReorder || siblingIndex < 0) return;
+
+      const newIndex =
+        direction === "up" ? siblingIndex - 1 : siblingIndex + 1;
+      if (newIndex < 0 || newIndex >= siblings.length) return;
+
+      const reordered = arrayMove(siblings, siblingIndex, newIndex);
+      await onReorder(
+        node.parentId ?? null,
+        node.weekStart,
+        reordered.map((task) => task.id!),
+      );
+    },
+    [node.parentId, node.weekStart, onReorder, siblingIndex, siblings],
+  );
 
   const metaContent = (
     <div className="flex flex-wrap items-center gap-2">
       {hasChildren ? (
         <TaskProgressBadge done={progress.done} total={progress.total} />
-      ) : null}
-      {!isTasksVariant && node.depth === 0 ? (
-        <CategoryBadge
-          category={node.category}
-          color={getColor(node.category)}
-          displayName={getDisplayName(node.category)}
-        />
       ) : null}
       {!isTasksVariant ? <PriorityBadge priority={node.priority} /> : null}
       <NotesIcon notes={node.notes} onClick={() => onViewNotes(node)} />
@@ -121,7 +157,28 @@ export function TaskTreeItem({
           showCompletedStyle && !isTasksVariant ? "opacity-75" : ""
         }`}
       >
-        {sortable && dragHandleProps ? (
+        {useTouchReorder && itemSortable ? (
+          <div className="flex shrink-0 flex-col gap-0.5">
+            <button
+              type="button"
+              onClick={() => void handleMove("up")}
+              disabled={!canMoveUp}
+              aria-label="Move task up"
+              className="rounded p-0.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleMove("down")}
+              disabled={!canMoveDown}
+              aria-label="Move task down"
+              className="rounded p-0.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          </div>
+        ) : itemSortable && dragHandleProps ? (
           <button
             type="button"
             {...dragHandleProps}
@@ -130,18 +187,8 @@ export function TaskTreeItem({
           >
             <GripVertical className="h-4 w-4" />
           </button>
-        ) : sortable ? (
+        ) : itemSortable ? (
           <span className="w-6 shrink-0" aria-hidden />
-        ) : null}
-
-        {selectionMode && node.depth === 0 ? (
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={onSelectionToggle}
-            className="h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800"
-            aria-label={`Select ${node.title}`}
-          />
         ) : null}
 
         <input
@@ -158,6 +205,16 @@ export function TaskTreeItem({
                 : "Mark as done"
           }
         />
+
+        {selectionMode && node.depth === 0 ? (
+          <input
+            type="radio"
+            checked={isSelected}
+            onChange={onSelectionToggle}
+            className="h-4 w-4 shrink-0 border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-800"
+            aria-label={`Select ${node.title}`}
+          />
+        ) : null}
 
         <div className="flex min-w-0 flex-1 items-start gap-2">
           {isTasksVariant ? (
@@ -231,6 +288,7 @@ export function TaskTreeItem({
                 completed={completed}
                 cardVariant={cardVariant}
                 showStrikethrough={showStrikethrough}
+                useTouchReorder={useTouchReorder}
                 sortable={
                   sortable && (!reorderOnlyTodo || child.status === "Todo")
                 }
@@ -245,6 +303,7 @@ export function TaskTreeItem({
                 onMoveToWeek={onMoveToWeek}
                 onMoveToCategory={onMoveToCategory}
                 onViewNotes={onViewNotes}
+                onReorder={onReorder}
                 collapsedTaskIds={collapsedTaskIds}
               />
             ))}

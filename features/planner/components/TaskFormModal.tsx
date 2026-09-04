@@ -46,6 +46,7 @@ interface TaskFormModalProps {
     input: CreateSubTaskInput,
   ) => Promise<void>;
   defaultWeekStart: string;
+  defaultCategory?: string;
   task?: Task | null;
   subTaskParent?: Task | null;
 }
@@ -57,6 +58,7 @@ export function TaskFormModal({
   onUpdate,
   onCreateSubTask,
   defaultWeekStart,
+  defaultCategory,
   task,
   subTaskParent,
 }: TaskFormModalProps) {
@@ -72,7 +74,9 @@ export function TaskFormModal({
   const [rootPriority, setRootPriority] = useState<TaskPriority>(
     task?.priority ?? "Medium",
   );
-  const [category, setCategory] = useState(task?.category ?? UNASSIGNED);
+  const [category, setCategory] = useState(
+    task?.category ?? defaultCategory ?? UNASSIGNED,
+  );
   const [subTaskPriority, setSubTaskPriority] = useState<TaskPriority | null>(
     task?.priority ?? null,
   );

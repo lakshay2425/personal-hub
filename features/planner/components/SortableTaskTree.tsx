@@ -16,6 +16,8 @@ import {
 } from "@dnd-kit/sortable";
 import { useCallback, useMemo, useState } from "react";
 
+import { useIsTouchDevice } from "@/features/shared/hooks/useIsTouchDevice";
+
 import { buildTaskTree, compareTasks } from "../lib/taskTree";
 import type { Task } from "../types";
 import { SortableTaskTreeItem } from "./SortableTaskTreeItem";
@@ -71,6 +73,9 @@ export function SortableTaskTree({
   onReorder,
   emptyMessage = "No tasks.",
 }: SortableTaskTreeProps) {
+  const isTouchDevice = useIsTouchDevice();
+  const useTouchReorder = isTouchDevice && sortable;
+
   const [collapsedTaskIds, setCollapsedTaskIds] = useState<Set<number>>(
     () => new Set(),
   );
@@ -165,6 +170,7 @@ export function SortableTaskTree({
           completed={completed}
           cardVariant={cardVariant}
           showStrikethrough={showStrikethrough}
+          useTouchReorder={useTouchReorder}
           sortable={
             sortable && (!reorderOnlyTodo || node.status === "Todo")
           }
@@ -180,6 +186,7 @@ export function SortableTaskTree({
           onMoveToWeek={onMoveToWeek}
           onMoveToCategory={onMoveToCategory}
           onViewNotes={onViewNotes}
+          onReorder={onReorder}
           selectionMode={selectionMode}
           isSelected={selectedIds?.has(node.id!)}
           onSelectionToggle={
@@ -193,7 +200,7 @@ export function SortableTaskTree({
     </ul>
   );
 
-  if (!sortable) {
+  if (!sortable || useTouchReorder) {
     return list;
   }
 

@@ -81,6 +81,7 @@ export function DashboardWorkspace() {
       category.completedTasks.length + category.logEntries.length > 0,
   ).length;
   const weekTotal = totalTasks + totalLogs;
+  const taskWeekTotal = data.totalCompletedTasks + data.totalPendingTasks;
 
   return (
     <div className="space-y-6">
@@ -96,6 +97,7 @@ export function DashboardWorkspace() {
             ).length
           }
           total={data.totalCompletedTasks}
+          weekTotal={taskWeekTotal}
           emptyMessage="No completed tasks this week yet."
         />
         <CategoryDistributionChart
@@ -107,6 +109,7 @@ export function DashboardWorkspace() {
             ).length
           }
           total={data.totalPendingTasks}
+          weekTotal={taskWeekTotal}
           emptyMessage="No pending tasks scheduled for this week."
         />
       </div>

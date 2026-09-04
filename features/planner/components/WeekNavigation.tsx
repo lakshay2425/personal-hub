@@ -1,9 +1,12 @@
 "use client";
 
+import { useRef } from "react";
+
 import {
   addWeeks,
   formatWeekRange,
   getCurrentWeekStart,
+  getMondayOfWeek,
   isCurrentWeek,
 } from "../lib/weekUtils";
 
@@ -13,6 +16,14 @@ interface WeekNavigationProps {
 }
 
 export function WeekNavigation({ weekStart, onWeekChange }: WeekNavigationProps) {
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDateChange = (value: string) => {
+    if (!value) return;
+    onWeekChange(getMondayOfWeek(new Date(value + "T00:00:00")));
+    dateInputRef.current?.blur();
+  };
+
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center justify-center gap-2">
@@ -23,9 +34,21 @@ export function WeekNavigation({ weekStart, onWeekChange }: WeekNavigationProps)
         >
           &lt; Prev
         </button>
-        <span className="min-w-[200px] text-center text-sm font-medium text-zinc-900 dark:text-zinc-50">
+        <button
+          type="button"
+          onClick={() => dateInputRef.current?.showPicker?.() ?? dateInputRef.current?.click()}
+          className="min-w-[200px] cursor-pointer text-center text-sm font-medium text-zinc-900 underline-offset-2 hover:underline dark:text-zinc-50"
+        >
           {formatWeekRange(weekStart)}
-        </span>
+        </button>
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={weekStart}
+          onChange={(event) => handleDateChange(event.target.value)}
+          className="sr-only"
+          aria-label="Pick a week"
+        />
         <button
           type="button"
           onClick={() => onWeekChange(addWeeks(weekStart, 1))}
