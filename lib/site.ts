@@ -5,7 +5,6 @@ export const SITE_DESCRIPTION =
   "A calm, local-first toolkit for projects, weekly planning with sub-tasks, daily logs, content ideas, product feature tracking, and job search tracking — with outreach templates linked to cold emails and LinkedIn/X outreach — stored entirely in your browser.";
 export const SITE_TITLE_TEMPLATE = `%s | ${SITE_NAME}`;
 export const SITE_LOGO_IMAGE = "/logo.png";
-export const SITE_OG_IMAGE = "/opengraph-image.png";
 export const SITE_KEYWORDS = [
   "personal hub",
   "local-first",

@@ -282,7 +282,7 @@ Import is full overwrite of `logEntries`.
 ## `job-search-tracker-db`
 
 **Source:** `features/job-search/db.ts`  
-**Current version:** 5
+**Current version:** 6
 
 ### Migration history (`job-search-tracker-db`)
 
@@ -293,6 +293,7 @@ Import is full overwrite of `logEntries`.
 | 3 | Add `templates` table (no data migration; existing rows preserved) |
 | 4 | Add `templateId` and `followUpTemplateId` on `leads` and `coldEmails`; backfill with `null` |
 | 5 | Add `xProfile` on leads; backfill from existing `linkedin` for X-channel leads (keeps `linkedin` unchanged) |
+| 6 | Add `productOutreachContacts` and `productOutreachInteractions` tables (no data migration; existing rows preserved) |
 
 ### `companies`
 
@@ -337,12 +338,42 @@ Import is full overwrite of `logEntries`.
 |------|-------|----------------|-----------------|
 | Leads | `/job-search/leads` | Email, Other | Click email → copy to clipboard; click company → company info modal |
 | Outreach | `/job-search/outreach` | LinkedIn, X | Overflow menu: Link (profile URL), Edit, Delete |
+| Product Outreach | `/job-search/outreach/product` | Instagram, LinkedIn, X, Email | Grouped contact cards with interaction timeline; Link, Copy context, Edit, Delete per interaction |
 
 **Leads page** also shows follow-up template (Email channel) and follow-up dates (Email only).
 
 **Outreach page** stores separate `linkedin` and `xProfile` fields; Link opens the URL for the lead's channel (`xProfile` with legacy fallback to `linkedin`).
 
 Follow-up **date** columns appear on the Leads page for Email-channel leads only. Outreach leads omit follow-up dates but support follow-up **template** links.
+
+---
+
+### `productOutreachContacts`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Auto-increment primary key |
+| `label` | `string` | Optional display name to recognize the person across platforms |
+| `createdAt` | `number` | Unix ms |
+
+**Indexes:** `id`, `label`, `createdAt`
+
+---
+
+### `productOutreachInteractions`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Auto-increment primary key |
+| `contactId` | `number` | FK → `productOutreachContacts.id` |
+| `channel` | `"Instagram" \| "LinkedIn" \| "X" \| "Email"` | Platform for this touchpoint |
+| `handle` | `string` | Instagram username (no `@`), LinkedIn/X profile or handle, or email address |
+| `context` | `string` | Required — why you reached out this time |
+| `createdAt` | `number` | Unix ms |
+
+**Indexes:** `id`, `contactId`, `channel`, `handle`, `createdAt`
+
+**UI:** `/job-search/outreach/product` — contacts grouped with a chronological interaction timeline. Each new touchpoint appends a row (cross-platform allowed). Deleting the last interaction removes the contact.
 
 ---
 
@@ -435,18 +466,20 @@ Deleting a template does not cascade-delete linked records; orphaned IDs display
 
 ```json
 {
-  "version": 4,
+  "version": 5,
   "exportedAt": "ISO-8601 string",
   "companies": [],
   "leads": [],
   "applications": [],
   "coldEmails": [],
   "templates": [],
-  "activityLogs": []
+  "activityLogs": [],
+  "productOutreachContacts": [],
+  "productOutreachInteractions": []
 }
 ```
 
-Import is full overwrite of all six tables.
+Import is full overwrite of all eight tables.
 
 **Backward compatibility:**
 
@@ -455,7 +488,7 @@ Import is full overwrite of all six tables.
 | 1–2 | No `templates` array → imports with empty templates; no template FK fields → `null` |
 | 3 | Has templates; template FK fields on leads/coldEmails default to `null` if missing |
 | 4 | Full schema including `templateId` and `followUpTemplateId` |
-| 5 | Adds `xProfile`; older backups import with `xProfile: ""` and backfill from `linkedin` for X-channel leads |
+| 5 | Export adds `productOutreachContacts` and `productOutreachInteractions`; v4 backups import with empty arrays for both |
 
 ---
 

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 
+import { OutreachShell } from "@/features/job-search/components/OutreachShell";
+
 export const metadata: Metadata = {
   title: "Outreach",
   description:
-    "Track LinkedIn and X outreach leads. Open profiles from the overflow menu, link message and follow-up templates, and manage contacts. Stored locally.",
+    "Track job outreach and product outreach contacts. Job outreach covers LinkedIn and X at target companies; product outreach logs cross-platform interaction history. Stored locally.",
 };
 
 export default function OutreachLayout({
@@ -11,5 +13,5 @@ export default function OutreachLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <OutreachShell>{children}</OutreachShell>;
 }

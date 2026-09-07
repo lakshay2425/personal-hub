@@ -1,6 +1,6 @@
 import { InvalidBackupError } from "@/lib/export/validateBackup";
 
-import { isLeadChannel, LEGACY_LEAD_CHANNEL } from "../constants";
+import { isLeadChannel, isProductOutreachChannel, LEGACY_LEAD_CHANNEL } from "../constants";
 import { getDB } from "../db";
 import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
 import type {
@@ -9,6 +9,8 @@ import type {
   ColdEmail,
   Company,
   Lead,
+  ProductOutreachContact,
+  ProductOutreachInteraction,
   Template,
 } from "../types";
 
@@ -21,13 +23,15 @@ const CORE_ARRAYS = [
 ] as const;
 
 export type JobSearchBackupPayload = {
-  version: 1 | 2 | 3 | 4;
+  version: 1 | 2 | 3 | 4 | 5;
   companies: Company[];
   leads: Lead[];
   applications: Application[];
   coldEmails: ColdEmail[];
   templates: Template[];
   activityLogs: ActivityLog[];
+  productOutreachContacts: ProductOutreachContact[];
+  productOutreachInteractions: ProductOutreachInteraction[];
 };
 
 function normalizeTemplateRef(value: unknown): number | null {
@@ -42,7 +46,13 @@ function assertCoreBackupShape(data: unknown): Record<string, unknown[]> {
   const record = data as Record<string, unknown>;
   const version = record.version;
 
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4) {
+  if (
+    version !== 1 &&
+    version !== 2 &&
+    version !== 3 &&
+    version !== 4 &&
+    version !== 5
+  ) {
     throw new InvalidBackupError();
   }
 
@@ -65,7 +75,7 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
     : [];
 
   return {
-    version: 4,
+    version: 5,
     companies: arrays.companies as Company[],
     leads: (arrays.leads as Lead[]).map((lead) => {
       const channel = isLeadChannel(lead.channel)
@@ -92,6 +102,19 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
     })),
     templates,
     activityLogs: arrays.activityLogs as ActivityLog[],
+    productOutreachContacts: Array.isArray(record.productOutreachContacts)
+      ? (record.productOutreachContacts as ProductOutreachContact[])
+      : [],
+    productOutreachInteractions: Array.isArray(record.productOutreachInteractions)
+      ? (record.productOutreachInteractions as ProductOutreachInteraction[]).map(
+          (interaction) => ({
+            ...interaction,
+            channel: isProductOutreachChannel(interaction.channel)
+              ? interaction.channel
+              : "Instagram",
+          }),
+        )
+      : [],
   };
 }
 
@@ -109,6 +132,8 @@ export async function importJobSearchData(
       db.coldEmails,
       db.templates,
       db.activityLogs,
+      db.productOutreachContacts,
+      db.productOutreachInteractions,
     ],
     async () => {
       await Promise.all([
@@ -118,6 +143,8 @@ export async function importJobSearchData(
         db.coldEmails.clear(),
         db.templates.clear(),
         db.activityLogs.clear(),
+        db.productOutreachContacts.clear(),
+        db.productOutreachInteractions.clear(),
       ]);
 
       await Promise.all([
@@ -127,6 +154,10 @@ export async function importJobSearchData(
         db.coldEmails.bulkPut(payload.coldEmails),
         db.templates.bulkPut(payload.templates),
         db.activityLogs.bulkPut(payload.activityLogs),
+        db.productOutreachContacts.bulkPut(payload.productOutreachContacts),
+        db.productOutreachInteractions.bulkPut(
+          payload.productOutreachInteractions,
+        ),
       ]);
     },
   );

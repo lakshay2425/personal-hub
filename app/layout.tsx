@@ -8,7 +8,6 @@ import { AppShell } from "@/components/AppShell";
 import {
   SITE_DESCRIPTION,
   SITE_LOGO_IMAGE,
-  SITE_OG_IMAGE,
   SITE_KEYWORDS,
   SITE_NAME,
   SITE_TITLE_TEMPLATE,
@@ -69,25 +68,11 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: "/",
-    images: [
-      {
-        url: SITE_OG_IMAGE,
-        width: 1200,
-        height: 630,
-        alt: `${SITE_NAME} app preview`,
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: [
-      {
-        url: SITE_OG_IMAGE,
-        alt: `${SITE_NAME} app preview`,
-      },
-    ],
   },
   icons: {
     shortcut: [{ url: SITE_LOGO_IMAGE, sizes: "512x512", type: "image/png" }],

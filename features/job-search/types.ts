@@ -2,6 +2,8 @@ export type LeadStatus = "New" | "Contacted" | "Replied" | "Inactive";
 
 export type LeadChannel = "Email" | "LinkedIn" | "X" | "Other";
 
+export type ProductOutreachChannel = "Instagram" | "LinkedIn" | "X" | "Email";
+
 export type ApplicationStatus =
   | "Applied"
   | "Interview"
@@ -104,6 +106,27 @@ export interface ActivityLog {
   entityId: number;
   action: string;
   timestamp: number;
+}
+
+export interface ProductOutreachContact {
+  id?: number;
+  label: string;
+  createdAt: number;
+}
+
+export interface ProductOutreachInteraction {
+  id?: number;
+  contactId: number;
+  channel: ProductOutreachChannel;
+  handle: string;
+  context: string;
+  createdAt: number;
+}
+
+export interface ProductOutreachContactWithInteractions
+  extends ProductOutreachContact {
+  id: number;
+  interactions: ProductOutreachInteraction[];
 }
 
 export interface CompanyWithCounts extends Company {

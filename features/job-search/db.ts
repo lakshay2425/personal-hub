@@ -6,6 +6,8 @@ import type {
   ColdEmail,
   Company,
   Lead,
+  ProductOutreachContact,
+  ProductOutreachInteraction,
   Template,
 } from "./types";
 
@@ -18,6 +20,11 @@ class JobSearchDatabase extends Dexie {
   coldEmails!: EntityTable<ColdEmail, "id">;
   templates!: EntityTable<Template, "id">;
   activityLogs!: EntityTable<ActivityLog, "id">;
+  productOutreachContacts!: EntityTable<ProductOutreachContact, "id">;
+  productOutreachInteractions!: EntityTable<
+    ProductOutreachInteraction,
+    "id"
+  >;
 
   constructor() {
     super("job-search-tracker-db");
@@ -139,6 +146,22 @@ class JobSearchDatabase extends Dexie {
             }
           });
       });
+
+    this.version(6).stores({
+      companies:
+        "++id, companyName, sector, createdAt",
+      leads:
+        "++id, companyId, name, role, type, channel, status, firstFollowUpDate, secondFollowUpDate, templateId, followUpTemplateId, createdAt",
+      applications:
+        "++id, companyId, role, portal, status, appliedDate, createdAt",
+      coldEmails:
+        "++id, companyId, leadId, role, status, sentDate, firstFollowUpDate, secondFollowUpDate, templateId, followUpTemplateId, createdAt",
+      templates: "++id, type, title, createdAt, updatedAt",
+      activityLogs: "++id, entityType, entityId, action, timestamp",
+      productOutreachContacts: "++id, label, createdAt",
+      productOutreachInteractions:
+        "++id, contactId, channel, handle, createdAt",
+    });
   }
 }
 

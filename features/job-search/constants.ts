@@ -3,6 +3,7 @@ import type {
   ColdEmailStatus,
   LeadChannel,
   LeadStatus,
+  ProductOutreachChannel,
   TemplateType,
   TimeFilter,
 } from "./types";
@@ -41,6 +42,50 @@ export function getLeadPageHref(channel: LeadChannel): string {
   return isOutreachChannel(channel)
     ? "/job-search/outreach"
     : "/job-search/leads";
+}
+
+export const PRODUCT_OUTREACH_CHANNELS: ProductOutreachChannel[] = [
+  "Instagram",
+  "LinkedIn",
+  "X",
+  "Email",
+];
+
+export const DEFAULT_PRODUCT_OUTREACH_CHANNEL: ProductOutreachChannel =
+  "Instagram";
+
+export function isProductOutreachChannel(
+  value: unknown,
+): value is ProductOutreachChannel {
+  return PRODUCT_OUTREACH_CHANNELS.includes(value as ProductOutreachChannel);
+}
+
+export function normalizeProductOutreachHandle(
+  channel: ProductOutreachChannel,
+  raw: string,
+): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+
+  if (channel === "Instagram") {
+    const withoutAt = trimmed.replace(/^@+/, "");
+    const username = withoutAt.split(/[/?#]/)[0] ?? "";
+    return username.trim();
+  }
+
+  if (channel === "X") {
+    const withoutAt = trimmed.replace(/^@+/, "");
+    if (/^https?:\/\//i.test(withoutAt) || withoutAt.includes(".")) {
+      return withoutAt;
+    }
+    return withoutAt.split(/[/?#]/)[0]?.trim() ?? "";
+  }
+
+  if (channel === "Email") {
+    return trimmed.toLowerCase();
+  }
+
+  return trimmed;
 }
 
 export const APPLICATION_STATUSES: ApplicationStatus[] = [
