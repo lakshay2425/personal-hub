@@ -19,6 +19,8 @@ export type OgSectionId =
   | "leads"
   | "outreach"
   | "productOutreach"
+  | "peopleDiscover"
+  | "peopleNetwork"
   | "applications"
   | "coldEmails"
   | "templates";
@@ -140,6 +142,26 @@ export const OG_SECTIONS: Record<OgSectionId, OgSection> = {
     badgeColor: "#9333ea",
     badgeBackground: "#faf5ff",
     alt: `Product Outreach | ${SITE_NAME}`,
+  },
+  peopleDiscover: {
+    id: "peopleDiscover",
+    title: "Discover",
+    description:
+      "Save people you find on LinkedIn and other platforms, then review their profiles when you have time. Stored locally.",
+    badge: "Discover",
+    badgeColor: "#0f766e",
+    badgeBackground: "#f0fdfa",
+    alt: `Discover | ${SITE_NAME}`,
+  },
+  peopleNetwork: {
+    id: "peopleNetwork",
+    title: "Network",
+    description:
+      "Keep people you know and the context for how you know them. Stored locally.",
+    badge: "Network",
+    badgeColor: "#7c3aed",
+    badgeBackground: "#f5f3ff",
+    alt: `Network | ${SITE_NAME}`,
   },
   applications: {
     id: "applications",

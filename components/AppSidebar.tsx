@@ -45,6 +45,14 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/planner/logger", label: "Logger" },
   { href: "/job-search", label: "Job Search" },
   { href: "/product-outreach", label: "Product Outreach" },
+  {
+    label: "People",
+    href: "/people/discover",
+    children: [
+      { href: "/people/discover", label: "Discover" },
+      { href: "/people/network", label: "Network" },
+    ],
+  },
 ];
 
 function MenuIcon() {
@@ -107,7 +115,9 @@ function NavLinkItem({
           ? pathname.startsWith("/planner/logger")
           : href === "/product-outreach"
             ? pathname === "/product-outreach"
-            : pathname.startsWith(href);
+            : href === "/people/discover"
+              ? pathname === "/people/discover"
+              : pathname.startsWith(href);
 
   return (
     <Link
@@ -188,7 +198,9 @@ export function AppSidebar({ isOpen, onOpen, onClose }: AppSidebarProps) {
                   ? pathname === "/content-ideas"
                   : child.href === "/planner"
                     ? pathname === "/planner"
-                    : pathname.startsWith(child.href),
+                    : child.href === "/people/discover"
+                      ? pathname === "/people/discover"
+                      : pathname.startsWith(child.href),
               );
 
               return (
