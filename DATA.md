@@ -337,8 +337,8 @@ Import is full overwrite of `logEntries`.
 | Page | Route | Channels shown | In-list actions |
 |------|-------|----------------|-----------------|
 | Leads | `/job-search/leads` | Email, Other | Click email → copy to clipboard; click company → company info modal |
-| Outreach | `/job-search/outreach` | LinkedIn, X | Overflow menu: Link (profile URL), Edit, Delete |
-| Product Outreach | `/job-search/outreach/product` | Instagram, LinkedIn, X, Email | Grouped contact cards with interaction timeline; Link, Copy context, Edit, Delete per interaction |
+| Job Outreach | `/job-search/outreach` | LinkedIn, X | Overflow menu: Link (profile URL), Edit, Delete |
+| Product Outreach | `/product-outreach` | Instagram, LinkedIn, X, Email | Grouped contact cards with interaction timeline; Link, Copy context, Edit, Delete per interaction |
 
 **Leads page** also shows follow-up template (Email channel) and follow-up dates (Email only).
 
@@ -373,7 +373,7 @@ Follow-up **date** columns appear on the Leads page for Email-channel leads only
 
 **Indexes:** `id`, `contactId`, `channel`, `handle`, `createdAt`
 
-**UI:** `/job-search/outreach/product` — contacts grouped with a chronological interaction timeline. Each new touchpoint appends a row (cross-platform allowed). Deleting the last interaction removes the contact.
+**UI:** `/product-outreach` — contacts grouped with a chronological interaction timeline. Each new touchpoint appends a row (cross-platform allowed). Deleting the last interaction removes the contact.
 
 ---
 

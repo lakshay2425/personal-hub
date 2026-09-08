@@ -132,7 +132,7 @@ export const NAV_ITEMS = [
   { href: "/job-search", label: "Dashboard", exact: true },
   { href: "/job-search/companies", label: "Companies", exact: false },
   { href: "/job-search/leads", label: "Leads", exact: false },
-  { href: "/job-search/outreach", label: "Outreach", exact: false },
+  { href: "/job-search/outreach", label: "Job Outreach", exact: true },
   { href: "/job-search/applications", label: "Applications", exact: false },
   { href: "/job-search/cold-emails", label: "Cold Emails", exact: false },
   { href: "/job-search/templates", label: "Templates", exact: false },

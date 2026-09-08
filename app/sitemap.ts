@@ -16,7 +16,7 @@ const routes = [
   "/job-search/companies",
   "/job-search/leads",
   "/job-search/outreach",
-  "/job-search/outreach/product",
+  "/product-outreach",
   "/job-search/applications",
   "/job-search/cold-emails",
   "/job-search/templates",

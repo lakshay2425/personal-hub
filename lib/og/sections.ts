@@ -103,11 +103,11 @@ export const OG_SECTIONS: Record<OgSectionId, OgSection> = {
   },
   outreach: {
     id: "outreach",
-    title: "Outreach",
+    title: "Job Outreach",
     description:
-      "Track job outreach and product outreach contacts. Job outreach covers LinkedIn and X at target companies.",
+      "Track LinkedIn and X outreach leads at target companies.",
     badge: "Job Outreach",
-    alt: `Outreach | ${SITE_NAME}`,
+    alt: `Job Outreach | ${SITE_NAME}`,
   },
   productOutreach: {
     id: "productOutreach",

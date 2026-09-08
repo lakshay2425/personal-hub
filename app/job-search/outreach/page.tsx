@@ -146,7 +146,7 @@ export default function OutreachPage() {
   return (
     <div>
       <PageHeader
-        title="Outreach"
+        title="Job Outreach"
         description="Track LinkedIn and X contacts at target companies"
         action={
           <button

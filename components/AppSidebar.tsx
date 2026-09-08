@@ -44,6 +44,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   { href: "/planner/logger", label: "Logger" },
   { href: "/job-search", label: "Job Search" },
+  { href: "/product-outreach", label: "Product Outreach" },
 ];
 
 function MenuIcon() {
@@ -104,7 +105,9 @@ function NavLinkItem({
         ? pathname === "/planner"
         : href === "/planner/logger"
           ? pathname.startsWith("/planner/logger")
-          : pathname.startsWith(href);
+          : href === "/product-outreach"
+            ? pathname === "/product-outreach"
+            : pathname.startsWith(href);
 
   return (
     <Link
