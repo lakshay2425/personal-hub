@@ -1,10 +1,9 @@
-import type { Metadata } from "next";
+import { createSectionMetadata } from "@/lib/og/metadata";
 
-export const metadata: Metadata = {
-  title: "Outreach Templates",
-  description:
-    "Reusable cold email, LinkedIn, X DM, and follow-up templates — link them to cold emails and outreach leads. Copy and customize before sending. Stored locally.",
-};
+export const metadata = createSectionMetadata(
+  "templates",
+  "/job-search/templates",
+);
 
 export default function TemplatesLayout({
   children,

@@ -65,14 +65,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: SITE_NAME,
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
   },
   icons: {
     shortcut: [{ url: SITE_LOGO_IMAGE, sizes: "512x512", type: "image/png" }],

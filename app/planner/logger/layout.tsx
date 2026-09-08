@@ -1,8 +1,8 @@
 import { createSectionMetadata } from "@/lib/og/metadata";
 
-export const metadata = createSectionMetadata("outreach", "/job-search/outreach");
+export const metadata = createSectionMetadata("logger", "/planner/logger");
 
-export default function OutreachLayout({
+export default function LoggerLayout({
   children,
 }: {
   children: React.ReactNode;

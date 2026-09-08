@@ -151,13 +151,13 @@ export async function renderOgImage(section: OgSection) {
               style={{
                 display: "flex",
                 marginTop: 28,
-                background: "#eef2ff",
+                background: section.badgeBackground,
                 borderRadius: 21,
                 padding: "8px 18px",
                 alignSelf: "flex-start",
                 fontSize: 22,
                 fontWeight: 700,
-                color: "#4f46e5",
+                color: section.badgeColor,
               }}
             >
               {truncateText(section.badge, 18)}

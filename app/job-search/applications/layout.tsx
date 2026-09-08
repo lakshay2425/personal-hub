@@ -1,11 +1,11 @@
 import { createSectionMetadata } from "@/lib/og/metadata";
 
 export const metadata = createSectionMetadata(
-  "coldEmails",
-  "/job-search/cold-emails",
+  "applications",
+  "/job-search/applications",
 );
 
-export default function ColdEmailsLayout({
+export default function ApplicationsLayout({
   children,
 }: {
   children: React.ReactNode;

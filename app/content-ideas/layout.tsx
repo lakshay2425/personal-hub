@@ -1,10 +1,6 @@
-import type { Metadata } from "next";
+import { createSectionMetadata } from "@/lib/og/metadata";
 
-export const metadata: Metadata = {
-  title: "Content Ideas",
-  description:
-    "Capture standalone content ideas with status tracking, published links, and calendar scheduling.",
-};
+export const metadata = createSectionMetadata("contentIdeas", "/content-ideas");
 
 export default function ContentIdeasLayout({
   children,

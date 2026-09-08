@@ -1,10 +1,6 @@
-import type { Metadata } from "next";
+import { createSectionMetadata } from "@/lib/og/metadata";
 
-export const metadata: Metadata = {
-  title: "Projects",
-  description:
-    "Capture questions in an inbox and organize them into projects with titled answers.",
-};
+export const metadata = createSectionMetadata("projects", "/projects");
 
 export default function ProjectsLayout({
   children,

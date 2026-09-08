@@ -1,10 +1,6 @@
-import type { Metadata } from "next";
+import { createSectionMetadata } from "@/lib/og/metadata";
 
-export const metadata: Metadata = {
-  title: "Leads",
-  description:
-    "Track email and other leads at target companies. Copy emails to clipboard, view company info in a modal, and link follow-up templates to email outreach. Stored locally.",
-};
+export const metadata = createSectionMetadata("leads", "/job-search/leads");
 
 export default function LeadsLayout({
   children,

@@ -1,10 +1,9 @@
-import type { Metadata } from "next";
+import { createSectionMetadata } from "@/lib/og/metadata";
 
-export const metadata: Metadata = {
-  title: "Product Outreach",
-  description:
-    "Log cross-platform product outreach with a timeline of interactions per contact across Instagram, LinkedIn, X, and email. Stored locally.",
-};
+export const metadata = createSectionMetadata(
+  "productOutreach",
+  "/product-outreach",
+);
 
 export default function ProductOutreachLayout({
   children,

@@ -1,7 +1,10 @@
 import Link from "next/link";
 
 import { AppLogo } from "@/components/AppLogo";
+import { createSectionMetadata } from "@/lib/og/metadata";
 import { SITE_GITHUB_URL, SITE_NAME } from "@/lib/site";
+
+export const metadata = createSectionMetadata("home", "/");
 
 const NAV_LINKS = [
   { href: "/projects", label: "Projects" },
