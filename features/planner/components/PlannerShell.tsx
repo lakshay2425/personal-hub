@@ -13,6 +13,7 @@ const PLANNER_NAV_ITEMS = [
 const LOGGER_NAV_ITEMS = [
   { href: "/planner/logger", label: "All Entries", exact: true },
   { href: "/planner/logger/daily", label: "By Date", exact: true },
+  { href: "/planner/logger/settings", label: "Settings", exact: true },
 ] as const;
 
 function isActive(

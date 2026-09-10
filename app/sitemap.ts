@@ -5,11 +5,13 @@ import { SITE_URL } from "@/lib/site";
 const routes = [
   "/",
   "/projects",
+  "/projects/settings",
   "/content-ideas",
   "/content-ideas/calendar",
   "/planner",
   "/planner/logger",
   "/planner/logger/daily",
+  "/planner/logger/settings",
   "/planner/dashboard",
   "/planner/settings",
   "/job-search",
@@ -18,8 +20,10 @@ const routes = [
   "/product-outreach",
   "/people/discover",
   "/people/network",
+  "/people/settings",
   "/job-search/applications",
   "/job-search/templates",
+  "/job-search/settings",
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {

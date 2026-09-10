@@ -3,6 +3,12 @@
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { LeadListSettingsSection } from "@/features/job-search/components/LeadListSettingsSection";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
+import { exportJobSearchData } from "@/features/job-search/repositories/exportRepository";
+import {
+  importJobSearchData,
+  validateJobSearchBackup,
+} from "@/features/job-search/repositories/importRepository";
+import { DataBackupSection } from "@/features/settings/components/DataBackupSection";
 
 export default function JobSearchSettingsPage() {
   const { showApplications, setShowApplications } = useJobSearchPreferences();
@@ -47,6 +53,16 @@ export default function JobSearchSettingsPage() {
       </div>
 
       <LeadListSettingsSection />
+
+      <DataBackupSection
+        title="Job search data"
+        description="Export or import companies, leads, touchpoints, applications, templates, and product outreach contacts."
+        filenamePrefix="question-hub-job-search"
+        onExport={exportJobSearchData}
+        onValidate={validateJobSearchBackup}
+        onImport={importJobSearchData}
+        onImported={() => window.location.reload()}
+      />
     </div>
   );
 }

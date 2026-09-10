@@ -11,7 +11,10 @@ export function PeopleSubNav() {
   return (
     <nav className="-mx-4 flex gap-1 overflow-x-auto border-b border-zinc-200 px-4 pb-3 sm:mx-0 sm:px-0 dark:border-zinc-800">
       {PEOPLE_NAV_ITEMS.map((item) => {
-        const isActive = pathname.startsWith(item.href);
+        const isActive =
+          "exact" in item && item.exact
+            ? pathname === item.href
+            : pathname.startsWith(item.href);
 
         return (
           <Link

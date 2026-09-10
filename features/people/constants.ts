@@ -7,6 +7,7 @@ import type {
 export const PEOPLE_NAV_ITEMS = [
   { href: "/people/discover", label: "Discover" },
   { href: "/people/network", label: "Network" },
+  { href: "/people/settings", label: "Settings", exact: true },
 ] as const;
 
 export const PEOPLE_PLATFORMS: PeoplePlatform[] = [

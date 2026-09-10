@@ -2,15 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { ExportButton } from "@/components/ExportButton";
-import { ImportButton } from "@/components/ImportButton";
 import { useSidebar } from "@/components/SidebarContext";
 
-import { exportPeopleData } from "../lib/exportRepository";
-import {
-  importPeopleData,
-  validatePeopleBackup,
-} from "../lib/importRepository";
 import { PeopleSubNav } from "./PeopleSubNav";
 
 export function PeopleShell({ children }: { children: ReactNode }) {
@@ -31,19 +24,6 @@ export function PeopleShell({ children }: { children: ReactNode }) {
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               Review people to follow and keep context on people you know.
             </p>
-          </div>
-          <div className="flex shrink-0 gap-2">
-            <ExportButton
-              onExport={exportPeopleData}
-              filenamePrefix="question-hub-people"
-              className="flex-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            />
-            <ImportButton
-              onValidate={validatePeopleBackup}
-              onImport={importPeopleData}
-              onImported={() => window.location.reload()}
-              className="flex-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            />
           </div>
         </div>
         <div className="pb-4">
