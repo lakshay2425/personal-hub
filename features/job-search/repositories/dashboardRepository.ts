@@ -9,9 +9,8 @@ import {
   getRecentCompanies,
 } from "../repositories/companiesRepository";
 import {
-  getRecentColdEmails,
-  getTodayFollowUpColdEmails,
-} from "../repositories/coldEmailsRepository";
+  getRecentTouchpoints,
+} from "../repositories/leadTouchpointsRepository";
 import {
   countLeadsSince,
   getRecentLeads,
@@ -22,7 +21,6 @@ import type {
   Company,
   DashboardStats,
   FollowUpItem,
-  Lead,
   TimeFilter,
 } from "../types";
 
@@ -62,27 +60,12 @@ function buildEntityMap<T extends { id?: number }>(
 
 export async function getTodayFollowUps(): Promise<FollowUpItem[]> {
   const today = getTodayDateString();
-  const [leads, coldEmails] = await Promise.all([
-    getTodayFollowUpLeads(today),
-    getTodayFollowUpColdEmails(today),
-  ]);
+  const leads = await getTodayFollowUpLeads(today);
 
-  const companyIds = [
-    ...new Set([
-      ...leads.map((lead) => lead.companyId),
-      ...coldEmails.map((email) => email.companyId),
-    ]),
-  ];
-  const leadIds = [...new Set(coldEmails.map((email) => email.leadId))];
-
+  const companyIds = [...new Set(leads.map((lead) => lead.companyId))];
   const database = getDB();
-  const [companies, relatedLeads] = await Promise.all([
-    database.companies.bulkGet(companyIds),
-    database.leads.bulkGet(leadIds),
-  ]);
-
+  const companies = await database.companies.bulkGet(companyIds);
   const companyMap = buildEntityMap<Company>(companies);
-  const leadMap = buildEntityMap<Lead>(relatedLeads);
 
   const items: FollowUpItem[] = [];
 
@@ -112,42 +95,15 @@ export async function getTodayFollowUps(): Promise<FollowUpItem[]> {
     }
   }
 
-  for (const email of coldEmails) {
-    const company = companyMap.get(email.companyId);
-    const lead = leadMap.get(email.leadId);
-    if (email.firstFollowUpDate === today) {
-      items.push({
-        id: email.id!,
-        entityType: "coldEmail",
-        companyName: company?.companyName ?? "Unknown",
-        leadName: lead?.name ?? "Unknown",
-        role: email.role,
-        followUpType: "First",
-        entityId: email.id!,
-      });
-    }
-    if (email.secondFollowUpDate === today) {
-      items.push({
-        id: email.id!,
-        entityType: "coldEmail",
-        companyName: company?.companyName ?? "Unknown",
-        leadName: lead?.name ?? "Unknown",
-        role: email.role,
-        followUpType: "Second",
-        entityId: email.id!,
-      });
-    }
-  }
-
   return items;
 }
 
 export async function getDashboardRecent() {
-  const [companies, leads, applications, coldEmails] = await Promise.all([
+  const [companies, leads, applications, recentTouchpoints] = await Promise.all([
     getRecentCompanies(5),
     getRecentLeads(5),
     getRecentApplications(5),
-    getRecentColdEmails(5),
+    getRecentTouchpoints(5),
   ]);
-  return { companies, leads, applications, coldEmails };
+  return { companies, leads, applications, recentTouchpoints };
 }

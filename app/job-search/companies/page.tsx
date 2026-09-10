@@ -374,7 +374,7 @@ export default function CompaniesPage() {
         onConfirm={handleDelete}
         isLoading={isDeleting}
         title="Delete Company"
-        message="This will permanently delete the company and all associated leads, applications, and cold emails. This action cannot be undone."
+        message="This will permanently delete the company and all associated leads, touchpoints, and applications. This action cannot be undone."
       />
     </div>
   );

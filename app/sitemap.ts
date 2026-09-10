@@ -15,12 +15,10 @@ const routes = [
   "/job-search",
   "/job-search/companies",
   "/job-search/leads",
-  "/job-search/outreach",
   "/product-outreach",
   "/people/discover",
   "/people/network",
   "/job-search/applications",
-  "/job-search/cold-emails",
   "/job-search/templates",
 ] as const;
 

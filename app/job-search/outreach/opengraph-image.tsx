@@ -1,6 +1,6 @@
 import { createOgImage } from "@/lib/og/opengraph-image";
 
-const og = createOgImage("outreach");
+const og = createOgImage("leads");
 
 export const alt = og.alt;
 export const size = og.size;

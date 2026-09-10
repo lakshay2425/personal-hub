@@ -9,11 +9,11 @@ import {
 } from "../repositories/dashboardRepository";
 import type {
   Application,
-  ColdEmail,
   Company,
   DashboardStats,
   FollowUpItem,
   Lead,
+  LeadTouchpoint,
   TimeFilter,
 } from "../types";
 
@@ -30,7 +30,9 @@ export function useDashboard(filter: TimeFilter) {
   const [recentApplications, setRecentApplications] = useState<Application[]>(
     [],
   );
-  const [recentColdEmails, setRecentColdEmails] = useState<ColdEmail[]>([]);
+  const [recentTouchpoints, setRecentTouchpoints] = useState<
+    (LeadTouchpoint & { lead?: Lead })[]
+  >([]);
   const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,7 +47,7 @@ export function useDashboard(filter: TimeFilter) {
     setRecentCompanies(recent.companies);
     setRecentLeads(recent.leads);
     setRecentApplications(recent.applications);
-    setRecentColdEmails(recent.coldEmails);
+    setRecentTouchpoints(recent.recentTouchpoints);
     setFollowUps(todayFollowUps);
     setIsLoading(false);
   }, [filter]);
@@ -65,7 +67,7 @@ export function useDashboard(filter: TimeFilter) {
         setRecentCompanies(recent.companies);
         setRecentLeads(recent.leads);
         setRecentApplications(recent.applications);
-        setRecentColdEmails(recent.coldEmails);
+        setRecentTouchpoints(recent.recentTouchpoints);
         setFollowUps(todayFollowUps);
         setIsLoading(false);
       }
@@ -83,7 +85,7 @@ export function useDashboard(filter: TimeFilter) {
     recentCompanies,
     recentLeads,
     recentApplications,
-    recentColdEmails,
+    recentTouchpoints,
     followUps,
     isLoading,
     refresh,

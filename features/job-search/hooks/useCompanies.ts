@@ -13,8 +13,14 @@ import {
 } from "../repositories/companiesRepository";
 import { getLeadsByCompanyId } from "../repositories/leadsRepository";
 import { getApplicationsByCompanyId } from "../repositories/applicationsRepository";
-import { getColdEmailsByCompanyId } from "../repositories/coldEmailsRepository";
-import type { Application, ColdEmail, Company, CompanyWithCounts, Lead } from "../types";
+import { getTouchpointsByLeadId } from "../repositories/leadTouchpointsRepository";
+import type {
+  Application,
+  Company,
+  CompanyWithCounts,
+  Lead,
+  LeadTouchpoint,
+} from "../types";
 
 export function useCompanies() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -105,20 +111,30 @@ export function useCompany(id: number) {
   const [company, setCompany] = useState<Company | undefined>();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
-  const [coldEmails, setColdEmails] = useState<ColdEmail[]>([]);
+  const [touchpointsByLeadId, setTouchpointsByLeadId] = useState<
+    Map<number, LeadTouchpoint[]>
+  >(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const [c, l, a, e] = await Promise.all([
+    const [c, l, a] = await Promise.all([
       getCompanyById(id),
       getLeadsByCompanyId(id),
       getApplicationsByCompanyId(id),
-      getColdEmailsByCompanyId(id),
     ]);
+
+    const touchpointEntries = await Promise.all(
+      l.map(async (lead) => {
+        if (!lead.id) return [0, [] as LeadTouchpoint[]] as const;
+        const touchpoints = await getTouchpointsByLeadId(lead.id);
+        return [lead.id, touchpoints] as const;
+      }),
+    );
+
     setCompany(c);
     setLeads(l);
     setApplications(a);
-    setColdEmails(e);
+    setTouchpointsByLeadId(new Map(touchpointEntries));
     setIsLoading(false);
   }, [id]);
 
@@ -126,17 +142,25 @@ export function useCompany(id: number) {
     let cancelled = false;
 
     async function load() {
-      const [c, l, a, e] = await Promise.all([
+      const [c, l, a] = await Promise.all([
         getCompanyById(id),
         getLeadsByCompanyId(id),
         getApplicationsByCompanyId(id),
-        getColdEmailsByCompanyId(id),
       ]);
+
+      const touchpointEntries = await Promise.all(
+        l.map(async (lead) => {
+          if (!lead.id) return [0, [] as LeadTouchpoint[]] as const;
+          const touchpoints = await getTouchpointsByLeadId(lead.id);
+          return [lead.id, touchpoints] as const;
+        }),
+      );
+
       if (!cancelled) {
         setCompany(c);
         setLeads(l);
         setApplications(a);
-        setColdEmails(e);
+        setTouchpointsByLeadId(new Map(touchpointEntries));
         setIsLoading(false);
       }
     }
@@ -148,5 +172,12 @@ export function useCompany(id: number) {
     };
   }, [id]);
 
-  return { company, leads, applications, coldEmails, isLoading, refresh };
+  return {
+    company,
+    leads,
+    applications,
+    touchpointsByLeadId,
+    isLoading,
+    refresh,
+  };
 }

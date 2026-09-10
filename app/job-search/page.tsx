@@ -19,7 +19,6 @@ import { TimeFilterPills } from "@/features/job-search/components/TimeFilterPill
 import { useDashboard } from "@/features/job-search/hooks/useDashboard";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
-import { useLeads } from "@/features/job-search/hooks/useLeads";
 import { formatDate, formatTimestamp } from "@/features/job-search/lib/dateUtils";
 import type { TimeFilter } from "@/features/job-search/types";
 
@@ -38,12 +37,11 @@ export default function DashboardPage() {
     recentCompanies,
     recentLeads,
     recentApplications,
-    recentColdEmails,
+    recentTouchpoints,
     followUps,
     isLoading,
   } = useDashboard(filter);
   const { companies } = useCompanies();
-  const { leads } = useLeads();
 
   if (isLoading) return <LoadingState message="Loading dashboard..." />;
 
@@ -101,11 +99,7 @@ export default function DashboardPage() {
                       label="Action"
                       value={
                         <Link
-                          href={
-                            item.entityType === "lead"
-                              ? "/job-search/leads"
-                              : "/job-search/cold-emails"
-                          }
+                          href="/job-search/leads"
                           className="font-medium text-zinc-900 hover:underline dark:text-zinc-50"
                         >
                           Open
@@ -154,11 +148,7 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={
-                          item.entityType === "lead"
-                            ? "/job-search/leads"
-                            : "/job-search/cold-emails"
-                        }
+                        href="/job-search/leads"
                         className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
                       >
                         Open
@@ -275,27 +265,39 @@ export default function DashboardPage() {
 
       <section>
         <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          Recent Cold Emails
+          Recent Touchpoints
         </h2>
-        {recentColdEmails.length === 0 ? (
+        {recentTouchpoints.length === 0 ? (
           <EmptyState
-            title="No cold emails yet"
-            description="Track your outreach emails here."
+            title="No touchpoints yet"
+            description="Log outreach touchpoints from the Leads page."
+            action={
+              <Link
+                href="/job-search/leads"
+                className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
+              >
+                Go to Leads →
+              </Link>
+            }
           />
         ) : (
           <>
             <MobileList>
-              {recentColdEmails.map((e) => (
-                <MobileListItem key={e.id}>
+              {recentTouchpoints.map((touchpoint) => (
+                <MobileListItem key={touchpoint.id}>
                   <MobileCardHeader
-                    title={leads.find((l) => l.id === e.leadId)?.name ?? "—"}
-                    subtitle={getCompanyName(e.companyId, companies)}
-                    badge={<StatusBadge status={e.status} />}
+                    title={touchpoint.lead?.name ?? "Unknown lead"}
+                    subtitle={touchpoint.type}
+                    badge={<StatusBadge status={touchpoint.status} />}
                   />
                   <MobileCardMeta>
                     <MobileCardMetaRow
-                      label="Sent"
-                      value={formatDate(e.sentDate)}
+                      label="Channel"
+                      value={touchpoint.channel}
+                    />
+                    <MobileCardMetaRow
+                      label="Date"
+                      value={formatDate(touchpoint.occurredAt)}
                     />
                   </MobileCardMeta>
                 </MobileListItem>
@@ -306,13 +308,16 @@ export default function DashboardPage() {
               <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
                 <tr>
                   <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Company
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
                     Lead
                   </th>
                   <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Sent Date
+                    Type
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Channel
+                  </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Date
                   </th>
                   <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
                     Status
@@ -320,19 +325,22 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {recentColdEmails.map((e) => (
-                  <tr key={e.id}>
+                {recentTouchpoints.map((touchpoint) => (
+                  <tr key={touchpoint.id}>
                     <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                      {getCompanyName(e.companyId, companies)}
+                      {touchpoint.lead?.name ?? "Unknown"}
                     </td>
                     <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {leads.find((l) => l.id === e.leadId)?.name ?? "—"}
+                      {touchpoint.type}
                     </td>
                     <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {formatDate(e.sentDate)}
+                      {touchpoint.channel}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                      {formatDate(touchpoint.occurredAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <StatusBadge status={e.status} />
+                      <StatusBadge status={touchpoint.status} />
                     </td>
                   </tr>
                 ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/features/job-search/components/PageHeader";
+import { LeadListSettingsSection } from "@/features/job-search/components/LeadListSettingsSection";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
 
 export default function JobSearchSettingsPage() {
@@ -44,6 +45,8 @@ export default function JobSearchSettingsPage() {
           </button>
         </div>
       </div>
+
+      <LeadListSettingsSection />
     </div>
   );
 }

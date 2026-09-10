@@ -1,23 +1,10 @@
+import { DEFAULT_LEAD_CHANNEL } from "../constants";
 import { getDB } from "../db";
-import { getUniqueStringValues } from "../lib/uniqueValues";
 import { logActivity } from "../lib/activityLog";
 import { deleteLeadWithLogs } from "../lib/cascade";
-import { DEFAULT_LEAD_CHANNEL } from "../constants";
+import { getUniqueStringValues } from "../lib/uniqueValues";
+import { ensureListOption } from "./listSettingsRepository";
 import type { Lead } from "../types";
-
-function clearNonEmailFollowUps<T extends Partial<Omit<Lead, "id" | "createdAt">>>(
-  data: T,
-): T {
-  if (data.channel !== undefined && data.channel !== "Email") {
-    return {
-      ...data,
-      firstFollowUpDate: null,
-      secondFollowUpDate: null,
-    };
-  }
-
-  return data;
-}
 
 export async function getAllLeads(): Promise<Lead[]> {
   const database = getDB();
@@ -43,14 +30,18 @@ export async function createLead(
 ): Promise<number> {
   const database = getDB();
   const channel = data.channel ?? DEFAULT_LEAD_CHANNEL;
-  const normalizedData = clearNonEmailFollowUps({
+  const status = data.status.trim();
+
+  await ensureListOption("leadStatuses", status);
+
+  const id = await database.leads.add({
     ...data,
     channel,
     linkedin: data.linkedin ?? "",
     xProfile: data.xProfile ?? "",
-  });
-  const id = await database.leads.add({
-    ...normalizedData,
+    firstFollowUpDate: data.firstFollowUpDate || null,
+    secondFollowUpDate: data.secondFollowUpDate || null,
+    followUpTemplateId: data.followUpTemplateId ?? null,
     createdAt: Date.now(),
   });
   await logActivity("lead", id as number, "Lead Added");
@@ -62,7 +53,20 @@ export async function updateLead(
   data: Partial<Omit<Lead, "id" | "createdAt">>,
 ): Promise<void> {
   const database = getDB();
-  await database.leads.update(id, clearNonEmailFollowUps(data));
+
+  if (data.status !== undefined) {
+    await ensureListOption("leadStatuses", data.status);
+  }
+
+  const normalized: Partial<Omit<Lead, "id" | "createdAt">> = { ...data };
+  if (data.firstFollowUpDate !== undefined) {
+    normalized.firstFollowUpDate = data.firstFollowUpDate || null;
+  }
+  if (data.secondFollowUpDate !== undefined) {
+    normalized.secondFollowUpDate = data.secondFollowUpDate || null;
+  }
+
+  await database.leads.update(id, normalized);
   await logActivity("lead", id, "Lead Updated");
 }
 
@@ -85,9 +89,8 @@ export async function getTodayFollowUpLeads(today: string): Promise<Lead[]> {
   const database = getDB();
   const all = await database.leads.toArray();
   return all.filter(
-    (l: Lead) =>
-      l.channel === "Email" &&
-      (l.firstFollowUpDate === today || l.secondFollowUpDate === today),
+    (lead: Lead) =>
+      lead.firstFollowUpDate === today || lead.secondFollowUpDate === today,
   );
 }
 
@@ -95,7 +98,7 @@ export async function searchLeads(query: string): Promise<Lead[]> {
   const database = getDB();
   const lower = query.toLowerCase();
   const all = await database.leads.toArray();
-  return all.filter((l: Lead) => l.name.toLowerCase().includes(lower));
+  return all.filter((lead: Lead) => lead.name.toLowerCase().includes(lower));
 }
 
 export async function getUniqueLeadRoles(): Promise<string[]> {

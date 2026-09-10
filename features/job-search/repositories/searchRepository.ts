@@ -1,5 +1,4 @@
 import { getDB } from "../db";
-import { getLeadPageHref } from "../constants";
 import { searchApplications } from "../repositories/applicationsRepository";
 import { searchCompanies } from "../repositories/companiesRepository";
 import { searchLeads } from "../repositories/leadsRepository";
@@ -35,8 +34,7 @@ export async function globalSearch(
     ]),
   ];
 
-  const database = getDB();
-  const relatedCompanies = await database.companies.bulkGet(companyIds);
+  const relatedCompanies = await getDB().companies.bulkGet(companyIds);
   const companyMap = buildCompanyMap(relatedCompanies);
 
   const results: GlobalSearchResult[] = [];
@@ -58,7 +56,7 @@ export async function globalSearch(
       id: lead.id!,
       title: lead.name,
       subtitle: company?.companyName ?? "Lead",
-      href: getLeadPageHref(lead.channel),
+      href: "/job-search/leads",
     });
   }
 

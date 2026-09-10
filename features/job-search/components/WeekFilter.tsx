@@ -12,9 +12,16 @@ interface WeekFilterProps {
   onWeekChange: (weekStart: string | null) => void;
   label: string;
   count?: number;
+  allOptionLabel?: string;
 }
 
-export function WeekFilter({ weekStart, onWeekChange, label, count }: WeekFilterProps) {
+export function WeekFilter({
+  weekStart,
+  onWeekChange,
+  label,
+  count,
+  allOptionLabel = "All weeks",
+}: WeekFilterProps) {
   const isAllWeeks = weekStart === null;
 
   return (
@@ -33,7 +40,7 @@ export function WeekFilter({ weekStart, onWeekChange, label, count }: WeekFilter
                 : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
             }`}
           >
-            All weeks
+            {allOptionLabel}
           </button>
           <button
             type="button"

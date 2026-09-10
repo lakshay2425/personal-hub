@@ -1,7 +1,7 @@
 import { createSectionMetadata } from "@/lib/og/metadata";
 
 export const metadata = createSectionMetadata(
-  "coldEmails",
+  "leads",
   "/job-search/cold-emails",
 );
 

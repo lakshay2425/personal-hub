@@ -22,13 +22,13 @@ import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearc
 import { formatDate, formatTimestamp } from "@/features/job-search/lib/dateUtils";
 import type { Company } from "@/features/job-search/types";
 
-type Tab = "leads" | "applications" | "coldEmails";
+type Tab = "leads" | "applications";
 
 export default function CompanyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = Number(params.id);
-  const { company, leads, applications, coldEmails, isLoading } =
+  const { company, leads, applications, touchpointsByLeadId, isLoading } =
     useCompany(id);
   const { editCompany, removeCompany } = useCompanies();
   const { showApplications } = useJobSearchPreferences();
@@ -96,7 +96,6 @@ export default function CompanyDetailPage() {
           },
         ]
       : []),
-    { key: "coldEmails", label: "Cold Emails", count: coldEmails.length },
   ];
 
   return (
@@ -173,40 +172,76 @@ export default function CompanyDetailPage() {
           ) : (
             <>
               <MobileList>
-                {leads.map((l) => (
-                  <MobileListItem key={l.id}>
-                    <MobileCardHeader
-                      title={l.name}
-                      subtitle={l.role || undefined}
-                      badge={<StatusBadge status={l.status} />}
-                    />
-                    {l.type ? (
+                {leads.map((lead) => {
+                  const touchpoints = lead.id
+                    ? (touchpointsByLeadId.get(lead.id) ?? [])
+                    : [];
+                  return (
+                    <MobileListItem key={lead.id}>
+                      <MobileCardHeader
+                        title={lead.name}
+                        subtitle={lead.role || undefined}
+                        badge={<StatusBadge status={lead.status} />}
+                      />
                       <MobileCardMeta>
-                        <MobileCardMetaRow label="Type" value={l.type} />
+                        {lead.type ? (
+                          <MobileCardMetaRow label="Type" value={lead.type} />
+                        ) : null}
+                        <MobileCardMetaRow
+                          label="Touchpoints"
+                          value={String(touchpoints.length)}
+                        />
+                        <MobileCardMetaRow
+                          label="View"
+                          value={
+                            <Link
+                              href="/job-search/leads"
+                              className="font-medium text-zinc-900 hover:underline dark:text-zinc-50"
+                            >
+                              Open in Leads
+                            </Link>
+                          }
+                        />
                       </MobileCardMeta>
-                    ) : null}
-                  </MobileListItem>
-                ))}
+                    </MobileListItem>
+                  );
+                })}
               </MobileList>
               <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-                <table className="w-full min-w-[640px] text-left text-sm">
+                <table className="w-full min-w-[720px] text-left text-sm">
                   <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
                     <tr>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Touchpoints</th>
+                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    {leads.map((l) => (
-                      <tr key={l.id}>
-                        <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{l.name}</td>
-                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{l.role || "—"}</td>
-                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{l.type || "—"}</td>
-                        <td className="px-4 py-3"><StatusBadge status={l.status} /></td>
-                      </tr>
-                    ))}
+                    {leads.map((lead) => {
+                      const touchpoints = lead.id
+                        ? (touchpointsByLeadId.get(lead.id) ?? [])
+                        : [];
+                      return (
+                        <tr key={lead.id}>
+                          <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{lead.name}</td>
+                          <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.role || "—"}</td>
+                          <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.type || "—"}</td>
+                          <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
+                          <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{touchpoints.length}</td>
+                          <td className="px-4 py-3">
+                            <Link
+                              href="/job-search/leads"
+                              className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
+                            >
+                              Open
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -265,58 +300,6 @@ export default function CompanyDetailPage() {
         </>
       )}
 
-      {visibleTab === "coldEmails" && (
-        <>
-          {coldEmails.length === 0 ? (
-            <EmptyState title="No cold emails" description="No cold emails for this company yet." />
-          ) : (
-            <>
-              <MobileList>
-                {coldEmails.map((e) => (
-                  <MobileListItem key={e.id}>
-                    <MobileCardHeader
-                      title={leads.find((l) => l.id === e.leadId)?.name ?? "—"}
-                      subtitle={e.role || undefined}
-                      badge={<StatusBadge status={e.status} />}
-                    />
-                    <MobileCardMeta>
-                      <MobileCardMetaRow
-                        label="Sent"
-                        value={formatDate(e.sentDate)}
-                      />
-                    </MobileCardMeta>
-                  </MobileListItem>
-                ))}
-              </MobileList>
-              <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-                <table className="w-full min-w-[640px] text-left text-sm">
-                  <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <tr>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Lead</th>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Sent</th>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    {coldEmails.map((e) => (
-                      <tr key={e.id}>
-                        <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                          {leads.find((l) => l.id === e.leadId)?.name ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{e.role || "—"}</td>
-                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(e.sentDate)}</td>
-                        <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </>
-      )}
-
       <div className="mt-10 border-t border-zinc-200 pt-6 dark:border-zinc-800">
         <button
           type="button"
@@ -340,7 +323,7 @@ export default function CompanyDetailPage() {
         onConfirm={handleDelete}
         isLoading={isDeleting}
         title="Delete Company"
-        message="This will permanently delete the company and all associated leads, applications, and cold emails."
+        message="This will permanently delete the company and all associated leads, touchpoints, and applications."
       />
     </div>
   );

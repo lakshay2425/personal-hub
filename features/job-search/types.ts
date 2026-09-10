@@ -1,6 +1,10 @@
-export type LeadStatus = "New" | "Contacted" | "Replied" | "Inactive";
+export type LeadStatus = string;
 
 export type LeadChannel = "Email" | "LinkedIn" | "X" | "Other";
+
+export type TouchpointStatus = string;
+
+export type TouchpointType = string;
 
 export type ProductOutreachChannel = "Instagram" | "LinkedIn" | "X" | "Email";
 
@@ -10,14 +14,6 @@ export type ApplicationStatus =
   | "Rejected"
   | "Offer"
   | "Joined";
-
-export type ColdEmailStatus =
-  | "Draft"
-  | "Sent"
-  | "Replied"
-  | "Rejected"
-  | "Positive Response"
-  | "Closed";
 
 export type TemplateType =
   | "Cold Email"
@@ -55,10 +51,36 @@ export interface Lead {
   status: LeadStatus;
   firstFollowUpDate: string | null;
   secondFollowUpDate: string | null;
-  templateId: number | null;
   followUpTemplateId: number | null;
   notes: string;
   createdAt: number;
+}
+
+export interface LeadTouchpoint {
+  id?: number;
+  leadId: number;
+  channel: LeadChannel;
+  type: TouchpointType;
+  status: TouchpointStatus;
+  templateId: number | null;
+  context: string;
+  occurredAt: number;
+  createdAt: number;
+}
+
+export interface LeadWithTouchpoints extends Lead {
+  id: number;
+  touchpoints: LeadTouchpoint[];
+}
+
+export interface JobSearchListSettings {
+  id: 1;
+  leadStatuses: string[];
+  newLeadStatus: string;
+  contactedLeadStatus: string;
+  touchpointStatuses: string[];
+  touchpointTypes: string[];
+  contactedTriggerStatuses: string[];
 }
 
 export interface Application {
@@ -69,22 +91,6 @@ export interface Application {
   jobLink: string;
   appliedDate: string;
   status: ApplicationStatus;
-  notes: string;
-  createdAt: number;
-}
-
-export interface ColdEmail {
-  id?: number;
-  companyId: number;
-  leadId: number;
-  role: string;
-  sentDate: string;
-  status: ColdEmailStatus;
-  firstFollowUpDate: string;
-  secondFollowUpDate: string;
-  templateName: string;
-  templateId: number | null;
-  followUpTemplateId: number | null;
   notes: string;
   createdAt: number;
 }
@@ -137,7 +143,7 @@ export interface CompanyWithCounts extends Company {
 
 export interface FollowUpItem {
   id: number;
-  entityType: "lead" | "coldEmail";
+  entityType: "lead";
   companyName: string;
   leadName: string;
   role: string;
@@ -166,4 +172,21 @@ export interface DashboardStats {
   totalApplications: number;
   interviews: number;
   offers: number;
+}
+
+/** @deprecated Used only for import/migration from legacy backups */
+export interface LegacyColdEmail {
+  id?: number;
+  companyId: number;
+  leadId: number;
+  role: string;
+  sentDate: string;
+  status: string;
+  firstFollowUpDate: string;
+  secondFollowUpDate: string;
+  templateName: string;
+  templateId: number | null;
+  followUpTemplateId: number | null;
+  notes: string;
+  createdAt: number;
 }

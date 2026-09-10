@@ -17,12 +17,10 @@ export type OgSectionId =
   | "jobSearch"
   | "companies"
   | "leads"
-  | "outreach"
   | "productOutreach"
   | "peopleDiscover"
   | "peopleNetwork"
   | "applications"
-  | "coldEmails"
   | "templates";
 
 export type OgSection = {
@@ -98,7 +96,7 @@ export const OG_SECTIONS: Record<OgSectionId, OgSection> = {
     id: "jobSearch",
     title: "Job Search Tracker",
     description:
-      "Track companies, leads, applications, cold emails, and outreach templates — copy lead emails, view company info, open LinkedIn/X profiles, and link templates to each touchpoint. Stored locally.",
+      "Track companies, leads, touchpoints, applications, and outreach templates — all in one unified leads workflow. Stored locally.",
     badge: "Dashboard",
     badgeColor: "#059669",
     badgeBackground: "#ecfdf5",
@@ -117,21 +115,11 @@ export const OG_SECTIONS: Record<OgSectionId, OgSection> = {
     id: "leads",
     title: "Leads",
     description:
-      "Track email and other leads at target companies. Copy emails to clipboard, view company info in a modal, and link follow-up templates to email outreach. Stored locally.",
+      "Track contacts and outreach touchpoints at target companies. Log emails, LinkedIn, and X outreach with templates and follow-up planning. Stored locally.",
     badge: "Leads",
     badgeColor: "#2563eb",
     badgeBackground: "#eff6ff",
     alt: `Leads | ${SITE_NAME}`,
-  },
-  outreach: {
-    id: "outreach",
-    title: "Job Outreach",
-    description:
-      "Track LinkedIn and X outreach leads at target companies. Open profiles from the overflow menu, link message and follow-up templates, and manage contacts. Stored locally.",
-    badge: "Job Outreach",
-    badgeColor: "#0d9488",
-    badgeBackground: "#f0fdfa",
-    alt: `Job Outreach | ${SITE_NAME}`,
   },
   productOutreach: {
     id: "productOutreach",
@@ -172,21 +160,11 @@ export const OG_SECTIONS: Record<OgSectionId, OgSection> = {
     badgeBackground: "#fefce8",
     alt: `Applications | ${SITE_NAME}`,
   },
-  coldEmails: {
-    id: "coldEmails",
-    title: "Cold Emails",
-    description:
-      "Track cold email outreach and link Cold Email and follow-up templates to each send. Stored locally.",
-    badge: "Cold Email",
-    badgeColor: "#dc2626",
-    badgeBackground: "#fef2f2",
-    alt: `Cold Emails | ${SITE_NAME}`,
-  },
   templates: {
     id: "templates",
     title: "Outreach Templates",
     description:
-      "Reusable cold email, LinkedIn, X DM, and follow-up templates — link them to cold emails and outreach leads. Copy and customize before sending. Stored locally.",
+      "Reusable cold email, LinkedIn, X DM, and follow-up templates — link them to lead touchpoints. Copy and customize before sending. Stored locally.",
     badge: "Templates",
     badgeColor: "#ea580c",
     badgeBackground: "#fff7ed",
