@@ -15,6 +15,7 @@ interface UpcomingTabProps {
   onAddSubTask: (task: Task) => void;
   onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
+  onViewDetail: (task: Task) => void;
   onReorder: (
     parentId: number | null,
     weekStart: string,
@@ -33,6 +34,7 @@ export function UpcomingTab({
   onAddSubTask,
   onMoveToCategory,
   onViewNotes,
+  onViewDetail,
   onReorder,
 }: UpcomingTabProps) {
   if (tasksByWeek.size === 0) {
@@ -62,6 +64,7 @@ export function UpcomingTab({
             onAddSubTask={onAddSubTask}
             onMoveToCategory={onMoveToCategory}
             onViewNotes={onViewNotes}
+            onViewDetail={onViewDetail}
             onReorder={onReorder}
             emptyMessage="No todo tasks for this week."
           />

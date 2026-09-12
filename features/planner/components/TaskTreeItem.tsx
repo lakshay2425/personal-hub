@@ -1,6 +1,5 @@
 "use client";
 
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
 import { ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { useCallback, useMemo } from "react";
@@ -10,7 +9,6 @@ import { compareTasks, countAllDescendants, getDescendantProgress } from "../lib
 import type { Task, TaskTreeNode } from "../types";
 import { NotesIcon } from "./NotesIcon";
 import { PriorityBadge } from "./PriorityBadge";
-import { SortableTaskTreeItem } from "./SortableTaskTreeItem";
 import { SubTaskHeader } from "./SubTaskHeader";
 import { TaskOverflowMenu } from "./TaskOverflowMenu";
 import { TaskProgressBadge } from "./TaskProgressBadge";
@@ -34,8 +32,6 @@ interface TaskTreeItemProps {
   reorderOnlyTodo?: boolean;
   showMoveToWeek?: boolean;
   weekLabel?: string;
-  isChildrenCollapsed: boolean;
-  onToggleChildrenCollapse: (taskId: number) => void;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
@@ -43,6 +39,7 @@ interface TaskTreeItemProps {
   onMoveToWeek?: (task: Task) => void;
   onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
+  onViewDetail: (task: Task) => void;
   onReorder?: (
     parentId: number | null,
     weekStart: string,
@@ -51,7 +48,6 @@ interface TaskTreeItemProps {
   selectionMode?: boolean;
   isSelected?: boolean;
   onSelectionToggle?: () => void;
-  collapsedTaskIds: Set<number>;
   itemRef?: (element: HTMLElement | null) => void;
   style?: CSSProperties;
   dragHandleProps?: HTMLAttributes<HTMLButtonElement>;
@@ -68,8 +64,6 @@ export function TaskTreeItem({
   reorderOnlyTodo = false,
   showMoveToWeek = false,
   weekLabel,
-  isChildrenCollapsed,
-  onToggleChildrenCollapse,
   onToggle,
   onEdit,
   onDelete,
@@ -77,11 +71,11 @@ export function TaskTreeItem({
   onMoveToWeek,
   onMoveToCategory,
   onViewNotes,
+  onViewDetail,
   onReorder,
   selectionMode = false,
   isSelected = false,
   onSelectionToggle,
-  collapsedTaskIds,
   itemRef,
   style,
   dragHandleProps,
@@ -223,10 +217,9 @@ export function TaskTreeItem({
                 title={node.title}
                 textClassName="text-sm"
                 hasChildren={hasChildren}
-                isChildrenCollapsed={isChildrenCollapsed}
                 descendantCount={descendantCount}
-                onToggleChildrenCollapse={() =>
-                  onToggleChildrenCollapse(node.id!)
+                onTitleClick={
+                  hasChildren ? () => onViewDetail(node) : undefined
                 }
                 completed={showCompletedStyle}
                 meta={
@@ -241,10 +234,9 @@ export function TaskTreeItem({
               title={node.title}
               textClassName="text-sm"
               hasChildren={hasChildren}
-              isChildrenCollapsed={isChildrenCollapsed}
               descendantCount={descendantCount}
-              onToggleChildrenCollapse={() =>
-                onToggleChildrenCollapse(node.id!)
+              onTitleClick={
+                hasChildren ? () => onViewDetail(node) : undefined
               }
               completed={showCompletedStyle}
               meta={metaContent}
@@ -273,43 +265,6 @@ export function TaskTreeItem({
           }
         />
       </div>
-
-      {hasChildren && !isChildrenCollapsed ? (
-        <SortableContext
-          items={node.children.map((child) => child.id!)}
-          strategy={verticalListSortingStrategy}
-        >
-          <ul className="mt-2 space-y-2">
-            {node.children.map((child) => (
-              <SortableTaskTreeItem
-                key={child.id}
-                node={child}
-                allTasks={allTasks}
-                completed={completed}
-                cardVariant={cardVariant}
-                showStrikethrough={showStrikethrough}
-                useTouchReorder={useTouchReorder}
-                sortable={
-                  sortable && (!reorderOnlyTodo || child.status === "Todo")
-                }
-                reorderOnlyTodo={reorderOnlyTodo}
-                showMoveToWeek={showMoveToWeek}
-                isChildrenCollapsed={collapsedTaskIds.has(child.id!)}
-                onToggleChildrenCollapse={onToggleChildrenCollapse}
-                onToggle={onToggle}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onAddSubTask={onAddSubTask}
-                onMoveToWeek={onMoveToWeek}
-                onMoveToCategory={onMoveToCategory}
-                onViewNotes={onViewNotes}
-                onReorder={onReorder}
-                collapsedTaskIds={collapsedTaskIds}
-              />
-            ))}
-          </ul>
-        </SortableContext>
-      ) : null}
     </li>
   );
 }

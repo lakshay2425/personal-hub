@@ -14,7 +14,7 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import { useIsTouchDevice } from "@/features/shared/hooks/useIsTouchDevice";
 
@@ -40,6 +40,7 @@ interface SortableTaskTreeProps {
   onMoveToWeek?: (task: Task) => void;
   onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
+  onViewDetail: (task: Task) => void;
   selectionMode?: boolean;
   selectedIds?: Set<number>;
   onSelectionToggle?: (taskId: number) => void;
@@ -67,6 +68,7 @@ export function SortableTaskTree({
   onMoveToWeek,
   onMoveToCategory,
   onViewNotes,
+  onViewDetail,
   selectionMode,
   selectedIds,
   onSelectionToggle,
@@ -75,10 +77,6 @@ export function SortableTaskTree({
 }: SortableTaskTreeProps) {
   const isTouchDevice = useIsTouchDevice();
   const useTouchReorder = isTouchDevice && sortable;
-
-  const [collapsedTaskIds, setCollapsedTaskIds] = useState<Set<number>>(
-    () => new Set(),
-  );
 
   const tree = useMemo(() => buildTaskTree(tasks), [tasks]);
 
@@ -90,18 +88,6 @@ export function SortableTaskTree({
       activationConstraint: { delay: 200, tolerance: 5 },
     }),
   );
-
-  const handleToggleChildrenCollapse = useCallback((taskId: number) => {
-    setCollapsedTaskIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(taskId)) {
-        next.delete(taskId);
-      } else {
-        next.add(taskId);
-      }
-      return next;
-    });
-  }, []);
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
@@ -177,8 +163,6 @@ export function SortableTaskTree({
           reorderOnlyTodo={reorderOnlyTodo}
           showMoveToWeek={showMoveToWeek}
           weekLabel={getWeekLabel?.(node)}
-          isChildrenCollapsed={collapsedTaskIds.has(node.id!)}
-          onToggleChildrenCollapse={handleToggleChildrenCollapse}
           onToggle={onToggle}
           onEdit={onEdit}
           onDelete={onDelete}
@@ -186,6 +170,7 @@ export function SortableTaskTree({
           onMoveToWeek={onMoveToWeek}
           onMoveToCategory={onMoveToCategory}
           onViewNotes={onViewNotes}
+          onViewDetail={onViewDetail}
           onReorder={onReorder}
           selectionMode={selectionMode}
           isSelected={selectedIds?.has(node.id!)}
@@ -194,7 +179,6 @@ export function SortableTaskTree({
               ? () => onSelectionToggle(node.id!)
               : undefined
           }
-          collapsedTaskIds={collapsedTaskIds}
         />
       ))}
     </ul>

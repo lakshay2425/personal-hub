@@ -14,6 +14,7 @@ import type { CreateSubTaskInput, CreateTaskInput, Task } from "../types";
 import { getDeleteWarningMessage } from "../lib/deleteTaskMessage";
 import { BacklogTab } from "./BacklogTab";
 import { PlannerTabNav, type PlannerTab } from "./PlannerTabNav";
+import { TaskDetailModal } from "./TaskDetailModal";
 import { TaskFormModal } from "./TaskFormModal";
 import { TaskNotesModal } from "./TaskNotesModal";
 import { TasksView } from "./TasksView";
@@ -27,6 +28,7 @@ export function PlannerWorkspace() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [subTaskParent, setSubTaskParent] = useState<Task | null>(null);
   const [notesTask, setNotesTask] = useState<Task | null>(null);
+  const [detailTask, setDetailTask] = useState<Task | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -269,6 +271,7 @@ export function PlannerWorkspace() {
     onAddSubTask: handleAddSubTask,
     onMoveToCategory: handleMoveToCategory,
     onViewNotes: setNotesTask,
+    onViewDetail: setDetailTask,
     onReorder: handleReorder,
     ...selectionProps,
   };
@@ -353,6 +356,17 @@ export function PlannerWorkspace() {
         defaultCategory={defaultCategory}
         task={editingTask}
         subTaskParent={subTaskParent}
+      />
+
+      <TaskDetailModal
+        isOpen={detailTask !== null}
+        onClose={() => setDetailTask(null)}
+        task={detailTask}
+        allTasks={allTasks}
+        onToggle={handleToggle}
+        onEdit={handleEdit}
+        onAddSubTask={handleAddSubTask}
+        onViewNotes={setNotesTask}
       />
 
       <TaskNotesModal

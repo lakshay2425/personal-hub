@@ -184,7 +184,7 @@ export function AppSidebar({ isOpen, onOpen, onClose }: AppSidebarProps) {
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-lg border border-zinc-200 p-2 transition-colors hover:bg-zinc-50 lg:hidden dark:border-zinc-700 dark:hover:bg-zinc-800"
+            className="shrink-0 rounded-lg border border-zinc-200 p-2 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
             aria-label="Close navigation"
           >
             <CloseIcon />

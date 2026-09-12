@@ -34,6 +34,7 @@ interface KanbanTaskBoardProps {
   onMoveToWeek?: (task: Task) => void;
   onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
+  onViewDetail: (task: Task) => void;
   onReorder: (
     parentId: number | null,
     weekStart: string,
@@ -63,6 +64,7 @@ export function KanbanTaskBoard({
   onMoveToWeek,
   onMoveToCategory,
   onViewNotes,
+  onViewDetail,
   onReorder,
   emptyMessage = "No tasks.",
   showEmptyCategoryCta = false,
@@ -142,6 +144,7 @@ export function KanbanTaskBoard({
                 onMoveToWeek={onMoveToWeek}
                 onMoveToCategory={onMoveToCategory}
                 onViewNotes={onViewNotes}
+                onViewDetail={onViewDetail}
                 onReorder={onReorder}
                 emptyMessage="No tasks"
               />

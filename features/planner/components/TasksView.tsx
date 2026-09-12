@@ -23,6 +23,7 @@ interface TasksViewProps {
   onAddSubTask: (task: Task) => void;
   onMoveToCategory?: (task: Task, category: string) => void;
   onViewNotes: (task: Task) => void;
+  onViewDetail: (task: Task) => void;
   onReorder: (
     parentId: number | null,
     weekStart: string,
@@ -44,6 +45,7 @@ export function TasksView({
   onAddSubTask,
   onMoveToCategory,
   onViewNotes,
+  onViewDetail,
   onReorder,
 }: TasksViewProps) {
   const [statusTab, setStatusTab] = useState<TasksStatusTab>("pending");
@@ -102,6 +104,7 @@ export function TasksView({
         onAddSubTask={onAddSubTask}
         onMoveToCategory={onMoveToCategory}
         onViewNotes={onViewNotes}
+        onViewDetail={onViewDetail}
         onReorder={onReorder}
         showEmptyCategoryCta={isPending}
         onAddTaskInCategory={onAddTaskInCategory}
