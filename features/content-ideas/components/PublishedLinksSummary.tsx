@@ -13,7 +13,7 @@ export function PublishedLinksSummary({ links }: PublishedLinksSummaryProps) {
   ].filter(Boolean) as { label: string; href: string }[];
 
   if (entries.length === 0) {
-    return <span className="text-xs text-zinc-400 dark:text-zinc-500">—</span>;
+    return null;
   }
 
   return (

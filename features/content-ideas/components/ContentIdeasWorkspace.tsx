@@ -8,12 +8,12 @@ import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 
-import { CONTENT_IDEA_STATUSES, CONTENT_IDEA_TYPES } from "../constants";
 import { useContentIdeas } from "../hooks/useContentIdeas";
 import { useContentIdeasViewMode } from "../hooks/useContentIdeasViewMode";
 import { countDescendantsInList } from "../lib/contentIdeaTree";
 import type { ContentIdea, ContentIdeaStatus, ContentIdeaTreeNode, ContentIdeaType } from "../types";
 import { ContentIdeasCards } from "./ContentIdeasCards";
+import { ContentIdeasFilters } from "./ContentIdeasFilters";
 import { ContentIdeasTable } from "./ContentIdeasTable";
 import { ContentIdeasViewToggle } from "./ContentIdeasViewToggle";
 import { SortableContentIdeaList } from "./SortableContentIdeaList";
@@ -258,34 +258,12 @@ export function ContentIdeasWorkspace({
           placeholder="Search by title..."
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:min-w-[200px] sm:flex-1 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
         />
-        <select
-          value={statusFilter}
-          onChange={(event) =>
-            setStatusFilter(event.target.value as ContentIdeaStatus | "")
-          }
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        >
-          <option value="">All statuses</option>
-          {CONTENT_IDEA_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-        <select
-          value={contentTypeFilter}
-          onChange={(event) =>
-            setContentTypeFilter(event.target.value as ContentIdeaType | "")
-          }
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        >
-          <option value="">All types</option>
-          {CONTENT_IDEA_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+        <ContentIdeasFilters
+          statusFilter={statusFilter}
+          contentTypeFilter={contentTypeFilter}
+          onStatusChange={setStatusFilter}
+          onContentTypeChange={setContentTypeFilter}
+        />
         <ContentIdeasViewToggle value={viewMode} onChange={setViewMode} className="w-full sm:w-auto" />
       </div>
 
