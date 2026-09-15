@@ -1,7 +1,8 @@
 "use client";
 
 import { MoreVertical } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import {
   canMoveToRoot,
@@ -21,6 +22,11 @@ interface ContentIdeaOverflowMenuProps {
   isMoving?: boolean;
 }
 
+interface MenuPosition {
+  top: number;
+  right: number;
+}
+
 export function ContentIdeaOverflowMenu({
   idea,
   allIdeas,
@@ -33,7 +39,9 @@ export function ContentIdeaOverflowMenu({
 }: ContentIdeaOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showMoveUnder, setShowMoveUnder] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const validTargets = useMemo(
     () => getValidParentTargets(idea.id!, allIdeas),
@@ -43,26 +51,50 @@ export function ContentIdeaOverflowMenu({
   const hasMoveUnderOptions =
     Boolean(onMoveToParent) && (showRootOption || validTargets.length > 0);
 
+  const updateMenuPosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.bottom + 4,
+      right: window.innerWidth - rect.right,
+    });
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
 
+    updateMenuPosition();
+
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
       if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
+        menuRef.current?.contains(target) ||
+        triggerRef.current?.contains(target)
       ) {
-        setIsOpen(false);
-        setShowMoveUnder(false);
+        return;
       }
+      setIsOpen(false);
+      setShowMoveUnder(false);
+      setMenuPosition(null);
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    window.addEventListener("resize", updateMenuPosition);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      window.removeEventListener("resize", updateMenuPosition);
+    };
+  }, [isOpen, updateMenuPosition]);
 
   const closeMenu = () => {
     setIsOpen(false);
     setShowMoveUnder(false);
+    setMenuPosition(null);
   };
 
   const handleMoveUnder = async (parentId: number | null) => {
@@ -71,11 +103,126 @@ export function ContentIdeaOverflowMenu({
     closeMenu();
   };
 
+  const handleToggle = () => {
+    if (isOpen) {
+      closeMenu();
+      return;
+    }
+
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) {
+      setMenuPosition({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setIsOpen(true);
+  };
+
+  const menuContent =
+    isOpen && menuPosition ? (
+      <div
+        ref={menuRef}
+        role="menu"
+        style={{
+          position: "fixed",
+          top: menuPosition.top,
+          right: menuPosition.right,
+          zIndex: 9999,
+        }}
+        className="max-h-[min(70dvh,24rem)] min-w-44 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+      >
+        {canAddSubIdea ? (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onAddSubIdea();
+              closeMenu();
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Add Sub-idea
+          </button>
+        ) : null}
+
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            onEdit();
+            closeMenu();
+          }}
+          className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          Edit
+        </button>
+
+        {hasMoveUnderOptions ? (
+          <>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setShowMoveUnder((value) => !value);
+              }}
+              disabled={isMoving}
+              className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Move under…
+            </button>
+            {showMoveUnder ? (
+              <div className="border-t border-zinc-100 dark:border-zinc-800">
+                {showRootOption ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleMoveUnder(null)}
+                    disabled={isMoving}
+                    className="w-full px-4 py-2 text-left text-xs text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  >
+                    Root level
+                  </button>
+                ) : null}
+                {validTargets.map((target) => (
+                  <button
+                    key={target.id}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleMoveUnder(target.id!)}
+                    disabled={isMoving}
+                    className="w-full px-4 py-2 text-left text-xs text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  >
+                    {truncateTitle(target.title)}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
+        <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />
+
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            onDelete();
+            closeMenu();
+          }}
+          className="w-full px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+        >
+          Delete
+        </button>
+      </div>
+    ) : null;
+
   return (
-    <div ref={menuRef} className="relative">
+    <div className="relative shrink-0">
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={handleToggle}
         aria-label="Content idea options"
         aria-haspopup="menu"
         aria-expanded={isOpen}
@@ -84,95 +231,9 @@ export function ContentIdeaOverflowMenu({
         <MoreVertical className="h-4 w-4" />
       </button>
 
-      {isOpen ? (
-        <div
-          role="menu"
-          className="absolute right-0 z-50 mt-1 max-h-[min(70dvh,24rem)] min-w-44 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
-        >
-          {canAddSubIdea ? (
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                onAddSubIdea();
-                closeMenu();
-              }}
-              className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Add Sub-idea
-            </button>
-          ) : null}
-
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              onEdit();
-              closeMenu();
-            }}
-            className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            Edit
-          </button>
-
-          {hasMoveUnderOptions ? (
-            <>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setShowMoveUnder((value) => !value);
-                }}
-                disabled={isMoving}
-                className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              >
-                Move under…
-              </button>
-              {showMoveUnder ? (
-                <div className="border-t border-zinc-100 dark:border-zinc-800">
-                  {showRootOption ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => handleMoveUnder(null)}
-                      disabled={isMoving}
-                      className="w-full px-4 py-2 text-left text-xs text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                    >
-                      Root level
-                    </button>
-                  ) : null}
-                  {validTargets.map((target) => (
-                    <button
-                      key={target.id}
-                      type="button"
-                      role="menuitem"
-                      onClick={() => handleMoveUnder(target.id!)}
-                      disabled={isMoving}
-                      className="w-full px-4 py-2 text-left text-xs text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                    >
-                      {truncateTitle(target.title)}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </>
-          ) : null}
-
-          <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />
-
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              onDelete();
-              closeMenu();
-            }}
-            className="w-full px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-          >
-            Delete
-          </button>
-        </div>
-      ) : null}
+      {typeof document !== "undefined" && menuContent
+        ? createPortal(menuContent, document.body)
+        : null}
     </div>
   );
 }

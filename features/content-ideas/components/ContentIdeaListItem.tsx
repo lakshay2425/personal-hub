@@ -65,18 +65,19 @@ export function ContentIdeaListItem({
   return (
     <li ref={itemRef} style={style}>
       <div className={DEPTH_STYLES[depth]}>
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="flex items-start gap-2">
+          {dragHandleProps ? (
+            <button
+              type="button"
+              {...dragHandleProps}
+              aria-label="Drag to reorder"
+              className="mt-0.5 shrink-0 cursor-grab rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 active:cursor-grabbing dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+          ) : null}
+
           <div className="flex min-w-0 flex-1 items-start gap-2">
-            {dragHandleProps ? (
-              <button
-                type="button"
-                {...dragHandleProps}
-                aria-label="Drag to reorder"
-                className="mt-0.5 shrink-0 cursor-grab rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 active:cursor-grabbing dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-              >
-                <GripVertical className="h-4 w-4" />
-              </button>
-            ) : null}
             <SubIdeaHeader
               title={title}
               textClassName={DEPTH_TEXT_STYLES[depth]}
@@ -91,15 +92,13 @@ export function ContentIdeaListItem({
                     <ContentTypeBadge contentType={node.contentType} />
                   </div>
                   <PublishedLinksSummary links={node.publishedLinks} />
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <p className="hidden text-xs text-zinc-500 md:inline dark:text-zinc-400">
                     Created {format(node.createdAt, "MMM d, yyyy")}
                   </p>
                 </div>
               }
             />
-          </div>
 
-          <div className="flex shrink-0 items-center gap-2">
             <ContentIdeaOverflowMenu
               idea={node}
               allIdeas={allIdeas}

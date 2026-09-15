@@ -69,7 +69,7 @@ export function ContentIdeasCards({
                 <PublishedLinksSummary links={idea.publishedLinks} />
               </div>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="hidden text-xs text-zinc-500 md:block dark:text-zinc-400">
               Created {format(idea.createdAt, "MMM d, yyyy")}
             </p>
           </div>
