@@ -5,27 +5,17 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ApplicationCard } from "@/features/job-search/components/ApplicationCard";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { ApplicationFormModal } from "@/features/job-search/components/forms/ApplicationFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
-import {
-  MobileCardActions,
-  MobileCardHeader,
-  MobileCardMeta,
-  MobileCardMetaRow,
-  MobileList,
-  MobileListItem,
-  mobileActionClass,
-} from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
-import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import { APPLICATION_STATUSES } from "@/features/job-search/constants";
 import { useApplications } from "@/features/job-search/hooks/useApplications";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
 import {
-  formatDate,
   getCurrentWeekStart,
   isDateInWeek,
 } from "@/features/job-search/lib/dateUtils";
@@ -209,95 +199,20 @@ export default function ApplicationsPage() {
           }
         />
       ) : (
-        <>
-          <MobileList>
-            {filtered.map((app) => (
-              <MobileListItem key={app.id}>
-                <MobileCardHeader
-                  title={app.role}
-                  subtitle={companyMap.get(app.companyId) ?? "—"}
-                  badge={<StatusBadge status={app.status} />}
-                />
-                <MobileCardMeta>
-                  {app.portal ? (
-                    <MobileCardMetaRow label="Portal" value={app.portal} />
-                  ) : null}
-                  <MobileCardMetaRow
-                    label="Applied"
-                    value={formatDate(app.appliedDate)}
-                  />
-                </MobileCardMeta>
-                <MobileCardActions>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingApp(app);
-                      setIsFormOpen(true);
-                    }}
-                    className={mobileActionClass.edit}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeletingApp(app)}
-                    className={mobileActionClass.delete}
-                  >
-                    Delete
-                  </button>
-                </MobileCardActions>
-              </MobileListItem>
-            ))}
-          </MobileList>
-          <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-              <tr>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Company</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Portal</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Applied Date</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {filtered.map((app) => (
-                <tr key={app.id}>
-                  <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                    {companyMap.get(app.companyId) ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{app.role}</td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{app.portal || "—"}</td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(app.appliedDate)}</td>
-                  <td className="px-4 py-3"><StatusBadge status={app.status} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingApp(app);
-                          setIsFormOpen(true);
-                        }}
-                        className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeletingApp(app)}
-                        className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((app) => (
+            <ApplicationCard
+              key={app.id}
+              application={app}
+              companyName={companyMap.get(app.companyId)}
+              onEdit={() => {
+                setEditingApp(app);
+                setIsFormOpen(true);
+              }}
+              onDelete={() => setDeletingApp(app)}
+            />
+          ))}
         </div>
-        </>
       )}
 
       <ApplicationFormModal

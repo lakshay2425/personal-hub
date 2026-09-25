@@ -6,6 +6,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ApplicationCard } from "@/features/job-search/components/ApplicationCard";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { CompanyFormModal } from "@/features/job-search/components/forms/CompanyFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
@@ -249,47 +250,14 @@ export default function CompanyDetailPage() {
           {applications.length === 0 ? (
             <EmptyState title="No applications" description="No applications for this company yet." />
           ) : (
-            <>
-              <MobileList>
-                {applications.map((a) => (
-                  <MobileListItem key={a.id}>
-                    <MobileCardHeader
-                      title={a.role}
-                      subtitle={a.portal || undefined}
-                      badge={<StatusBadge status={a.status} />}
-                    />
-                    <MobileCardMeta>
-                      <MobileCardMetaRow
-                        label="Applied"
-                        value={formatDate(a.appliedDate)}
-                      />
-                    </MobileCardMeta>
-                  </MobileListItem>
-                ))}
-              </MobileList>
-              <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-                <table className="w-full min-w-[640px] text-left text-sm">
-                  <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <tr>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Portal</th>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Applied</th>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    {applications.map((a) => (
-                      <tr key={a.id}>
-                        <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{a.role}</td>
-                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{a.portal || "—"}</td>
-                        <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{formatDate(a.appliedDate)}</td>
-                        <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
+            <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {applications.map((application) => (
+                <ApplicationCard
+                  key={application.id}
+                  application={application}
+                />
+              ))}
+            </div>
           )}
         </>
       )}

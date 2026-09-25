@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 interface CompanyOverflowMenuProps {
   onEdit: () => void;
   onDelete: () => void;
+  label?: string;
 }
 
 interface MenuPosition {
@@ -17,6 +18,7 @@ interface MenuPosition {
 export function CompanyOverflowMenu({
   onEdit,
   onDelete,
+  label = "Company options",
 }: CompanyOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
@@ -127,7 +129,7 @@ export function CompanyOverflowMenu({
         ref={triggerRef}
         type="button"
         onClick={handleToggle}
-        aria-label="Company options"
+        aria-label={label}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         className="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
