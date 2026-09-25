@@ -8,10 +8,14 @@ import {
   isLeadChannel,
   isProductOutreachChannel,
   LEGACY_LEAD_CHANNEL,
+  separateResponseFromStatus,
 } from "../constants";
 import { getDB } from "../db";
 import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
-import { createDefaultListSettings } from "./listSettingsRepository";
+import {
+  createDefaultListSettings,
+  withResponseStatusDefaults,
+} from "./listSettingsRepository";
 import type {
   ActivityLog,
   Application,
@@ -92,11 +96,17 @@ function legacyColdEmailsToTouchpoints(
   for (const coldEmail of coldEmails) {
     if (!coldEmail.leadId || !leadIds.has(coldEmail.leadId)) continue;
 
+    const separated = separateResponseFromStatus(
+      mapLegacyColdEmailStatus(coldEmail.status ?? ""),
+      undefined,
+    );
+
     touchpoints.push({
       leadId: coldEmail.leadId,
       channel: "Email",
       type: "Initial",
-      status: mapLegacyColdEmailStatus(coldEmail.status ?? ""),
+      status: separated.status,
+      responseStatus: separated.responseStatus,
       templateId: normalizeTemplateRef(coldEmail.templateId),
       context: coldEmail.notes ?? "",
       occurredAt: parseDateToTimestamp(
@@ -182,16 +192,23 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
     : [];
 
   const importedTouchpoints = Array.isArray(record.leadTouchpoints)
-    ? (record.leadTouchpoints as LeadTouchpoint[]).map((touchpoint) => ({
-        ...touchpoint,
-        channel: isLeadChannel(touchpoint.channel)
-          ? touchpoint.channel
-          : LEGACY_LEAD_CHANNEL,
-        type: touchpoint.type?.trim() || "Other",
-        status: touchpoint.status?.trim() || DEFAULT_TOUCHPOINT_STATUS,
-        templateId: normalizeTemplateRef(touchpoint.templateId),
-        context: touchpoint.context ?? "",
-      }))
+    ? (record.leadTouchpoints as LeadTouchpoint[]).map((touchpoint) => {
+        const separated = separateResponseFromStatus(
+          touchpoint.status,
+          touchpoint.responseStatus,
+        );
+        return {
+          ...touchpoint,
+          channel: isLeadChannel(touchpoint.channel)
+            ? touchpoint.channel
+            : LEGACY_LEAD_CHANNEL,
+          type: touchpoint.type?.trim() || "Other",
+          status: separated.status,
+          responseStatus: separated.responseStatus,
+          templateId: normalizeTemplateRef(touchpoint.templateId),
+          context: touchpoint.context ?? "",
+        };
+      })
     : [];
 
   const migratedTouchpoints =
@@ -213,9 +230,11 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
     return lead;
   });
 
-  const listSettings = Array.isArray(record.listSettings)
-    ? (record.listSettings as JobSearchListSettings[])
-    : [createDefaultListSettings()];
+  const listSettings = (
+    Array.isArray(record.listSettings) && record.listSettings.length > 0
+      ? (record.listSettings as JobSearchListSettings[])
+      : [createDefaultListSettings()]
+  ).map(withResponseStatusDefaults);
 
   return {
     version: 6,

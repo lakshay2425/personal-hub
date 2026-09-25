@@ -7,6 +7,7 @@ import {
   DEFAULT_TOUCHPOINT_STATUS,
   LEGACY_LEAD_CHANNEL,
   LIST_SETTINGS_ID,
+  separateResponseFromStatus,
 } from "./constants";
 import { createDefaultListSettings } from "./repositories/listSettingsRepository";
 import type {
@@ -323,6 +324,35 @@ class JobSearchDatabase extends Dexie {
 
           await leadsTable.put(rest);
         }
+      });
+
+    this.version(9)
+      .stores({
+        companies:
+          "++id, companyName, sector, createdAt",
+        leads:
+          "++id, companyId, name, role, type, channel, status, createdAt",
+        applications:
+          "++id, companyId, role, portal, status, appliedDate, createdAt",
+        templates: "++id, type, title, createdAt, updatedAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+        productOutreachContacts: "++id, label, createdAt",
+        productOutreachInteractions:
+          "++id, contactId, channel, handle, createdAt",
+        leadTouchpoints:
+          "++id, leadId, channel, status, type, occurredAt, createdAt",
+        listSettings: "id",
+      })
+      .upgrade(async (transaction) => {
+        const touchpointsTable = transaction.table("leadTouchpoints");
+        await touchpointsTable.toCollection().modify((touchpoint) => {
+          const separated = separateResponseFromStatus(
+            touchpoint.status,
+            touchpoint.responseStatus,
+          );
+          touchpoint.status = separated.status;
+          touchpoint.responseStatus = separated.responseStatus;
+        });
       });
   }
 }

@@ -16,6 +16,7 @@ import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatsCard } from "@/features/job-search/components/StatsCard";
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { TimeFilterPills } from "@/features/job-search/components/TimeFilterPills";
+import { DEFAULT_RESPONSE_STATUS } from "@/features/job-search/constants";
 import { useDashboard } from "@/features/job-search/hooks/useDashboard";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
@@ -204,6 +205,12 @@ export default function DashboardPage() {
                       value={touchpoint.channel}
                     />
                     <MobileCardMetaRow
+                      label="Response"
+                      value={
+                        touchpoint.responseStatus || DEFAULT_RESPONSE_STATUS
+                      }
+                    />
+                    <MobileCardMetaRow
                       label="Date"
                       value={formatDate(touchpoint.occurredAt)}
                     />
@@ -230,6 +237,9 @@ export default function DashboardPage() {
                   <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
                     Status
                   </th>
+                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
+                    Response
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -249,6 +259,13 @@ export default function DashboardPage() {
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={touchpoint.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge
+                        status={
+                          touchpoint.responseStatus || DEFAULT_RESPONSE_STATUS
+                        }
+                      />
                     </td>
                   </tr>
                 ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChannelBadge } from "./ChannelBadge";
+import { DEFAULT_RESPONSE_STATUS } from "../constants";
 import { formatDate } from "../lib/dateUtils";
 import type { LeadTouchpoint, Template } from "../types";
 import { StatusBadge } from "./StatusBadge";
@@ -32,6 +33,9 @@ export function LeadTouchpointRow({
           {touchpoint.type}
         </span>
         <StatusBadge status={touchpoint.status} />
+        <StatusBadge
+          status={touchpoint.responseStatus || DEFAULT_RESPONSE_STATUS}
+        />
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
           {formatDate(touchpoint.occurredAt)}
         </span>

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 
 import {
+  DEFAULT_RESPONSE_STATUS,
   DEFAULT_TOUCHPOINT_STATUS,
   LEAD_CHANNELS,
 } from "../../constants";
@@ -31,6 +32,7 @@ interface LeadTouchpointFormModalProps {
   defaultChannel?: LeadTouchpoint["channel"];
   templates: Template[];
   touchpointStatusOptions: string[];
+  responseStatusOptions: string[];
   touchpointTypeOptions: string[];
   onSubmit: (data: LeadTouchpointInput) => Promise<void>;
 }
@@ -41,6 +43,7 @@ interface LeadTouchpointFormFieldsProps {
   defaultChannel: LeadTouchpoint["channel"];
   templates: Template[];
   touchpointStatusOptions: string[];
+  responseStatusOptions: string[];
   touchpointTypeOptions: string[];
   onClose: () => void;
   onSubmit: (data: LeadTouchpointInput) => Promise<void>;
@@ -67,6 +70,7 @@ function LeadTouchpointFormFields({
   defaultChannel,
   templates,
   touchpointStatusOptions,
+  responseStatusOptions,
   touchpointTypeOptions,
   onClose,
   onSubmit,
@@ -77,6 +81,9 @@ function LeadTouchpointFormFields({
   const [type, setType] = useState(touchpoint?.type ?? "");
   const [status, setStatus] = useState(
     touchpoint?.status ?? DEFAULT_TOUCHPOINT_STATUS,
+  );
+  const [responseStatus, setResponseStatus] = useState(
+    touchpoint?.responseStatus ?? DEFAULT_RESPONSE_STATUS,
   );
   const [templateId, setTemplateId] = useState(
     touchpoint?.templateId != null ? String(touchpoint.templateId) : "",
@@ -99,6 +106,7 @@ function LeadTouchpointFormFields({
         channel,
         type: type.trim() || "Other",
         status: status.trim() || DEFAULT_TOUCHPOINT_STATUS,
+        responseStatus: responseStatus.trim() || DEFAULT_RESPONSE_STATUS,
         templateId: templateId ? Number(templateId) : null,
         context,
         occurredAt: dateInputToTimestamp(occurredAt),
@@ -140,7 +148,17 @@ function LeadTouchpointFormFields({
             options={touchpointStatusOptions}
             placeholder="Select status..."
             createLabel="Add new status..."
-            newValuePlaceholder="Draft, Sent, Replied..."
+            newValuePlaceholder="Draft, Sent..."
+          />
+        </FormField>
+        <FormField label="Response" required>
+          <CreatableSelectInput
+            value={responseStatus}
+            onChange={setResponseStatus}
+            options={responseStatusOptions}
+            placeholder="Select response..."
+            createLabel="Add new response..."
+            newValuePlaceholder="Not responded, Replied..."
           />
         </FormField>
         <FormField label="Date">
@@ -197,6 +215,7 @@ export function LeadTouchpointFormModal({
   defaultChannel = "Email",
   templates,
   touchpointStatusOptions,
+  responseStatusOptions,
   touchpointTypeOptions,
   onSubmit,
 }: LeadTouchpointFormModalProps) {
@@ -214,6 +233,7 @@ export function LeadTouchpointFormModal({
         defaultChannel={defaultChannel}
         templates={templates}
         touchpointStatusOptions={touchpointStatusOptions}
+        responseStatusOptions={responseStatusOptions}
         touchpointTypeOptions={touchpointTypeOptions}
         onClose={onClose}
         onSubmit={onSubmit}

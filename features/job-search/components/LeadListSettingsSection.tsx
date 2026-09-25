@@ -44,6 +44,9 @@ export function LeadListSettingsSection() {
         touchpointStatuses: parseListInput(
           listToText(settings.touchpointStatuses),
         ),
+        responseStatuses: parseListInput(
+          listToText(settings.responseStatuses ?? []),
+        ),
         touchpointTypes: parseListInput(listToText(settings.touchpointTypes)),
         contactedTriggerStatuses: parseListInput(
           listToText(settings.contactedTriggerStatuses),
@@ -73,8 +76,8 @@ export function LeadListSettingsSection() {
           Lead & touchpoint lists
         </h2>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Customize lead statuses, touchpoint statuses/types, and which
-          touchpoint statuses mark a lead as contacted.
+          Customize lead statuses, send statuses, response statuses, types,
+          and which send statuses mark a lead as contacted.
         </p>
       </div>
 
@@ -105,7 +108,7 @@ export function LeadListSettingsSection() {
           />
         </div>
         <SettingsTextArea
-          label="Touchpoint statuses (one per line)"
+          label="Send statuses (one per line)"
           value={listToText(settings.touchpointStatuses)}
           onChange={(value) =>
             setDraft({
@@ -113,6 +116,18 @@ export function LeadListSettingsSection() {
               touchpointStatuses: parseListInput(value),
             })
           }
+          hint="Your side of the outreach: draft, sent, and similar."
+        />
+        <SettingsTextArea
+          label="Response statuses (one per line)"
+          value={listToText(settings.responseStatuses ?? [])}
+          onChange={(value) =>
+            setDraft({
+              ...settings,
+              responseStatuses: parseListInput(value),
+            })
+          }
+          hint="Whether they replied. Kept separate from send status."
         />
         <SettingsTextArea
           label="Touchpoint types (one per line)"
@@ -130,7 +145,7 @@ export function LeadListSettingsSection() {
               contactedTriggerStatuses: parseListInput(value),
             })
           }
-          hint="When a touchpoint has one of these statuses, the lead auto-updates to the contacted status."
+          hint="When a touchpoint send status is one of these, the lead auto-updates to the contacted status."
         />
       </div>
 

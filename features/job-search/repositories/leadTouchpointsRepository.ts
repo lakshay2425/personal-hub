@@ -1,4 +1,5 @@
 import {
+  DEFAULT_RESPONSE_STATUS,
   DEFAULT_TOUCHPOINT_STATUS,
   isLeadChannel,
   LEGACY_LEAD_CHANNEL,
@@ -112,11 +113,14 @@ export async function addTouchpoint(
   const channel = normalizeChannel(input.channel);
   const type = input.type.trim() || "Other";
   const status = input.status.trim() || DEFAULT_TOUCHPOINT_STATUS;
+  const responseStatus =
+    input.responseStatus?.trim() || DEFAULT_RESPONSE_STATUS;
   const now = Date.now();
 
   await Promise.all([
     ensureListOption("touchpointTypes", type),
     ensureListOption("touchpointStatuses", status),
+    ensureListOption("responseStatuses", responseStatus),
   ]);
 
   const id = await database.leadTouchpoints.add({
@@ -124,6 +128,7 @@ export async function addTouchpoint(
     channel,
     type,
     status,
+    responseStatus,
     templateId: input.templateId ?? null,
     context: input.context.trim(),
     occurredAt: input.occurredAt || now,
@@ -151,12 +156,19 @@ export async function updateTouchpoint(
     partial.status !== undefined
       ? partial.status.trim() || DEFAULT_TOUCHPOINT_STATUS
       : existing.status;
+  const responseStatus =
+    partial.responseStatus !== undefined
+      ? partial.responseStatus.trim() || DEFAULT_RESPONSE_STATUS
+      : existing.responseStatus || DEFAULT_RESPONSE_STATUS;
 
   if (partial.type !== undefined) {
     await ensureListOption("touchpointTypes", type);
   }
   if (partial.status !== undefined) {
     await ensureListOption("touchpointStatuses", status);
+  }
+  if (partial.responseStatus !== undefined) {
+    await ensureListOption("responseStatuses", responseStatus);
   }
 
   await database.leadTouchpoints.update(id, {
@@ -166,6 +178,7 @@ export async function updateTouchpoint(
         : existing.channel,
     type,
     status,
+    responseStatus,
     templateId:
       partial.templateId !== undefined
         ? partial.templateId
@@ -211,7 +224,8 @@ export function matchesLeadTouchpointQuery(
       touchpoint.context.toLowerCase().includes(lower) ||
       touchpoint.channel.toLowerCase().includes(lower) ||
       touchpoint.type.toLowerCase().includes(lower) ||
-      touchpoint.status.toLowerCase().includes(lower),
+      touchpoint.status.toLowerCase().includes(lower) ||
+      (touchpoint.responseStatus ?? "").toLowerCase().includes(lower),
   );
 }
 

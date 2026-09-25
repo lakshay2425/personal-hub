@@ -4,6 +4,8 @@ export type LeadChannel = "Email" | "LinkedIn" | "X" | "Other";
 
 export type TouchpointStatus = string;
 
+export type TouchpointResponseStatus = string;
+
 export type TouchpointType = string;
 
 export type ProductOutreachChannel = "Instagram" | "LinkedIn" | "X" | "Email";
@@ -59,6 +61,7 @@ export interface LeadTouchpoint {
   channel: LeadChannel;
   type: TouchpointType;
   status: TouchpointStatus;
+  responseStatus: TouchpointResponseStatus;
   templateId: number | null;
   context: string;
   occurredAt: number;
@@ -76,6 +79,7 @@ export interface JobSearchListSettings {
   newLeadStatus: string;
   contactedLeadStatus: string;
   touchpointStatuses: string[];
+  responseStatuses: string[];
   touchpointTypes: string[];
   contactedTriggerStatuses: string[];
 }

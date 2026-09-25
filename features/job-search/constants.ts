@@ -9,13 +9,20 @@ import type {
 export const DEFAULT_NEW_LEAD_STATUS = "New";
 export const DEFAULT_CONTACTED_LEAD_STATUS = "Contacted";
 export const DEFAULT_TOUCHPOINT_STATUS = "Draft";
+export const DEFAULT_RESPONSE_STATUS = "Not responded";
+export const LEGACY_REPLIED_TOUCHPOINT_STATUS = "Replied";
 
 export const DEFAULT_LEAD_STATUSES = [
   DEFAULT_NEW_LEAD_STATUS,
   DEFAULT_CONTACTED_LEAD_STATUS,
 ];
 
-export const DEFAULT_TOUCHPOINT_STATUSES = ["Draft", "Sent", "Replied"];
+export const DEFAULT_TOUCHPOINT_STATUSES = ["Draft", "Sent"];
+
+export const DEFAULT_RESPONSE_STATUSES = [
+  DEFAULT_RESPONSE_STATUS,
+  LEGACY_REPLIED_TOUCHPOINT_STATUS,
+];
 
 export const DEFAULT_TOUCHPOINT_TYPES = [
   "Initial",
@@ -26,7 +33,31 @@ export const DEFAULT_TOUCHPOINT_TYPES = [
   "Other",
 ];
 
-export const DEFAULT_CONTACTED_TRIGGER_STATUSES = ["Sent", "Replied"];
+export const DEFAULT_CONTACTED_TRIGGER_STATUSES = ["Sent"];
+
+export function separateResponseFromStatus(
+  status: string | undefined,
+  responseStatus: string | undefined,
+): { status: string; responseStatus: string } {
+  const trimmedStatus = status?.trim() || DEFAULT_TOUCHPOINT_STATUS;
+  const trimmedResponse = responseStatus?.trim() ?? "";
+
+  if (trimmedResponse) {
+    return { status: trimmedStatus, responseStatus: trimmedResponse };
+  }
+
+  if (trimmedStatus === LEGACY_REPLIED_TOUCHPOINT_STATUS) {
+    return {
+      status: "Sent",
+      responseStatus: LEGACY_REPLIED_TOUCHPOINT_STATUS,
+    };
+  }
+
+  return {
+    status: trimmedStatus,
+    responseStatus: DEFAULT_RESPONSE_STATUS,
+  };
+}
 
 export const LEAD_CHANNELS: LeadChannel[] = [
   "Email",
@@ -138,4 +169,5 @@ export const LIST_SETTINGS_ID = 1 as const;
 export type ListSettingsField =
   | "leadStatuses"
   | "touchpointStatuses"
+  | "responseStatuses"
   | "touchpointTypes";

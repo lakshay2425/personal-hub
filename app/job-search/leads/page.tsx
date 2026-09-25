@@ -545,6 +545,7 @@ export default function LeadsPage() {
         defaultChannel={activeLead?.channel ?? DEFAULT_LEAD_CHANNEL}
         templates={templates}
         touchpointStatusOptions={listSettings.touchpointStatuses}
+        responseStatusOptions={listSettings.responseStatuses}
         touchpointTypeOptions={listSettings.touchpointTypes}
         onSubmit={handleTouchpointSubmit}
       />
