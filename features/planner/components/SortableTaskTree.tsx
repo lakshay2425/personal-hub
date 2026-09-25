@@ -27,6 +27,7 @@ interface SortableTaskTreeProps {
   sortable?: boolean;
   completed?: boolean;
   showStrikethrough?: boolean;
+  showCompletionToggle?: boolean;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
@@ -46,6 +47,7 @@ export function SortableTaskTree({
   sortable = true,
   completed = false,
   showStrikethrough = true,
+  showCompletionToggle = true,
   onToggle,
   onEdit,
   onDelete,
@@ -127,6 +129,7 @@ export function SortableTaskTree({
           allTasks={tasks}
           completed={completed}
           showStrikethrough={showStrikethrough}
+          showCompletionToggle={showCompletionToggle}
           useTouchReorder={useTouchReorder}
           sortable={sortable}
           onToggle={onToggle}

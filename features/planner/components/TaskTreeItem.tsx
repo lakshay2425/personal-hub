@@ -28,6 +28,7 @@ interface TaskTreeItemProps {
   allTasks: Task[];
   completed?: boolean;
   showStrikethrough?: boolean;
+  showCompletionToggle?: boolean;
   sortable?: boolean;
   useTouchReorder?: boolean;
   onToggle: (task: Task, markDone: boolean) => void;
@@ -51,6 +52,7 @@ export function TaskTreeItem({
   allTasks,
   completed = false,
   showStrikethrough = true,
+  showCompletionToggle = true,
   sortable = true,
   useTouchReorder = false,
   onToggle,
@@ -155,7 +157,7 @@ export function TaskTreeItem({
           <span className="w-6 shrink-0" aria-hidden />
         ) : null}
 
-        {showCheckbox ? (
+        {showCompletionToggle && showCheckbox ? (
           <input
             type="checkbox"
             checked={isDone}
@@ -163,7 +165,7 @@ export function TaskTreeItem({
             className="h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800"
             aria-label={isDone ? "Mark as todo" : "Mark as done"}
           />
-        ) : (
+        ) : showCompletionToggle ? (
           <span
             className="h-4 w-4 shrink-0"
             aria-hidden
@@ -173,7 +175,7 @@ export function TaskTreeItem({
                 : "Add a slice under this practice"
             }
           />
-        )}
+        ) : null}
 
         <div className="flex min-w-0 flex-1 items-start gap-2">
           <SubTaskHeader

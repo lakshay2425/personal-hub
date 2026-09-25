@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Task, TaskKind } from "../types";
 import { SortableTaskTree } from "./SortableTaskTree";
 
@@ -10,6 +11,7 @@ interface PlannerKindSectionProps {
   completedTasks?: Task[];
   emptyMessage: string;
   completedEmptyMessage?: string;
+  showCompletionToggle?: boolean;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
@@ -30,6 +32,7 @@ export function PlannerKindSection({
   completedTasks,
   emptyMessage,
   completedEmptyMessage = "No completed tasks.",
+  showCompletionToggle = true,
   onToggle,
   onEdit,
   onDelete,
@@ -39,6 +42,7 @@ export function PlannerKindSection({
   onViewDetail,
   onReorder,
 }: PlannerKindSectionProps) {
+  const [view, setView] = useState<"pending" | "completed">("pending");
   const treeHandlers = {
     onToggle,
     onEdit,
@@ -61,26 +65,53 @@ export function PlannerKindSection({
         </p>
       </div>
 
-      <SortableTaskTree
-        tasks={tasks}
-        emptyMessage={emptyMessage}
-        {...treeHandlers}
-      />
-
-      {completedTasks && completedTasks.length > 0 ? (
-        <div className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Completed
-          </h3>
-          <SortableTaskTree
-            tasks={completedTasks}
-            sortable={false}
-            completed
-            emptyMessage={completedEmptyMessage}
-            {...treeHandlers}
-          />
+      {completedTasks !== undefined ? (
+        <div
+          className="flex gap-1 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800/50"
+          role="tablist"
+          aria-label={`${title} task status`}
+        >
+          {(
+            [
+              ["pending", "Pending", tasks.length],
+              ["completed", "Completed", completedTasks.length],
+            ] as const
+          ).map(([id, label, count]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={view === id}
+              onClick={() => setView(id)}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                view === id
+                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-50"
+                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+              }`}
+            >
+              {label} ({count})
+            </button>
+          ))}
         </div>
       ) : null}
+
+      {view === "pending" || completedTasks === undefined ? (
+        <SortableTaskTree
+          tasks={tasks}
+          emptyMessage={emptyMessage}
+          showCompletionToggle={showCompletionToggle}
+          {...treeHandlers}
+        />
+      ) : (
+        <SortableTaskTree
+          tasks={completedTasks}
+          sortable={false}
+          completed
+          emptyMessage={completedEmptyMessage}
+          showCompletionToggle={showCompletionToggle}
+          {...treeHandlers}
+        />
+      )}
     </section>
   );
 }

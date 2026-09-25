@@ -223,6 +223,7 @@ export function PlannerWorkspace() {
               description="Log the task. Classify it later."
               tasks={inboxActive}
               completedTasks={inboxCompleted}
+              showCompletionToggle={false}
               emptyMessage="No tasks waiting. Capture whatever you want to do."
               completedEmptyMessage="No completed inbox tasks."
               {...sectionHandlers}
@@ -260,6 +261,7 @@ export function PlannerWorkspace() {
         onSubmit={handleCreateTask}
         onUpdate={handleUpdateTask}
         onCreateSubTask={handleCreateSubTask}
+        taskKind={activeTab}
         task={editingTask}
         subTaskParent={subTaskParent}
       />

@@ -22,6 +22,7 @@ export type TaskTreeNode = Task & {
 export interface CreateTaskInput {
   title: string;
   notes?: string;
+  kind?: TaskKind;
 }
 
 export interface CreateSubTaskInput {

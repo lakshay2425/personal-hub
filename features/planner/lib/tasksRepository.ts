@@ -57,10 +57,11 @@ export async function getAllTasks(): Promise<Task[]> {
 export async function createTask(input: CreateTaskInput): Promise<Task> {
   const db = getDB();
   const now = Date.now();
-  const sortOrder = await getNextSortOrder(null, "inbox");
+  const kind = input.kind ?? "inbox";
+  const sortOrder = await getNextSortOrder(null, kind);
 
   const task: Task = {
-    kind: "inbox",
+    kind,
     parentId: null,
     depth: 0,
     sortOrder,

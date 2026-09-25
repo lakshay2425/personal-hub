@@ -14,6 +14,7 @@ import type {
   CreateSubTaskInput,
   CreateTaskInput,
   Task,
+  TaskKind,
   UpdateTaskInput,
 } from "../types";
 
@@ -26,6 +27,7 @@ interface TaskFormModalProps {
     parentId: number,
     input: CreateSubTaskInput,
   ) => Promise<void>;
+  taskKind?: TaskKind;
   task?: Task | null;
   subTaskParent?: Task | null;
 }
@@ -36,6 +38,7 @@ export function TaskFormModal({
   onSubmit,
   onUpdate,
   onCreateSubTask,
+  taskKind,
   task,
   subTaskParent,
 }: TaskFormModalProps) {
@@ -72,6 +75,7 @@ export function TaskFormModal({
         await onSubmit({
           title: title.trim(),
           notes: notes.trim(),
+          kind: taskKind,
         });
       }
       onClose();
