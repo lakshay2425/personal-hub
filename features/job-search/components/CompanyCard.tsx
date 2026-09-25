@@ -1,8 +1,9 @@
 "use client";
 
-import { StickyNote } from "lucide-react";
+import { ExternalLink, StickyNote } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 import { Modal } from "@/components/ui/Modal";
 
@@ -29,6 +30,16 @@ export function CompanyCard({
   const websiteUrl = website ? normalizeProfileUrl(website) : "";
   const [notesOpen, setNotesOpen] = useState(false);
 
+  const copyWebsiteLink = async () => {
+    if (!websiteUrl) return;
+    try {
+      await navigator.clipboard.writeText(websiteUrl);
+      toast.success("Website link copied");
+    } catch {
+      toast.error("Could not copy the website link");
+    }
+  };
+
   return (
     <article className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-start justify-between gap-2">
@@ -49,40 +60,28 @@ export function CompanyCard({
               <StickyNote className="h-4 w-4" />
             </button>
           ) : null}
-          <CompanyOverflowMenu onEdit={onEdit} onDelete={onDelete} />
+          <CompanyOverflowMenu
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onCopyLink={websiteUrl ? copyWebsiteLink : undefined}
+          />
         </div>
       </div>
 
-      {sector || website ? (
-        <dl className="mt-3 space-y-2 text-sm">
-          {sector ? (
-            <div>
-              <dt className="text-xs text-zinc-500 dark:text-zinc-400">
-                Sector
-              </dt>
-              <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
-                {sector}
-              </dd>
-            </div>
-          ) : null}
-          {websiteUrl ? (
-            <div>
-              <dt className="text-xs text-zinc-500 dark:text-zinc-400">
-                Website
-              </dt>
-              <dd className="mt-0.5">
-                <a
-                  href={websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="break-all text-blue-600 hover:underline dark:text-blue-400"
-                >
-                  {website}
-                </a>
-              </dd>
-            </div>
-          ) : null}
-        </dl>
+      {sector ? (
+        <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">{sector}</p>
+      ) : null}
+
+      {websiteUrl ? (
+        <a
+          href={websiteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >
+          Visit website
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">

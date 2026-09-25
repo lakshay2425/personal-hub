@@ -17,10 +17,8 @@ import {
   MobileList,
   MobileListItem,
 } from "@/features/job-search/components/MobileListCard";
-import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { useCompany, useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
-import { formatDate } from "@/features/job-search/lib/dateUtils";
 import type { Company } from "@/features/job-search/types";
 
 type Tab = "leads" | "applications";

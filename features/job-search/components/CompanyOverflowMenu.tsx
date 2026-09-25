@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 interface CompanyOverflowMenuProps {
   onEdit: () => void;
   onDelete: () => void;
+  onCopyLink?: () => void;
   label?: string;
 }
 
@@ -18,6 +19,7 @@ interface MenuPosition {
 export function CompanyOverflowMenu({
   onEdit,
   onDelete,
+  onCopyLink,
   label = "Company options",
 }: CompanyOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -96,8 +98,21 @@ export function CompanyOverflowMenu({
           right: menuPosition.right,
           zIndex: 9999,
         }}
-        className="min-w-36 overflow-hidden rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+        className="min-w-44 overflow-hidden rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
       >
+        {onCopyLink ? (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onCopyLink();
+              closeMenu();
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Copy website link
+          </button>
+        ) : null}
         <button
           type="button"
           role="menuitem"
