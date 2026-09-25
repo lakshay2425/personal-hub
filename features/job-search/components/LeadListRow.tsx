@@ -1,7 +1,6 @@
 "use client";
 
 import type { Company, LeadWithTouchpoints } from "../types";
-import { StatusBadge } from "./StatusBadge";
 
 interface LeadListRowProps {
   lead: LeadWithTouchpoints;
@@ -19,12 +18,9 @@ export function LeadListRow({ lead, company, onClick }: LeadListRowProps) {
       className="flex w-full flex-col gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/30 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/50 sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium text-zinc-900 dark:text-zinc-50">
-            {lead.name}
-          </span>
-          <StatusBadge status={lead.status} />
-        </div>
+        <span className="font-medium text-zinc-900 dark:text-zinc-50">
+          {lead.name}
+        </span>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
           <span>{company?.companyName ?? "Unknown company"}</span>
           {lead.role ? <span>{lead.role}</span> : null}

@@ -181,7 +181,6 @@ export default function CompanyDetailPage() {
                       <MobileCardHeader
                         title={lead.name}
                         subtitle={lead.role || undefined}
-                        badge={<StatusBadge status={lead.status} />}
                       />
                       <MobileCardMeta>
                         {lead.type ? (
@@ -214,7 +213,6 @@ export default function CompanyDetailPage() {
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Status</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Touchpoints</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Action</th>
                     </tr>
@@ -229,7 +227,6 @@ export default function CompanyDetailPage() {
                           <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{lead.name}</td>
                           <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.role || "—"}</td>
                           <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.type || "—"}</td>
-                          <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
                           <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{touchpoints.length}</td>
                           <td className="px-4 py-3">
                             <Link

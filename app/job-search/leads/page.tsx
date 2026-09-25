@@ -86,7 +86,6 @@ export default function LeadsPage() {
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [groupByCompany, setGroupByCompany] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("");
   const [channelFilter, setChannelFilter] = useState("");
   const [touchpointChannelFilter, setTouchpointChannelFilter] = useState("");
   const [weekFilter, setWeekFilter] = useState<string | null>(null);
@@ -129,9 +128,6 @@ export default function LeadsPage() {
         (lead) => lead.companyId === Number(companyFilter),
       );
     }
-    if (statusFilter) {
-      result = result.filter((lead) => lead.status === statusFilter);
-    }
     if (channelFilter) {
       result = result.filter((lead) => lead.channel === channelFilter);
     }
@@ -166,7 +162,6 @@ export default function LeadsPage() {
     leadsWithTouchpoints,
     search,
     companyFilter,
-    statusFilter,
     channelFilter,
     touchpointChannelFilter,
     weekFilter,
@@ -434,18 +429,6 @@ export default function LeadsPage() {
           Group by company
         </label>
         <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        >
-          <option value="">All Statuses</option>
-          {listSettings.leadStatuses.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-        <select
           value={channelFilter}
           onChange={(event) => setChannelFilter(event.target.value)}
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
@@ -529,7 +512,6 @@ export default function LeadsPage() {
         lead={editingLead}
         companies={companies}
         defaultChannel={DEFAULT_LEAD_CHANNEL}
-        leadStatusOptions={listSettings.leadStatuses}
         onCreateCompany={handleCreateCompany}
       />
 

@@ -33,7 +33,6 @@ interface LeadFormModalProps {
   companies: Company[];
   defaultCompanyId?: number;
   defaultChannel?: Lead["channel"];
-  leadStatusOptions: string[];
   onCreateCompany: (companyName: string) => Promise<Company>;
 }
 
@@ -42,7 +41,6 @@ interface LeadFormFieldsProps {
   companies: Company[];
   defaultCompanyId?: number;
   defaultChannel?: Lead["channel"];
-  leadStatusOptions: string[];
   onClose: () => void;
   onSubmit: (data: Omit<Lead, "id" | "createdAt">) => Promise<void>;
   onCreateCompany: (companyName: string) => Promise<Company>;
@@ -53,7 +51,6 @@ function LeadFormFields({
   companies,
   defaultCompanyId,
   defaultChannel = DEFAULT_LEAD_CHANNEL,
-  leadStatusOptions,
   onClose,
   onSubmit,
   onCreateCompany,
@@ -66,9 +63,6 @@ function LeadFormFields({
         : "",
   );
   const [name, setName] = useState(lead?.name ?? "");
-  const [status, setStatus] = useState<Lead["status"]>(
-    lead?.status ?? DEFAULT_NEW_LEAD_STATUS,
-  );
   const [role, setRole] = useState(lead?.role ?? "");
   const [type, setType] = useState(lead?.type ?? "");
   const [email, setEmail] = useState(lead?.email ?? "");
@@ -124,7 +118,7 @@ function LeadFormFields({
         linkedin,
         xProfile,
         channel,
-        status,
+        status: lead?.status ?? DEFAULT_NEW_LEAD_STATUS,
         notes,
       });
       onClose();
@@ -161,16 +155,6 @@ function LeadFormFields({
             onChange={setName}
             placeholder="John Doe"
             required
-          />
-        </FormField>
-        <FormField label="Status">
-          <CreatableSelectInput
-            value={status}
-            onChange={setStatus}
-            options={leadStatusOptions}
-            placeholder="Select status..."
-            createLabel="Add new status..."
-            newValuePlaceholder="New, Contacted..."
           />
         </FormField>
         <FormField label="Role">
@@ -251,7 +235,6 @@ export function LeadFormModal({
   companies,
   defaultCompanyId,
   defaultChannel,
-  leadStatusOptions,
   onCreateCompany,
 }: LeadFormModalProps) {
   return (
@@ -270,7 +253,6 @@ export function LeadFormModal({
         companies={companies}
         defaultCompanyId={defaultCompanyId}
         defaultChannel={defaultChannel}
-        leadStatusOptions={leadStatusOptions}
         onClose={onClose}
         onSubmit={onSubmit}
         onCreateCompany={onCreateCompany}

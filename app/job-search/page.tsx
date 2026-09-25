@@ -133,7 +133,6 @@ export default function DashboardPage() {
                       {getCompanyName(l.companyId, companies)}
                     </p>
                   </div>
-                  <StatusBadge status={l.status} />
                 </li>
               ))}
             </ul>
