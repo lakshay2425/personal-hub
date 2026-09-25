@@ -1,6 +1,6 @@
 "use client";
 
-import { StickyNote } from "lucide-react";
+import { ExternalLink, StickyNote } from "lucide-react";
 import { useState } from "react";
 
 import { Modal } from "@/components/ui/Modal";
@@ -69,7 +69,7 @@ export function ApplicationCard({
         </div>
       </div>
 
-      {portal || appliedDate || jobUrl ? (
+      {portal || appliedDate ? (
         <dl className="mt-3 space-y-2 text-sm">
           {portal ? (
             <div>
@@ -91,24 +91,21 @@ export function ApplicationCard({
               </dd>
             </div>
           ) : null}
-          {jobUrl ? (
-            <div>
-              <dt className="text-xs text-zinc-500 dark:text-zinc-400">
-                Job link
-              </dt>
-              <dd className="mt-0.5">
-                <a
-                  href={jobUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="break-all text-blue-600 hover:underline dark:text-blue-400"
-                >
-                  {jobLink}
-                </a>
-              </dd>
-            </div>
-          ) : null}
         </dl>
+      ) : null}
+
+      {jobUrl ? (
+        <div className="mt-3 flex justify-end">
+          <a
+            href={jobUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Show Application
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
       ) : null}
 
       <Modal

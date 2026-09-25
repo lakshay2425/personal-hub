@@ -72,28 +72,29 @@ export function CompanyCard({
         <p className="mt-3 text-sm text-zinc-700 dark:text-zinc-300">{sector}</p>
       ) : null}
 
-      {websiteUrl ? (
-        <a
-          href={websiteUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          Visit website
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
-      ) : null}
-
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
-        <span>
-          {company.leadsCount}{" "}
-          {company.leadsCount === 1 ? "lead" : "leads"}
-        </span>
-        {showApplications ? (
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
           <span>
-            {company.applicationsCount}{" "}
-            {company.applicationsCount === 1 ? "app" : "apps"}
+            {company.leadsCount}{" "}
+            {company.leadsCount === 1 ? "lead" : "leads"}
           </span>
+          {showApplications ? (
+            <span>
+              {company.applicationsCount}{" "}
+              {company.applicationsCount === 1 ? "app" : "apps"}
+            </span>
+          ) : null}
+        </div>
+        {websiteUrl ? (
+          <a
+            href={websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Visit website
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
         ) : null}
       </div>
 
