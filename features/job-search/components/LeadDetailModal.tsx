@@ -8,12 +8,10 @@ import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
 import { formatDate } from "../lib/dateUtils";
 import { getTemplateTitle } from "../lib/templateUtils";
 import type { Company, LeadWithTouchpoints, Template } from "../types";
-import { ChannelBadge } from "./ChannelBadge";
 import { LeadCompanyButton } from "./LeadCompanyButton";
 import { LeadEmailButton } from "./LeadEmailButton";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
 import { mobileActionClass } from "./MobileListCard";
-import { StatusBadge } from "./StatusBadge";
 
 interface LeadDetailModalProps {
   isOpen: boolean;
@@ -58,11 +56,6 @@ export function LeadDetailModal({
     <Modal isOpen={isOpen} onClose={onClose} title={lead.name} size="lg">
       <div className="space-y-6">
         <div>
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <StatusBadge status={lead.status} />
-            <ChannelBadge channel={lead.channel} />
-          </div>
-
           <div className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
               <span className="text-zinc-500 dark:text-zinc-400">Company</span>

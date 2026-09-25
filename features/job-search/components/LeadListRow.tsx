@@ -1,7 +1,6 @@
 "use client";
 
 import type { Company, LeadWithTouchpoints } from "../types";
-import { ChannelBadge } from "./ChannelBadge";
 import { StatusBadge } from "./StatusBadge";
 
 interface LeadListRowProps {
@@ -25,7 +24,6 @@ export function LeadListRow({ lead, company, onClick }: LeadListRowProps) {
             {lead.name}
           </span>
           <StatusBadge status={lead.status} />
-          <ChannelBadge channel={lead.channel} />
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
           <span>{company?.companyName ?? "Unknown company"}</span>

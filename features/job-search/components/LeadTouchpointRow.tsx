@@ -2,7 +2,6 @@
 
 import { ChannelBadge } from "./ChannelBadge";
 import { formatDate } from "../lib/dateUtils";
-import { getTemplateTitle } from "../lib/templateUtils";
 import type { LeadTouchpoint, Template } from "../types";
 import { StatusBadge } from "./StatusBadge";
 import { mobileActionClass } from "./MobileListCard";
@@ -20,6 +19,11 @@ export function LeadTouchpointRow({
   onEdit,
   onDelete,
 }: LeadTouchpointRowProps) {
+  const templateTitle =
+    touchpoint.templateId != null
+      ? templateMap.get(touchpoint.templateId)?.title
+      : null;
+
   return (
     <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-800 dark:bg-zinc-900/40">
       <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -33,12 +37,14 @@ export function LeadTouchpointRow({
         </span>
       </div>
 
-      <div className="mb-2 text-sm text-zinc-700 dark:text-zinc-300">
-        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-          Template:{" "}
-        </span>
-        {getTemplateTitle(templateMap, touchpoint.templateId)}
-      </div>
+      {templateTitle ? (
+        <div className="mb-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Template:{" "}
+          </span>
+          {templateTitle}
+        </div>
+      ) : null}
 
       {touchpoint.context ? (
         <p className="mb-3 whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
