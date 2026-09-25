@@ -194,42 +194,6 @@ export async function deleteTouchpoint(id: number): Promise<void> {
   await logActivity("lead", existing.leadId, "Touchpoint Deleted");
 }
 
-export async function confirmFollowUpSent(
-  leadId: number,
-  which: 1 | 2,
-  payload: Partial<LeadTouchpointInput> = {},
-): Promise<number> {
-  const database = getDB();
-  const lead = await database.leads.get(leadId);
-  if (!lead) {
-    throw new Error("Lead not found");
-  }
-
-  const settings = await getListSettings();
-  const sentStatus =
-    settings.contactedTriggerStatuses.find((status) => status !== "Draft") ??
-    "Sent";
-  const now = Date.now();
-
-  const touchpointId = await addTouchpoint(leadId, {
-    channel: payload.channel ?? lead.channel,
-    type: payload.type?.trim() || "Follow-up",
-    status: payload.status?.trim() || sentStatus,
-    templateId: payload.templateId ?? lead.followUpTemplateId,
-    context: payload.context?.trim() ?? "",
-    occurredAt: payload.occurredAt ?? now,
-  });
-
-  const update: Partial<Lead> =
-    which === 1
-      ? { firstFollowUpDate: null }
-      : { secondFollowUpDate: null };
-
-  await database.leads.update(leadId, update);
-  await logActivity("lead", leadId, `Follow-up ${which} Confirmed`);
-  return touchpointId;
-}
-
 export function matchesLeadTouchpointQuery(
   lead: LeadWithTouchpoints,
   query: string,

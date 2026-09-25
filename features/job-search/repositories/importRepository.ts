@@ -152,13 +152,21 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       ? lead.channel
       : LEGACY_LEAD_CHANNEL;
 
+    const {
+      firstFollowUpDate: _firstFollowUpDate,
+      secondFollowUpDate: _secondFollowUpDate,
+      followUpTemplateId: _followUpTemplateId,
+      ...leadWithoutFollowUps
+    } = lead as Lead & {
+      firstFollowUpDate?: string | null;
+      secondFollowUpDate?: string | null;
+      followUpTemplateId?: number | null;
+    };
+
     return backfillLeadProfileFields({
-      ...lead,
+      ...leadWithoutFollowUps,
       channel,
       status: normalizeLegacyLeadStatus(lead.status ?? DEFAULT_NEW_LEAD_STATUS),
-      firstFollowUpDate: lead.firstFollowUpDate || null,
-      secondFollowUpDate: lead.secondFollowUpDate || null,
-      followUpTemplateId: normalizeTemplateRef(lead.followUpTemplateId),
       xProfile: lead.xProfile ?? "",
     });
   });

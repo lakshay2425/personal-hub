@@ -5,8 +5,6 @@ import Link from "next/link";
 import { Modal } from "@/components/ui/Modal";
 
 import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
-import { formatDate } from "../lib/dateUtils";
-import { getTemplateTitle } from "../lib/templateUtils";
 import type { Company, LeadWithTouchpoints, Template } from "../types";
 import { LeadCompanyButton } from "./LeadCompanyButton";
 import { LeadEmailButton } from "./LeadEmailButton";
@@ -23,8 +21,6 @@ interface LeadDetailModalProps {
   onEditLead: () => void;
   onDeleteLead: () => void;
   onAddTouchpoint: () => void;
-  onConfirmFollowUp1?: () => void;
-  onConfirmFollowUp2?: () => void;
   onEditTouchpoint: (
     touchpoint: LeadWithTouchpoints["touchpoints"][number],
   ) => void;
@@ -43,8 +39,6 @@ export function LeadDetailModal({
   onEditLead,
   onDeleteLead,
   onAddTouchpoint,
-  onConfirmFollowUp1,
-  onConfirmFollowUp2,
   onEditTouchpoint,
   onDeleteTouchpoint,
 }: LeadDetailModalProps) {
@@ -119,27 +113,6 @@ export function LeadDetailModal({
             ) : null}
           </div>
 
-          {(lead.firstFollowUpDate || lead.secondFollowUpDate) && (
-            <div className="mt-4 space-y-1 text-sm text-zinc-600 dark:text-zinc-300">
-              {lead.firstFollowUpDate ? (
-                <p>
-                  Follow-up 1 planned: {formatDate(lead.firstFollowUpDate)}
-                  {lead.followUpTemplateId
-                    ? ` · ${getTemplateTitle(templateMap, lead.followUpTemplateId)}`
-                    : ""}
-                </p>
-              ) : null}
-              {lead.secondFollowUpDate ? (
-                <p>
-                  Follow-up 2 planned: {formatDate(lead.secondFollowUpDate)}
-                  {lead.followUpTemplateId
-                    ? ` · ${getTemplateTitle(templateMap, lead.followUpTemplateId)}`
-                    : ""}
-                </p>
-              ) : null}
-            </div>
-          )}
-
           {lead.notes ? (
             <div className="mt-4">
               <span className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -167,24 +140,6 @@ export function LeadDetailModal({
           >
             Add touchpoint
           </button>
-          {lead.firstFollowUpDate && onConfirmFollowUp1 ? (
-            <button
-              type="button"
-              onClick={onConfirmFollowUp1}
-              className={mobileActionClass.edit}
-            >
-              Confirm follow-up 1
-            </button>
-          ) : null}
-          {lead.secondFollowUpDate && onConfirmFollowUp2 ? (
-            <button
-              type="button"
-              onClick={onConfirmFollowUp2}
-              className={mobileActionClass.edit}
-            >
-              Confirm follow-up 2
-            </button>
-          ) : null}
           <button
             type="button"
             onClick={onDeleteLead}

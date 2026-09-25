@@ -49,9 +49,6 @@ export interface Lead {
   xProfile: string;
   channel: LeadChannel;
   status: LeadStatus;
-  firstFollowUpDate: string | null;
-  secondFollowUpDate: string | null;
-  followUpTemplateId: number | null;
   notes: string;
   createdAt: number;
 }
@@ -139,16 +136,6 @@ export interface CompanyWithCounts extends Company {
   id: number;
   leadsCount: number;
   applicationsCount: number;
-}
-
-export interface FollowUpItem {
-  id: number;
-  entityType: "lead";
-  companyName: string;
-  leadName: string;
-  role: string;
-  followUpType: "First" | "Second";
-  entityId: number;
 }
 
 export interface GlobalSearchResult {

@@ -10,7 +10,6 @@ import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LeadDetailModal } from "@/features/job-search/components/LeadDetailModal";
 import { LeadListRow } from "@/features/job-search/components/LeadListRow";
 import { LeadTouchpointCard } from "@/features/job-search/components/LeadTouchpointCard";
-import { ConfirmFollowUpModal } from "@/features/job-search/components/forms/ConfirmFollowUpModal";
 import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormModal";
 import {
   LeadTouchpointFormModal,
@@ -74,7 +73,6 @@ export default function LeadsPage() {
     appendTouchpoint,
     editTouchpoint,
     removeTouchpoint,
-    confirmFollowUp,
   } = useLeadTouchpoints();
   const { templates } = useTemplates();
   const { settings: listSettings } = useLeadListSettings();
@@ -104,9 +102,6 @@ export default function LeadsPage() {
   );
   const [editingTouchpoint, setEditingTouchpoint] =
     useState<LeadTouchpoint | null>(null);
-  const [confirmFollowUpLead, setConfirmFollowUpLead] =
-    useState<LeadWithTouchpoints | null>(null);
-  const [confirmFollowUpWhich, setConfirmFollowUpWhich] = useState<1 | 2>(1);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -200,20 +195,6 @@ export default function LeadsPage() {
       setEditingTouchpoint(null);
       setTouchpointFormMode("addTouchpoint");
     },
-    onConfirmFollowUp1: lead.firstFollowUpDate
-      ? () => {
-          setDetailLead(null);
-          setConfirmFollowUpLead(lead);
-          setConfirmFollowUpWhich(1);
-        }
-      : undefined,
-    onConfirmFollowUp2: lead.secondFollowUpDate
-      ? () => {
-          setDetailLead(null);
-          setConfirmFollowUpLead(lead);
-          setConfirmFollowUpWhich(2);
-        }
-      : undefined,
     onEditTouchpoint: (touchpoint: LeadTouchpoint) => {
       setDetailLead(null);
       setActiveLead(lead);
@@ -333,20 +314,6 @@ export default function LeadsPage() {
     } catch {
       toast.error("Failed to save touchpoint");
       throw new Error("save failed");
-    }
-  };
-
-  const handleConfirmFollowUp = async (context: string) => {
-    if (!confirmFollowUpLead) return;
-
-    try {
-      await confirmFollowUp(confirmFollowUpLead.id, confirmFollowUpWhich, {
-        context,
-      });
-      toast.success(`Follow-up ${confirmFollowUpWhich} confirmed`);
-    } catch {
-      toast.error("Failed to confirm follow-up");
-      throw new Error("confirm failed");
     }
   };
 
@@ -561,7 +528,6 @@ export default function LeadsPage() {
         onSubmit={handleLeadSubmit}
         lead={editingLead}
         companies={companies}
-        templates={templates}
         defaultChannel={DEFAULT_LEAD_CHANNEL}
         leadStatusOptions={listSettings.leadStatuses}
         onCreateCompany={handleCreateCompany}
@@ -581,15 +547,6 @@ export default function LeadsPage() {
         touchpointStatusOptions={listSettings.touchpointStatuses}
         touchpointTypeOptions={listSettings.touchpointTypes}
         onSubmit={handleTouchpointSubmit}
-      />
-
-      <ConfirmFollowUpModal
-        isOpen={confirmFollowUpLead !== null}
-        onClose={() => setConfirmFollowUpLead(null)}
-        lead={confirmFollowUpLead}
-        which={confirmFollowUpWhich}
-        templateMap={templateMap}
-        onConfirm={handleConfirmFollowUp}
       />
 
       <CompanyInfoModal

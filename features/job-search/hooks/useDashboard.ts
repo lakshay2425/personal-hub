@@ -5,13 +5,11 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getDashboardRecent,
   getDashboardStats,
-  getTodayFollowUps,
 } from "../repositories/dashboardRepository";
 import type {
   Application,
   Company,
   DashboardStats,
-  FollowUpItem,
   Lead,
   LeadTouchpoint,
   TimeFilter,
@@ -33,22 +31,19 @@ export function useDashboard(filter: TimeFilter) {
   const [recentTouchpoints, setRecentTouchpoints] = useState<
     (LeadTouchpoint & { lead?: Lead })[]
   >([]);
-  const [followUps, setFollowUps] = useState<FollowUpItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
-    const [statsData, recent, todayFollowUps] = await Promise.all([
+    const [statsData, recent] = await Promise.all([
       getDashboardStats(filter),
       getDashboardRecent(),
-      getTodayFollowUps(),
     ]);
     setStats(statsData);
     setRecentCompanies(recent.companies);
     setRecentLeads(recent.leads);
     setRecentApplications(recent.applications);
     setRecentTouchpoints(recent.recentTouchpoints);
-    setFollowUps(todayFollowUps);
     setIsLoading(false);
   }, [filter]);
 
@@ -57,10 +52,9 @@ export function useDashboard(filter: TimeFilter) {
 
     async function load() {
       setIsLoading(true);
-      const [statsData, recent, todayFollowUps] = await Promise.all([
+      const [statsData, recent] = await Promise.all([
         getDashboardStats(filter),
         getDashboardRecent(),
-        getTodayFollowUps(),
       ]);
       if (!cancelled) {
         setStats(statsData);
@@ -68,7 +62,6 @@ export function useDashboard(filter: TimeFilter) {
         setRecentLeads(recent.leads);
         setRecentApplications(recent.applications);
         setRecentTouchpoints(recent.recentTouchpoints);
-        setFollowUps(todayFollowUps);
         setIsLoading(false);
       }
     }
@@ -86,7 +79,6 @@ export function useDashboard(filter: TimeFilter) {
     recentLeads,
     recentApplications,
     recentTouchpoints,
-    followUps,
     isLoading,
     refresh,
   };

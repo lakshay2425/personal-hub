@@ -39,9 +39,6 @@ export async function createLead(
     channel,
     linkedin: data.linkedin ?? "",
     xProfile: data.xProfile ?? "",
-    firstFollowUpDate: data.firstFollowUpDate || null,
-    secondFollowUpDate: data.secondFollowUpDate || null,
-    followUpTemplateId: data.followUpTemplateId ?? null,
     createdAt: Date.now(),
   });
   await logActivity("lead", id as number, "Lead Added");
@@ -58,15 +55,7 @@ export async function updateLead(
     await ensureListOption("leadStatuses", data.status);
   }
 
-  const normalized: Partial<Omit<Lead, "id" | "createdAt">> = { ...data };
-  if (data.firstFollowUpDate !== undefined) {
-    normalized.firstFollowUpDate = data.firstFollowUpDate || null;
-  }
-  if (data.secondFollowUpDate !== undefined) {
-    normalized.secondFollowUpDate = data.secondFollowUpDate || null;
-  }
-
-  await database.leads.update(id, normalized);
+  await database.leads.update(id, data);
   await logActivity("lead", id, "Lead Updated");
 }
 
@@ -83,15 +72,6 @@ export async function countLeadsSince(since: number | null): Promise<number> {
   const database = getDB();
   if (since === null) return database.leads.count();
   return database.leads.where("createdAt").aboveOrEqual(since).count();
-}
-
-export async function getTodayFollowUpLeads(today: string): Promise<Lead[]> {
-  const database = getDB();
-  const all = await database.leads.toArray();
-  return all.filter(
-    (lead: Lead) =>
-      lead.firstFollowUpDate === today || lead.secondFollowUpDate === today,
-  );
 }
 
 export async function searchLeads(query: string): Promise<Lead[]> {

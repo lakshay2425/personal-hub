@@ -1,4 +1,4 @@
-import { getTimeFilterStart, getTodayDateString } from "../lib/dateUtils";
+import { getTimeFilterStart } from "../lib/dateUtils";
 import {
   countApplicationsByStatusSince,
   countApplicationsSince,
@@ -14,13 +14,9 @@ import {
 import {
   countLeadsSince,
   getRecentLeads,
-  getTodayFollowUpLeads,
 } from "../repositories/leadsRepository";
-import { getDB } from "../db";
 import type {
-  Company,
   DashboardStats,
-  FollowUpItem,
   TimeFilter,
 } from "../types";
 
@@ -44,58 +40,6 @@ export async function getDashboardStats(
     interviews,
     offers,
   };
-}
-
-function buildEntityMap<T extends { id?: number }>(
-  entities: (T | undefined)[],
-): Map<number, T> {
-  const map = new Map<number, T>();
-  for (const entity of entities) {
-    if (entity?.id !== undefined) {
-      map.set(entity.id, entity);
-    }
-  }
-  return map;
-}
-
-export async function getTodayFollowUps(): Promise<FollowUpItem[]> {
-  const today = getTodayDateString();
-  const leads = await getTodayFollowUpLeads(today);
-
-  const companyIds = [...new Set(leads.map((lead) => lead.companyId))];
-  const database = getDB();
-  const companies = await database.companies.bulkGet(companyIds);
-  const companyMap = buildEntityMap<Company>(companies);
-
-  const items: FollowUpItem[] = [];
-
-  for (const lead of leads) {
-    const company = companyMap.get(lead.companyId);
-    if (lead.firstFollowUpDate === today) {
-      items.push({
-        id: lead.id!,
-        entityType: "lead",
-        companyName: company?.companyName ?? "Unknown",
-        leadName: lead.name,
-        role: lead.role,
-        followUpType: "First",
-        entityId: lead.id!,
-      });
-    }
-    if (lead.secondFollowUpDate === today) {
-      items.push({
-        id: lead.id!,
-        entityType: "lead",
-        companyName: company?.companyName ?? "Unknown",
-        leadName: lead.name,
-        role: lead.role,
-        followUpType: "Second",
-        entityId: lead.id!,
-      });
-    }
-  }
-
-  return items;
 }
 
 export async function getDashboardRecent() {

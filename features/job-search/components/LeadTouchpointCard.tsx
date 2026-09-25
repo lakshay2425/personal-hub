@@ -3,8 +3,6 @@
 import Link from "next/link";
 
 import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
-import { formatDate } from "../lib/dateUtils";
-import { getTemplateTitle } from "../lib/templateUtils";
 import type { Company, LeadWithTouchpoints, Template } from "../types";
 import { ChannelBadge } from "./ChannelBadge";
 import { LeadCompanyButton } from "./LeadCompanyButton";
@@ -22,8 +20,6 @@ interface LeadTouchpointCardProps {
   onEditLead: () => void;
   onDeleteLead: () => void;
   onAddTouchpoint: () => void;
-  onConfirmFollowUp1?: () => void;
-  onConfirmFollowUp2?: () => void;
   onEditTouchpoint: (
     touchpoint: LeadWithTouchpoints["touchpoints"][number],
   ) => void;
@@ -41,8 +37,6 @@ export function LeadTouchpointCard({
   onEditLead,
   onDeleteLead,
   onAddTouchpoint,
-  onConfirmFollowUp1,
-  onConfirmFollowUp2,
   onEditTouchpoint,
   onDeleteTouchpoint,
 }: LeadTouchpointCardProps) {
@@ -88,26 +82,6 @@ export function LeadTouchpointCard({
               </Link>
             ) : null}
           </div>
-          {(lead.firstFollowUpDate || lead.secondFollowUpDate) && (
-            <div className="mt-2 space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-              {lead.firstFollowUpDate ? (
-                <p>
-                  Follow-up 1 planned: {formatDate(lead.firstFollowUpDate)}
-                  {lead.followUpTemplateId
-                    ? ` · ${getTemplateTitle(templateMap, lead.followUpTemplateId)}`
-                    : ""}
-                </p>
-              ) : null}
-              {lead.secondFollowUpDate ? (
-                <p>
-                  Follow-up 2 planned: {formatDate(lead.secondFollowUpDate)}
-                  {lead.followUpTemplateId
-                    ? ` · ${getTemplateTitle(templateMap, lead.followUpTemplateId)}`
-                    : ""}
-                </p>
-              ) : null}
-            </div>
-          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -125,24 +99,6 @@ export function LeadTouchpointCard({
           >
             Add touchpoint
           </button>
-          {lead.firstFollowUpDate && onConfirmFollowUp1 ? (
-            <button
-              type="button"
-              onClick={onConfirmFollowUp1}
-              className={mobileActionClass.edit}
-            >
-              Confirm follow-up 1
-            </button>
-          ) : null}
-          {lead.secondFollowUpDate && onConfirmFollowUp2 ? (
-            <button
-              type="button"
-              onClick={onConfirmFollowUp2}
-              className={mobileActionClass.edit}
-            >
-              Confirm follow-up 2
-            </button>
-          ) : null}
           <button
             type="button"
             onClick={onDeleteLead}

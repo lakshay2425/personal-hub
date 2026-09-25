@@ -285,6 +285,45 @@ class JobSearchDatabase extends Dexie {
 
         await listSettingsTable.put(createDefaultListSettings());
       });
+
+    this.version(8)
+      .stores({
+        companies:
+          "++id, companyName, sector, createdAt",
+        leads:
+          "++id, companyId, name, role, type, channel, status, createdAt",
+        applications:
+          "++id, companyId, role, portal, status, appliedDate, createdAt",
+        templates: "++id, type, title, createdAt, updatedAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+        productOutreachContacts: "++id, label, createdAt",
+        productOutreachInteractions:
+          "++id, contactId, channel, handle, createdAt",
+        leadTouchpoints:
+          "++id, leadId, channel, status, type, occurredAt, createdAt",
+        listSettings: "id",
+      })
+      .upgrade(async (transaction) => {
+        const leadsTable = transaction.table("leads");
+        const leads = await leadsTable.toArray();
+
+        for (const lead of leads) {
+          const {
+            firstFollowUpDate: _firstFollowUpDate,
+            secondFollowUpDate: _secondFollowUpDate,
+            followUpTemplateId: _followUpTemplateId,
+            templateId: _templateId,
+            ...rest
+          } = lead as Lead & {
+            firstFollowUpDate?: string | null;
+            secondFollowUpDate?: string | null;
+            followUpTemplateId?: number | null;
+            templateId?: number | null;
+          };
+
+          await leadsTable.put(rest);
+        }
+      });
   }
 }
 

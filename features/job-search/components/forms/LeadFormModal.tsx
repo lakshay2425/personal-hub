@@ -14,7 +14,7 @@ import {
   getUniqueLeadRoles,
   getUniqueLeadTypes,
 } from "../../repositories/leadsRepository";
-import type { Company, Lead, Template } from "../../types";
+import type { Company, Lead } from "../../types";
 import { CompanyCombobox } from "./CompanyCombobox";
 import { CreatableSelectInput } from "./CreatableSelectInput";
 import {
@@ -24,7 +24,6 @@ import {
   TextArea,
   TextInput,
 } from "./FormFields";
-import { TemplateSelectInput } from "./TemplateSelectInput";
 
 interface LeadFormModalProps {
   isOpen: boolean;
@@ -32,7 +31,6 @@ interface LeadFormModalProps {
   onSubmit: (data: Omit<Lead, "id" | "createdAt">) => Promise<void>;
   lead?: Lead | null;
   companies: Company[];
-  templates: Template[];
   defaultCompanyId?: number;
   defaultChannel?: Lead["channel"];
   leadStatusOptions: string[];
@@ -42,7 +40,6 @@ interface LeadFormModalProps {
 interface LeadFormFieldsProps {
   lead?: Lead | null;
   companies: Company[];
-  templates: Template[];
   defaultCompanyId?: number;
   defaultChannel?: Lead["channel"];
   leadStatusOptions: string[];
@@ -54,7 +51,6 @@ interface LeadFormFieldsProps {
 function LeadFormFields({
   lead,
   companies,
-  templates,
   defaultCompanyId,
   defaultChannel = DEFAULT_LEAD_CHANNEL,
   leadStatusOptions,
@@ -70,6 +66,9 @@ function LeadFormFields({
         : "",
   );
   const [name, setName] = useState(lead?.name ?? "");
+  const [status, setStatus] = useState<Lead["status"]>(
+    lead?.status ?? DEFAULT_NEW_LEAD_STATUS,
+  );
   const [role, setRole] = useState(lead?.role ?? "");
   const [type, setType] = useState(lead?.type ?? "");
   const [email, setEmail] = useState(lead?.email ?? "");
@@ -78,18 +77,6 @@ function LeadFormFields({
   const [xProfile, setXProfile] = useState(initialProfiles?.xProfile ?? "");
   const [channel, setChannel] = useState<Lead["channel"]>(
     lead?.channel ?? defaultChannel,
-  );
-  const [status, setStatus] = useState<Lead["status"]>(
-    lead?.status ?? DEFAULT_NEW_LEAD_STATUS,
-  );
-  const [firstFollowUpDate, setFirstFollowUpDate] = useState(
-    lead?.firstFollowUpDate ?? "",
-  );
-  const [secondFollowUpDate, setSecondFollowUpDate] = useState(
-    lead?.secondFollowUpDate ?? "",
-  );
-  const [followUpTemplateId, setFollowUpTemplateId] = useState(
-    lead?.followUpTemplateId != null ? String(lead.followUpTemplateId) : "",
   );
   const [notes, setNotes] = useState(lead?.notes ?? "");
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
@@ -138,11 +125,6 @@ function LeadFormFields({
         xProfile,
         channel,
         status,
-        firstFollowUpDate: firstFollowUpDate || null,
-        secondFollowUpDate: secondFollowUpDate || null,
-        followUpTemplateId: followUpTemplateId
-          ? Number(followUpTemplateId)
-          : null,
         notes,
       });
       onClose();
@@ -179,6 +161,16 @@ function LeadFormFields({
             onChange={setName}
             placeholder="John Doe"
             required
+          />
+        </FormField>
+        <FormField label="Status">
+          <CreatableSelectInput
+            value={status}
+            onChange={setStatus}
+            options={leadStatusOptions}
+            placeholder="Select status..."
+            createLabel="Add new status..."
+            newValuePlaceholder="New, Contacted..."
           />
         </FormField>
         <FormField label="Role">
@@ -236,38 +228,6 @@ function LeadFormFields({
             required
           />
         </FormField>
-        <FormField label="Status">
-          <CreatableSelectInput
-            value={status}
-            onChange={setStatus}
-            options={leadStatusOptions}
-            placeholder="Select status..."
-            createLabel="Add new status..."
-            newValuePlaceholder="New, Contacted..."
-          />
-        </FormField>
-        <TemplateSelectInput
-          label="Follow-up Template"
-          value={followUpTemplateId}
-          onChange={setFollowUpTemplateId}
-          templates={templates}
-          filterType="Follow-up"
-          placeholder="Select follow-up template (optional)"
-        />
-        <FormField label="First Follow-up">
-          <TextInput
-            value={firstFollowUpDate}
-            onChange={setFirstFollowUpDate}
-            type="date"
-          />
-        </FormField>
-        <FormField label="Second Follow-up">
-          <TextInput
-            value={secondFollowUpDate}
-            onChange={setSecondFollowUpDate}
-            type="date"
-          />
-        </FormField>
         <div className="sm:col-span-2">
           <FormField label="Notes">
             <TextArea value={notes} onChange={setNotes} />
@@ -289,7 +249,6 @@ export function LeadFormModal({
   onSubmit,
   lead,
   companies,
-  templates,
   defaultCompanyId,
   defaultChannel,
   leadStatusOptions,
@@ -309,7 +268,6 @@ export function LeadFormModal({
         }
         lead={lead}
         companies={companies}
-        templates={templates}
         defaultCompanyId={defaultCompanyId}
         defaultChannel={defaultChannel}
         leadStatusOptions={leadStatusOptions}

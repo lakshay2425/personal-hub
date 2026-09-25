@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   addTouchpoint,
-  confirmFollowUpSent,
   deleteTouchpoint,
   getAllLeadsWithTouchpoints,
   getTouchpointsByLeadId,
@@ -68,19 +67,6 @@ export function useLeadTouchpoints() {
     [refresh],
   );
 
-  const confirmFollowUp = useCallback(
-    async (
-      leadId: number,
-      which: 1 | 2,
-      payload?: Partial<LeadTouchpointInput>,
-    ) => {
-      const id = await confirmFollowUpSent(leadId, which, payload);
-      await refresh();
-      return id;
-    },
-    [refresh],
-  );
-
   const loadTouchpointsForLead = useCallback(async (leadId: number) => {
     return getTouchpointsByLeadId(leadId);
   }, []);
@@ -92,7 +78,6 @@ export function useLeadTouchpoints() {
     appendTouchpoint,
     editTouchpoint,
     removeTouchpoint,
-    confirmFollowUp,
     loadTouchpointsForLead,
   };
 }

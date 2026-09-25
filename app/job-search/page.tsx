@@ -38,7 +38,6 @@ export default function DashboardPage() {
     recentLeads,
     recentApplications,
     recentTouchpoints,
-    followUps,
     isLoading,
   } = useDashboard(filter);
   const { companies } = useCompanies();
@@ -71,97 +70,6 @@ export default function DashboardPage() {
           </>
         ) : null}
       </div>
-
-      <section className="mb-10">
-        <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          Today&apos;s Follow-ups
-        </h2>
-        {followUps.length === 0 ? (
-          <EmptyState
-            title="No follow-ups today"
-            description="You're all caught up for today."
-          />
-        ) : (
-          <>
-            <MobileList>
-              {followUps.map((item, idx) => (
-                <MobileListItem key={`${item.entityType}-${item.entityId}-${item.followUpType}-${idx}`}>
-                  <MobileCardHeader
-                    title={item.leadName}
-                    subtitle={item.companyName}
-                    badge={<StatusBadge status={item.followUpType} variant="info" />}
-                  />
-                  <MobileCardMeta>
-                    {item.role ? (
-                      <MobileCardMetaRow label="Role" value={item.role} />
-                    ) : null}
-                    <MobileCardMetaRow
-                      label="Action"
-                      value={
-                        <Link
-                          href="/job-search/leads"
-                          className="font-medium text-zinc-900 hover:underline dark:text-zinc-50"
-                        >
-                          Open
-                        </Link>
-                      }
-                    />
-                  </MobileCardMeta>
-                </MobileListItem>
-              ))}
-            </MobileList>
-            <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-            <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Company
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Lead Name
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Role
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Follow-up Type
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {followUps.map((item, idx) => (
-                  <tr key={`${item.entityType}-${item.entityId}-${item.followUpType}-${idx}`}>
-                    <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                      {item.companyName}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {item.leadName}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {item.role || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={item.followUpType} variant="info" />
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href="/job-search/leads"
-                        className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
-                      >
-                        Open
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          </>
-        )}
-      </section>
 
       <div
         className={`mb-10 grid gap-8 ${
