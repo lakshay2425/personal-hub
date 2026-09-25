@@ -177,7 +177,7 @@ export default function CompaniesPage() {
           }
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((company) => (
             <CompanyCard
               key={company.id}
