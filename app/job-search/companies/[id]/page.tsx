@@ -19,7 +19,7 @@ import {
 import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { useCompany, useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
-import { formatDate, formatTimestamp } from "@/features/job-search/lib/dateUtils";
+import { formatDate } from "@/features/job-search/lib/dateUtils";
 import type { Company } from "@/features/job-search/types";
 
 type Tab = "leads" | "applications";
@@ -131,9 +131,6 @@ export default function CompanyDetailPage() {
                 {company.notes}
               </p>
             )}
-            <p className="mt-2 text-xs text-zinc-400">
-              Created {formatTimestamp(company.createdAt)}
-            </p>
           </div>
           <button
             type="button"

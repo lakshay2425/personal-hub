@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 import { Modal } from "@/components/ui/Modal";
 
-import { formatTimestamp } from "../lib/dateUtils";
 import { normalizeProfileUrl } from "../lib/leadProfileUtils";
 import type { Company } from "../types";
 
@@ -48,43 +47,40 @@ export function CompanyInfoModal({
       title={company.companyName}
       size="md"
     >
-      <dl className="space-y-4">
-        <InfoRow
-          label="Sector"
-          value={company.sector.trim() || "—"}
-        />
-        <InfoRow
-          label="Website"
-          value={
-            websiteUrl ? (
-              <a
-                href={websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="break-all text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {website}
-              </a>
-            ) : (
-              "—"
-            )
-          }
-        />
-        <InfoRow
-          label="Notes"
-          value={
-            company.notes.trim() ? (
-              <span className="whitespace-pre-wrap">{company.notes}</span>
-            ) : (
-              "—"
-            )
-          }
-        />
-        <InfoRow
-          label="Created"
-          value={formatTimestamp(company.createdAt)}
-        />
-      </dl>
+      {company.sector.trim() || websiteUrl || company.notes.trim() ? (
+        <dl className="space-y-4">
+          {company.sector.trim() ? (
+            <InfoRow label="Sector" value={company.sector.trim()} />
+          ) : null}
+          {websiteUrl ? (
+            <InfoRow
+              label="Website"
+              value={
+                <a
+                  href={websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  {website}
+                </a>
+              }
+            />
+          ) : null}
+          {company.notes.trim() ? (
+            <InfoRow
+              label="Notes"
+              value={
+                <span className="whitespace-pre-wrap">{company.notes}</span>
+              }
+            />
+          ) : null}
+        </dl>
+      ) : (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          No extra details yet.
+        </p>
+      )}
 
       <div className="mt-6 flex justify-end">
         <button

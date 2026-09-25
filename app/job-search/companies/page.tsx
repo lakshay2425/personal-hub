@@ -1,28 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { CompanyCard } from "@/features/job-search/components/CompanyCard";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { CompanyFormModal } from "@/features/job-search/components/forms/CompanyFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
-import {
-  MobileCardActions,
-  MobileCardHeader,
-  MobileCardMeta,
-  MobileCardMetaRow,
-  MobileList,
-  MobileListItem,
-  mobileActionClass,
-} from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
 import {
-  formatTimestamp,
   getCurrentWeekStart,
   isTimestampInWeek,
 } from "@/features/job-search/lib/dateUtils";
@@ -187,175 +177,20 @@ export default function CompaniesPage() {
           }
         />
       ) : (
-        <>
-          <MobileList>
-            {filtered.map((company) => (
-              <MobileListItem key={company.id}>
-                <MobileCardHeader
-                  title={
-                    <Link
-                      href={`/job-search/companies/${company.id}`}
-                      className="hover:underline"
-                    >
-                      {company.companyName}
-                    </Link>
-                  }
-                  subtitle={company.sector || undefined}
-                />
-                <MobileCardMeta>
-                  <MobileCardMetaRow
-                    label="Leads"
-                    value={company.leadsCount}
-                  />
-                  {showApplications ? (
-                    <MobileCardMetaRow
-                      label="Applications"
-                      value={company.applicationsCount}
-                    />
-                  ) : null}
-                  <MobileCardMetaRow
-                    label="Created"
-                    value={formatTimestamp(company.createdAt)}
-                  />
-                  {company.website ? (
-                    <MobileCardMetaRow
-                      label="Website"
-                      value={
-                        <a
-                          href={company.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline dark:text-blue-400"
-                        >
-                          Link
-                        </a>
-                      }
-                    />
-                  ) : null}
-                </MobileCardMeta>
-                <MobileCardActions>
-                  <Link
-                    href={`/job-search/companies/${company.id}`}
-                    className={mobileActionClass.edit}
-                  >
-                    Open
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingCompany(company);
-                      setIsFormOpen(true);
-                    }}
-                    className={mobileActionClass.edit}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeletingCompany(company)}
-                    className={mobileActionClass.delete}
-                  >
-                    Delete
-                  </button>
-                </MobileCardActions>
-              </MobileListItem>
-            ))}
-          </MobileList>
-          <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-              <tr>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                  Company Name
-                </th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                  Sector
-                </th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                  Website
-                </th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                  Leads
-                </th>
-                {showApplications ? (
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Apps
-                  </th>
-                ) : null}
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                  Created At
-                </th>
-                <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {filtered.map((company) => (
-                <tr key={company.id}>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/job-search/companies/${company.id}`}
-                      className="font-medium text-zinc-900 hover:underline dark:text-zinc-50"
-                    >
-                      {company.companyName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {company.sector || "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {company.website ? (
-                      <a
-                        href={company.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline dark:text-blue-400"
-                      >
-                        Link
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {company.leadsCount}
-                  </td>
-                  {showApplications ? (
-                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {company.applicationsCount}
-                    </td>
-                  ) : null}
-                  <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                    {formatTimestamp(company.createdAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingCompany(company);
-                          setIsFormOpen(true);
-                        }}
-                        className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeletingCompany(company)}
-                        className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((company) => (
+            <CompanyCard
+              key={company.id}
+              company={company}
+              showApplications={showApplications}
+              onEdit={() => {
+                setEditingCompany(company);
+                setIsFormOpen(true);
+              }}
+              onDelete={() => setDeletingCompany(company)}
+            />
+          ))}
         </div>
-        </>
       )}
 
       <CompanyFormModal

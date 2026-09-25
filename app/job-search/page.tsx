@@ -20,7 +20,7 @@ import { DEFAULT_RESPONSE_STATUS } from "@/features/job-search/constants";
 import { useDashboard } from "@/features/job-search/hooks/useDashboard";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
-import { formatDate, formatTimestamp } from "@/features/job-search/lib/dateUtils";
+import { formatDate } from "@/features/job-search/lib/dateUtils";
 import type { TimeFilter } from "@/features/job-search/types";
 
 function getCompanyName(
@@ -101,9 +101,6 @@ export default function DashboardPage() {
                   >
                     <span className="min-w-0 flex-1 break-words font-medium text-zinc-900 dark:text-zinc-50">
                       {c.companyName}
-                    </span>
-                    <span className="shrink-0 text-xs text-zinc-500">
-                      {formatTimestamp(c.createdAt)}
                     </span>
                   </Link>
                 </li>
