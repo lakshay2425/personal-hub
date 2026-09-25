@@ -89,7 +89,7 @@ export async function createSubTask(
   }
 
   if (parent.kind === "inbox") {
-    throw new Error("Move this task to Sprint or Recursive before adding sub-tasks");
+    throw new Error("Move this task to Sprint or Iterative before adding sub-tasks");
   }
 
   if (parent.depth >= 2) {

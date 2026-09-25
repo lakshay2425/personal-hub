@@ -83,19 +83,16 @@ export async function getDashboardWeekData(
 
   const kinds: KindWeekData[] = [
     kindData("sprint", "Sprint"),
-    kindData("recursive", "Recursive"),
+    kindData("recursive", "Iterative"),
   ];
 
   const weekLogs = logEntries.filter((entry) =>
     isDateInWeek(entry.date, weekStart, weekEnd),
   );
 
-  const categoryNames = [
-    ...priorities.slots
-      .filter((slot) => slot !== null)
-      .map((slot) => slot!.name),
-    UNASSIGNED,
-  ];
+  const categoryNames = priorities.slots
+    .filter((slot) => slot !== null)
+    .map((slot) => slot!.name);
 
   const categories: CategoryWeekData[] = categoryNames.map((category) => ({
     category,

@@ -9,11 +9,23 @@ import { useTasks } from "../hooks/useTasks";
 import type { CreateSubTaskInput, CreateTaskInput, Task, TaskKind } from "../types";
 import { getDeleteWarningMessage } from "../lib/deleteTaskMessage";
 import { PlannerKindSection } from "./PlannerKindSection";
+import { PlannerKindTabs, type PlannerKindTab } from "./PlannerKindTabs";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { TaskFormModal } from "./TaskFormModal";
 import { TaskNotesModal } from "./TaskNotesModal";
 
+const KIND_LABELS: Record<TaskKind, string> = {
+  inbox: "Inbox",
+  sprint: "Sprint",
+  recursive: "Iterative",
+};
+
+function countRootTasks(tasks: Task[]): number {
+  return tasks.filter((task) => (task.parentId ?? null) === null).length;
+}
+
 export function PlannerWorkspace() {
+  const [activeTab, setActiveTab] = useState<PlannerKindTab>("inbox");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [subTaskParent, setSubTaskParent] = useState<Task | null>(null);
@@ -82,12 +94,8 @@ export function PlannerWorkspace() {
     async (task: Task, kind: TaskKind) => {
       try {
         await moveKind(task.id!, kind);
-        const labels = {
-          inbox: "Inbox",
-          sprint: "Sprint",
-          recursive: "Recursive",
-        };
-        toast.success(`Moved to ${labels[kind]}`);
+        setActiveTab(kind);
+        toast.success(`Moved to ${KIND_LABELS[kind]}`);
       } catch {
         toast.error("Failed to move task");
       }
@@ -200,33 +208,49 @@ export function PlannerWorkspace() {
           Loading tasks…
         </p>
       ) : (
-        <div className="space-y-10">
-          <PlannerKindSection
-            title="Inbox"
-            description="Log the task. Classify it later."
-            tasks={inboxActive}
-            completedTasks={inboxCompleted}
-            emptyMessage="No tasks waiting. Capture whatever you want to do."
-            completedEmptyMessage="No completed inbox tasks."
-            {...sectionHandlers}
+        <>
+          <PlannerKindTabs
+            activeTab={activeTab}
+            inboxCount={countRootTasks(inboxActive)}
+            sprintCount={countRootTasks(sprintActive)}
+            iterativeCount={countRootTasks(recursiveTasks)}
+            onTabChange={setActiveTab}
           />
-          <PlannerKindSection
-            title="Sprint"
-            description="One-time investments. Finishing the work ends it."
-            tasks={sprintActive}
-            completedTasks={sprintCompleted}
-            emptyMessage="No sprint tasks. Move a one-of-a-kind investment here."
-            completedEmptyMessage="No finished sprints yet."
-            {...sectionHandlers}
-          />
-          <PlannerKindSection
-            title="Recursive"
-            description="Ongoing practices. Completing a slice leaves the practice open."
-            tasks={recursiveTasks}
-            emptyMessage="No recursive tasks. Move a practice you keep doing here."
-            {...sectionHandlers}
-          />
-        </div>
+
+          {activeTab === "inbox" ? (
+            <PlannerKindSection
+              title="Inbox"
+              description="Log the task. Classify it later."
+              tasks={inboxActive}
+              completedTasks={inboxCompleted}
+              emptyMessage="No tasks waiting. Capture whatever you want to do."
+              completedEmptyMessage="No completed inbox tasks."
+              {...sectionHandlers}
+            />
+          ) : null}
+
+          {activeTab === "sprint" ? (
+            <PlannerKindSection
+              title="Sprint"
+              description="One-time investments. Finishing the work ends it."
+              tasks={sprintActive}
+              completedTasks={sprintCompleted}
+              emptyMessage="No sprint tasks. Move a one-of-a-kind investment here."
+              completedEmptyMessage="No finished sprints yet."
+              {...sectionHandlers}
+            />
+          ) : null}
+
+          {activeTab === "recursive" ? (
+            <PlannerKindSection
+              title="Iterative"
+              description="Ongoing practices. Completing a slice leaves the practice open."
+              tasks={recursiveTasks}
+              emptyMessage="No iterative tasks. Move a practice you keep doing here."
+              {...sectionHandlers}
+            />
+          ) : null}
+        </>
       )}
 
       <TaskFormModal

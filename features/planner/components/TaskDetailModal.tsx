@@ -165,7 +165,7 @@ export function TaskDetailModal({
             ) : (
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 {task.kind === "inbox"
-                  ? "Move this task to Sprint or Recursive to add sub-tasks."
+                  ? "Move this task to Sprint or Iterative to add sub-tasks."
                   : "No sub-tasks yet."}
               </p>
             )}

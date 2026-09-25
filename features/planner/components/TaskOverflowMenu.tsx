@@ -23,7 +23,7 @@ interface MenuPosition {
 const KIND_LABELS: Record<TaskKind, string> = {
   inbox: "Inbox",
   sprint: "Sprint",
-  recursive: "Recursive",
+  recursive: "Iterative",
 };
 
 export function TaskOverflowMenu({

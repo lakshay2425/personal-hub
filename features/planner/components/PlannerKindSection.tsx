@@ -67,7 +67,7 @@ export function PlannerKindSection({
         {...treeHandlers}
       />
 
-      {completedTasks ? (
+      {completedTasks && completedTasks.length > 0 ? (
         <div className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Completed
