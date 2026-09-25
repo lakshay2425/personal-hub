@@ -71,7 +71,7 @@ const FEATURES = [
     href: "/planner",
     title: "Planner",
     description:
-      "Weekly planner with sub-tasks, drag reorder, backlog, and automatic Logger entries when you complete tasks.",
+      "Capture tasks in an inbox, class them as sprints or recursive practices, reorder by drag, and log completions automatically.",
     cta: "Open Planner",
     icon: (
       <svg

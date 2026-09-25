@@ -4,10 +4,13 @@ import { useMemo } from "react";
 
 import { Modal } from "@/components/ui/Modal";
 
-import { buildTaskTree, getDescendantProgress } from "../lib/taskTree";
+import {
+  buildTaskTree,
+  canToggleTaskCompletion,
+  getDescendantProgress,
+} from "../lib/taskTree";
 import type { Task, TaskTreeNode } from "../types";
 import { NotesIcon } from "./NotesIcon";
-import { PriorityBadge } from "./PriorityBadge";
 import { TaskProgressBadge } from "./TaskProgressBadge";
 
 interface TaskDetailModalProps {
@@ -49,27 +52,24 @@ function SubTaskListItem({
 }: SubTaskListItemProps) {
   const hasChildren = node.children.length > 0;
   const isDone = node.status === "Done";
-  const checkboxDisabled = hasChildren;
+  const showCheckbox = canToggleTaskCompletion(node, hasChildren);
 
   return (
     <li className={nested ? "ml-4" : undefined}>
       <div
         className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-800/50"
       >
-        <input
-          type="checkbox"
-          checked={isDone}
-          disabled={checkboxDisabled}
-          onChange={(event) => onToggle(node, event.target.checked)}
-          className="h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800"
-          aria-label={
-            checkboxDisabled
-              ? "Complete sub-tasks to finish this task"
-              : isDone
-                ? "Mark as todo"
-                : "Mark as done"
-          }
-        />
+        {showCheckbox ? (
+          <input
+            type="checkbox"
+            checked={isDone}
+            onChange={(event) => onToggle(node, event.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800"
+            aria-label={isDone ? "Mark as todo" : "Mark as done"}
+          />
+        ) : (
+          <span className="h-4 w-4 shrink-0" aria-hidden />
+        )}
         <p
           className={`min-w-0 flex-1 break-words text-sm text-zinc-900 dark:text-zinc-50 ${
             isDone ? "line-through opacity-75" : ""
@@ -131,6 +131,8 @@ export function TaskDetailModal({
     onAddSubTask(task);
   };
 
+  const canAddSubTask = task ? task.kind !== "inbox" && task.depth < 2 : false;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -141,7 +143,6 @@ export function TaskDetailModal({
       {task ? (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <PriorityBadge priority={task.priority} />
             <TaskProgressBadge done={progress.done} total={progress.total} />
             <NotesIcon notes={task.notes} onClick={() => onViewNotes(task)} />
           </div>
@@ -163,19 +164,23 @@ export function TaskDetailModal({
               </ul>
             ) : (
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                No sub-tasks yet.
+                {task.kind === "inbox"
+                  ? "Move this task to Sprint or Recursive to add sub-tasks."
+                  : "No sub-tasks yet."}
               </p>
             )}
           </div>
 
           <div className="flex flex-wrap gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-            <button
-              type="button"
-              onClick={handleAddSubTask}
-              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Add sub-task
-            </button>
+            {canAddSubTask ? (
+              <button
+                type="button"
+                onClick={handleAddSubTask}
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Add sub-task
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={handleEdit}

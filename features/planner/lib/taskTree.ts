@@ -1,5 +1,18 @@
 import type { Task, TaskTreeNode } from "../types";
 
+export function canToggleTaskCompletion(
+  task: Task,
+  hasChildren: boolean,
+): boolean {
+  if (hasChildren) {
+    return false;
+  }
+  if (task.kind === "recursive" && (task.parentId ?? null) === null) {
+    return false;
+  }
+  return true;
+}
+
 export function compareTasks(a: Task, b: Task): number {
   const orderA = a.sortOrder ?? 0;
   const orderB = b.sortOrder ?? 0;

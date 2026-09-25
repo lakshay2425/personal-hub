@@ -9,7 +9,7 @@ import {
   getDashboardWeekData,
   type DashboardWeekData,
 } from "../lib/dashboardRepository";
-import { CategoryDistributionChart } from "./CategoryDistributionChart";
+import { KindDistributionChart } from "./KindDistributionChart";
 import { PriorityWeekRow } from "./PriorityWeekRow";
 
 export function DashboardWorkspace() {
@@ -68,71 +68,57 @@ export function DashboardWorkspace() {
     return null;
   }
 
-  const totalTasks = data.categories.reduce(
-    (sum, category) => sum + category.completedTasks.length,
-    0,
-  );
   const totalLogs = data.categories.reduce(
     (sum, category) => sum + category.logEntries.length,
     0,
   );
   const activeAreas = data.categories.filter(
-    (category) =>
-      category.completedTasks.length + category.logEntries.length > 0,
+    (category) => category.logEntries.length > 0,
   ).length;
-  const weekTotal = totalTasks + totalLogs;
-  const taskWeekTotal = data.totalCompletedTasks + data.totalPendingTasks;
+  const taskWeekTotal = data.totalOpenRoots + data.totalCompletedThisWeek;
 
   return (
     <div className="space-y-6">
       <WeekNavigation weekStart={weekStart} onWeekChange={setWeekStart} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <CategoryDistributionChart
-          title="Completed this week"
-          categories={data.categories}
-          getCount={(categoryData) =>
-            categoryData.completedTasks.filter(
-              (task) => (task.parentId ?? null) === null,
-            ).length
-          }
-          total={data.totalCompletedTasks}
+        <KindDistributionChart
+          title="Open tasks"
+          kinds={data.kinds}
+          getCount={(kindData) => kindData.openRoots.length}
+          total={data.totalOpenRoots}
           weekTotal={taskWeekTotal}
-          emptyMessage="No completed tasks this week yet."
+          emptyMessage="No open sprint or recursive tasks."
         />
-        <CategoryDistributionChart
-          title="Pending this week"
-          categories={data.categories}
-          getCount={(categoryData) =>
-            categoryData.pendingTasks.filter(
-              (task) => (task.parentId ?? null) === null,
-            ).length
-          }
-          total={data.totalPendingTasks}
+        <KindDistributionChart
+          title="Completed this week"
+          kinds={data.kinds}
+          getCount={(kindData) => kindData.completedThisWeek.length}
+          total={data.totalCompletedThisWeek}
           weekTotal={taskWeekTotal}
-          emptyMessage="No pending tasks scheduled for this week."
+          emptyMessage="No completed sprint or recursive tasks this week."
         />
       </div>
 
       <div className="space-y-3">
         <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
-          Activity by priority
+          Activity by log category
         </h3>
-        {weekTotal > 0 ? (
+        {totalLogs > 0 ? (
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {totalTasks} task{totalTasks === 1 ? "" : "s"} completed this week
-            across {activeAreas} area{activeAreas === 1 ? "" : "s"}
+            {totalLogs} log{totalLogs === 1 ? "" : "s"} this week across{" "}
+            {activeAreas} area{activeAreas === 1 ? "" : "s"}
           </p>
         ) : (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No activity this week yet.
+            No log entries this week yet.
           </p>
         )}
         {data.categories.map((categoryData) => (
           <PriorityWeekRow
             key={categoryData.category}
             data={categoryData}
-            weekTotal={weekTotal}
+            weekTotal={totalLogs}
           />
         ))}
       </div>

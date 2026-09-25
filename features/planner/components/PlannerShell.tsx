@@ -41,7 +41,7 @@ export function PlannerShell({ children }: { children: ReactNode }) {
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {isLoggerRoute
               ? "Record and review your daily activity log."
-              : "Plan your week and track activity by priority."}
+              : "Capture tasks, then class them as sprints or recursive practices."}
           </p>
         </div>
 

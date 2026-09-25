@@ -1,16 +1,14 @@
-export type TaskPriority = "High" | "Medium" | "Low";
+export type TaskKind = "inbox" | "sprint" | "recursive";
 export type TaskStatus = "Todo" | "Done";
 export type TaskDepth = 0 | 1 | 2;
 
 export interface Task {
   id?: number;
-  weekStart: string;
+  kind: TaskKind;
   parentId: number | null;
   depth: TaskDepth;
   sortOrder: number;
   title: string;
-  priority: TaskPriority | null;
-  category: string;
   status: TaskStatus;
   completedAt: number | null;
   notes: string;
@@ -22,23 +20,16 @@ export type TaskTreeNode = Task & {
 };
 
 export interface CreateTaskInput {
-  weekStart: string;
   title: string;
-  priority?: TaskPriority;
-  category?: string;
   notes?: string;
 }
 
 export interface CreateSubTaskInput {
   title: string;
-  priority?: TaskPriority | null;
   notes?: string;
 }
 
 export interface UpdateTaskInput {
   title?: string;
-  priority?: TaskPriority | null;
-  category?: string;
   notes?: string;
-  weekStart?: string;
 }

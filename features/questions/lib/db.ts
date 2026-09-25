@@ -5,7 +5,7 @@ import type {
   QuestionHubActivityLog,
 } from "@/features/content-ideas/types";
 import type { PrioritiesSettings } from "@/features/settings/types";
-import type { Task, TaskPriority } from "@/features/planner/types";
+import type { Task } from "@/features/planner/types";
 import type {
   ProjectFeature,
   ProjectVersion,
@@ -206,14 +206,21 @@ class QuestionHubDatabase extends Dexie {
             }
           });
 
-        const tasks = await tx.table("tasks").toArray();
-        const PRIORITY_ORDER: Record<TaskPriority, number> = {
+        const tasks = (await tx.table("tasks").toArray()) as Array<{
+          id?: number;
+          weekStart: string;
+          parentId?: number | null;
+          priority?: "High" | "Medium" | "Low" | null;
+          createdAt: number;
+          sortOrder?: number;
+        }>;
+        const PRIORITY_ORDER: Record<"High" | "Medium" | "Low", number> = {
           High: 0,
           Medium: 1,
           Low: 2,
         };
 
-        const byGroup = new Map<string, Task[]>();
+        const byGroup = new Map<string, typeof tasks>();
         for (const task of tasks) {
           const parentId = task.parentId ?? null;
           const key = `${task.weekStart}\0${parentId ?? "root"}`;
@@ -256,7 +263,7 @@ class QuestionHubDatabase extends Dexie {
         await tx
           .table("tasks")
           .toCollection()
-          .modify((task: Task) => {
+          .modify((task: { category?: string }) => {
             if (task.category === undefined) {
               task.category = "unassigned";
             }
@@ -286,6 +293,64 @@ class QuestionHubDatabase extends Dexie {
               idea.contentType = "Post";
             }
           });
+      });
+
+    this.version(13)
+      .stores({
+        projects: "id",
+        questions: "id, projectId, parentId",
+        answers: "id, questionId, projectId",
+        contentIdeas:
+          "++id, projectId, parentId, title, status, contentType, scheduledDate, createdAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+        tasks:
+          "++id, kind, parentId, title, status, completedAt, sortOrder, createdAt",
+        features: "++id, projectId, versionId, title, status, createdAt",
+        versions: "++id, projectId, name, createdAt",
+        settings: "key",
+      })
+      .upgrade(async (tx) => {
+        type LegacyTask = Task & {
+          weekStart?: string;
+        };
+
+        await tx
+          .table("tasks")
+          .toCollection()
+          .modify((task: LegacyTask) => {
+            if (task.kind === undefined) {
+              task.kind = "inbox";
+            }
+          });
+
+        const tasks = (await tx.table("tasks").toArray()) as LegacyTask[];
+        const byGroup = new Map<string, LegacyTask[]>();
+
+        for (const task of tasks) {
+          const parentId = task.parentId ?? null;
+          const key = `${parentId ?? "root"}`;
+          const group = byGroup.get(key) ?? [];
+          group.push(task);
+          byGroup.set(key, group);
+        }
+
+        for (const group of byGroup.values()) {
+          group.sort((a, b) => {
+            const weekDiff = (a.weekStart ?? "").localeCompare(
+              b.weekStart ?? "",
+            );
+            if (weekDiff !== 0) return weekDiff;
+            const orderA = a.sortOrder ?? 0;
+            const orderB = b.sortOrder ?? 0;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.createdAt - b.createdAt;
+          });
+          await Promise.all(
+            group.map((task, index) =>
+              tx.table("tasks").update(task.id!, { sortOrder: index }),
+            ),
+          );
+        }
       });
   }
 }

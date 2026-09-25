@@ -5,10 +5,14 @@ import { ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import type { CSSProperties, HTMLAttributes } from "react";
 
-import { compareTasks, countAllDescendants, getDescendantProgress } from "../lib/taskTree";
-import type { Task, TaskTreeNode } from "../types";
+import {
+  canToggleTaskCompletion,
+  compareTasks,
+  countAllDescendants,
+  getDescendantProgress,
+} from "../lib/taskTree";
+import type { Task, TaskKind, TaskTreeNode } from "../types";
 import { NotesIcon } from "./NotesIcon";
-import { PriorityBadge } from "./PriorityBadge";
 import { SubTaskHeader } from "./SubTaskHeader";
 import { TaskOverflowMenu } from "./TaskOverflowMenu";
 import { TaskProgressBadge } from "./TaskProgressBadge";
@@ -19,35 +23,24 @@ const DEPTH_PADDING = {
   2: "ml-6 sm:ml-8",
 } as const;
 
-type CardVariant = "default" | "tasks";
-
 interface TaskTreeItemProps {
   node: TaskTreeNode;
   allTasks: Task[];
   completed?: boolean;
-  cardVariant?: CardVariant;
   showStrikethrough?: boolean;
   sortable?: boolean;
   useTouchReorder?: boolean;
-  reorderOnlyTodo?: boolean;
-  showMoveToWeek?: boolean;
-  weekLabel?: string;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
   onAddSubTask: (task: Task) => void;
-  onMoveToWeek?: (task: Task) => void;
-  onMoveToCategory?: (task: Task, category: string) => void;
+  onMoveKind?: (task: Task, kind: TaskKind) => void;
   onViewNotes: (task: Task) => void;
   onViewDetail: (task: Task) => void;
   onReorder?: (
     parentId: number | null,
-    weekStart: string,
     orderedIds: number[],
   ) => Promise<void>;
-  selectionMode?: boolean;
-  isSelected?: boolean;
-  onSelectionToggle?: () => void;
   itemRef?: (element: HTMLElement | null) => void;
   style?: CSSProperties;
   dragHandleProps?: HTMLAttributes<HTMLButtonElement>;
@@ -57,57 +50,41 @@ export function TaskTreeItem({
   node,
   allTasks,
   completed = false,
-  cardVariant = "default",
   showStrikethrough = true,
   sortable = true,
   useTouchReorder = false,
-  reorderOnlyTodo = false,
-  showMoveToWeek = false,
-  weekLabel,
   onToggle,
   onEdit,
   onDelete,
   onAddSubTask,
-  onMoveToWeek,
-  onMoveToCategory,
+  onMoveKind,
   onViewNotes,
   onViewDetail,
   onReorder,
-  selectionMode = false,
-  isSelected = false,
-  onSelectionToggle,
   itemRef,
   style,
   dragHandleProps,
 }: TaskTreeItemProps) {
   const hasChildren = node.children.length > 0;
-  const canAddSubTask = node.depth < 2;
+  const canAddSubTask = node.kind !== "inbox" && node.depth < 2;
   const descendantCount = countAllDescendants(node);
   const progress = getDescendantProgress(node.id!, allTasks);
   const isDone = node.status === "Done";
-  const checkboxDisabled = hasChildren;
-  const isTasksVariant = cardVariant === "tasks";
+  const showCheckbox = canToggleTaskCompletion(node, hasChildren);
   const showCompletedStyle = showStrikethrough && (completed || isDone);
-  const itemSortable =
-    sortable && (!reorderOnlyTodo || node.status === "Todo");
 
   const siblings = useMemo(() => {
     const parentId = node.parentId ?? null;
-    const weekStart = node.weekStart;
     return allTasks
-      .filter(
-        (task) =>
-          (task.parentId ?? null) === parentId &&
-          task.weekStart === weekStart,
-      )
+      .filter((task) => (task.parentId ?? null) === parentId)
       .sort(compareTasks);
-  }, [allTasks, node.parentId, node.weekStart]);
+  }, [allTasks, node.parentId]);
 
   const siblingIndex = siblings.findIndex((task) => task.id === node.id);
-  const canMoveUp = useTouchReorder && itemSortable && siblingIndex > 0;
+  const canMoveUp = useTouchReorder && sortable && siblingIndex > 0;
   const canMoveDown =
     useTouchReorder &&
-    itemSortable &&
+    sortable &&
     siblingIndex >= 0 &&
     siblingIndex < siblings.length - 1;
 
@@ -122,11 +99,10 @@ export function TaskTreeItem({
       const reordered = arrayMove(siblings, siblingIndex, newIndex);
       await onReorder(
         node.parentId ?? null,
-        node.weekStart,
         reordered.map((task) => task.id!),
       );
     },
-    [node.parentId, node.weekStart, onReorder, siblingIndex, siblings],
+    [node.parentId, onReorder, siblingIndex, siblings],
   );
 
   const metaContent = (
@@ -134,13 +110,7 @@ export function TaskTreeItem({
       {hasChildren ? (
         <TaskProgressBadge done={progress.done} total={progress.total} />
       ) : null}
-      {!isTasksVariant ? <PriorityBadge priority={node.priority} /> : null}
       <NotesIcon notes={node.notes} onClick={() => onViewNotes(node)} />
-      {weekLabel ? (
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          {weekLabel}
-        </span>
-      ) : null}
     </div>
   );
 
@@ -148,10 +118,10 @@ export function TaskTreeItem({
     <li ref={itemRef} style={style} className={DEPTH_PADDING[node.depth]}>
       <div
         className={`group flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-900 ${
-          showCompletedStyle && !isTasksVariant ? "opacity-75" : ""
+          showCompletedStyle ? "opacity-75" : ""
         }`}
       >
-        {useTouchReorder && itemSortable ? (
+        {useTouchReorder && sortable ? (
           <div className="flex shrink-0 flex-col gap-0.5">
             <button
               type="button"
@@ -172,7 +142,7 @@ export function TaskTreeItem({
               <ChevronDown className="h-4 w-4" />
             </button>
           </div>
-        ) : itemSortable && dragHandleProps ? (
+        ) : sortable && dragHandleProps ? (
           <button
             type="button"
             {...dragHandleProps}
@@ -181,87 +151,56 @@ export function TaskTreeItem({
           >
             <GripVertical className="h-4 w-4" />
           </button>
-        ) : itemSortable ? (
+        ) : sortable ? (
           <span className="w-6 shrink-0" aria-hidden />
         ) : null}
 
-        <input
-          type="checkbox"
-          checked={isDone}
-          disabled={checkboxDisabled}
-          onChange={(event) => onToggle(node, event.target.checked)}
-          className="h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800"
-          aria-label={
-            checkboxDisabled
-              ? "Complete sub-tasks to finish this task"
-              : isDone
-                ? "Mark as todo"
-                : "Mark as done"
-          }
-        />
-
-        {selectionMode && node.depth === 0 ? (
+        {showCheckbox ? (
           <input
-            type="radio"
-            checked={isSelected}
-            onChange={onSelectionToggle}
-            className="h-4 w-4 shrink-0 border-zinc-300 text-blue-600 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-800"
-            aria-label={`Select ${node.title}`}
+            type="checkbox"
+            checked={isDone}
+            onChange={(event) => onToggle(node, event.target.checked)}
+            className="h-4 w-4 shrink-0 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800"
+            aria-label={isDone ? "Mark as todo" : "Mark as done"}
           />
-        ) : null}
+        ) : (
+          <span
+            className="h-4 w-4 shrink-0"
+            aria-hidden
+            title={
+              hasChildren
+                ? "Complete sub-tasks to finish this task"
+                : "Add a slice under this practice"
+            }
+          />
+        )}
 
         <div className="flex min-w-0 flex-1 items-start gap-2">
-          {isTasksVariant ? (
-            <div className="min-w-0 flex-1">
-              <SubTaskHeader
-                title={node.title}
-                textClassName="text-sm"
-                hasChildren={hasChildren}
-                descendantCount={descendantCount}
-                onTitleClick={
-                  hasChildren ? () => onViewDetail(node) : undefined
-                }
-                completed={showCompletedStyle}
-                meta={
-                  hasChildren || node.notes ? (
-                    <div className="mt-1">{metaContent}</div>
-                  ) : null
-                }
-              />
-            </div>
-          ) : (
-            <SubTaskHeader
-              title={node.title}
-              textClassName="text-sm"
-              hasChildren={hasChildren}
-              descendantCount={descendantCount}
-              onTitleClick={
-                hasChildren ? () => onViewDetail(node) : undefined
-              }
-              completed={showCompletedStyle}
-              meta={metaContent}
-            />
-          )}
+          <SubTaskHeader
+            title={node.title}
+            textClassName="text-sm"
+            hasChildren={hasChildren}
+            descendantCount={descendantCount}
+            onTitleClick={
+              hasChildren ? () => onViewDetail(node) : undefined
+            }
+            completed={showCompletedStyle}
+            meta={
+              hasChildren || node.notes ? (
+                <div className="mt-1">{metaContent}</div>
+              ) : null
+            }
+          />
         </div>
-
-        {isTasksVariant ? (
-          <PriorityBadge priority={node.priority} />
-        ) : null}
 
         <TaskOverflowMenu
           task={node}
           canAddSubTask={canAddSubTask}
-          showMoveToWeek={showMoveToWeek}
           onAddSubTask={() => onAddSubTask(node)}
           onEdit={() => onEdit(node)}
           onDelete={() => onDelete(node)}
-          onMoveToWeek={
-            onMoveToWeek ? () => onMoveToWeek(node) : undefined
-          }
-          onMoveToCategory={
-            onMoveToCategory
-              ? (category) => onMoveToCategory(node, category)
-              : undefined
+          onMoveKind={
+            onMoveKind ? (kind) => onMoveKind(node, kind) : undefined
           }
         />
       </div>

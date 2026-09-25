@@ -127,7 +127,7 @@ export function PriorityConfigSection() {
     try {
       await deletePriority(deleteTarget.name);
       reload();
-      toast.success(`"${deleteTarget.name}" removed; items moved to Unassigned`);
+      toast.success(`"${deleteTarget.name}" removed; log entries moved to Unassigned`);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to delete priority",
@@ -151,8 +151,8 @@ export function PriorityConfigSection() {
             Priority Configuration
           </h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Define up to 4 priority areas. Tasks and log entries can be tagged
-            with these categories.
+            Define up to 4 priority areas. Log entries can be tagged with these
+            categories.
           </p>
         </div>
 
@@ -242,7 +242,7 @@ export function PriorityConfigSection() {
       <ConfirmDialog
         isOpen={deleteTarget !== null}
         title="Remove priority?"
-        message={`All tasks and log entries under "${deleteTarget?.name}" will be moved to Unassigned. This cannot be undone.`}
+        message={`All log entries under "${deleteTarget?.name}" will be moved to Unassigned. This cannot be undone.`}
         confirmLabel="Remove"
         onConfirm={() => void handleConfirmDelete()}
         onClose={() => setDeleteTarget(null)}

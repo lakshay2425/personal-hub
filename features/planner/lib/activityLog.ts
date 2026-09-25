@@ -21,3 +21,8 @@ export async function deleteActivityLogsForTask(
     .where({ entityType: "task", entityId })
     .delete();
 }
+
+export async function deleteAllTaskActivityLogs(): Promise<void> {
+  const db = getDB();
+  await db.activityLogs.where("entityType").equals("task").delete();
+}

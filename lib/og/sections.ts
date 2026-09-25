@@ -77,7 +77,7 @@ export const OG_SECTIONS: Record<OgSectionId, OgSection> = {
     id: "planner",
     title: "Planner",
     description:
-      "Plan your week, log your progress, and track activity by priority.",
+      "Capture tasks in an inbox, then class them as sprints or recursive practices.",
     badge: "Tasks",
     badgeColor: "#0284c7",
     badgeBackground: "#ecfeff",

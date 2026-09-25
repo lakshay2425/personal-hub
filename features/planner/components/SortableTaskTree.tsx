@@ -19,34 +19,23 @@ import { useCallback, useMemo } from "react";
 import { useIsTouchDevice } from "@/features/shared/hooks/useIsTouchDevice";
 
 import { buildTaskTree, compareTasks } from "../lib/taskTree";
-import type { Task } from "../types";
+import type { Task, TaskKind } from "../types";
 import { SortableTaskTreeItem } from "./SortableTaskTreeItem";
-
-type CardVariant = "default" | "tasks";
 
 interface SortableTaskTreeProps {
   tasks: Task[];
   sortable?: boolean;
-  reorderOnlyTodo?: boolean;
   completed?: boolean;
-  cardVariant?: CardVariant;
   showStrikethrough?: boolean;
-  showMoveToWeek?: boolean;
-  getWeekLabel?: (task: Task) => string | undefined;
   onToggle: (task: Task, markDone: boolean) => void;
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
   onAddSubTask: (task: Task) => void;
-  onMoveToWeek?: (task: Task) => void;
-  onMoveToCategory?: (task: Task, category: string) => void;
+  onMoveKind?: (task: Task, kind: TaskKind) => void;
   onViewNotes: (task: Task) => void;
   onViewDetail: (task: Task) => void;
-  selectionMode?: boolean;
-  selectedIds?: Set<number>;
-  onSelectionToggle?: (taskId: number) => void;
   onReorder: (
     parentId: number | null,
-    weekStart: string,
     orderedIds: number[],
   ) => Promise<void>;
   emptyMessage?: string;
@@ -55,23 +44,15 @@ interface SortableTaskTreeProps {
 export function SortableTaskTree({
   tasks,
   sortable = true,
-  reorderOnlyTodo = false,
   completed = false,
-  cardVariant = "default",
   showStrikethrough = true,
-  showMoveToWeek = false,
-  getWeekLabel,
   onToggle,
   onEdit,
   onDelete,
   onAddSubTask,
-  onMoveToWeek,
-  onMoveToCategory,
+  onMoveKind,
   onViewNotes,
   onViewDetail,
-  selectionMode,
-  selectedIds,
-  onSelectionToggle,
   onReorder,
   emptyMessage = "No tasks.",
 }: SortableTaskTreeProps) {
@@ -105,21 +86,13 @@ export function SortableTaskTree({
         return;
       }
 
-      if (
-        (activeTask.parentId ?? null) !== (overTask.parentId ?? null) ||
-        activeTask.weekStart !== overTask.weekStart
-      ) {
+      if ((activeTask.parentId ?? null) !== (overTask.parentId ?? null)) {
         return;
       }
 
       const parentId = activeTask.parentId ?? null;
-      const weekStart = activeTask.weekStart;
       const siblings = tasks
-        .filter(
-          (task) =>
-            (task.parentId ?? null) === parentId &&
-            task.weekStart === weekStart,
-        )
+        .filter((task) => (task.parentId ?? null) === parentId)
         .sort(compareTasks);
       const oldIndex = siblings.findIndex((task) => task.id === activeId);
       const newIndex = siblings.findIndex((task) => task.id === overId);
@@ -131,7 +104,6 @@ export function SortableTaskTree({
       const reordered = arrayMove(siblings, oldIndex, newIndex);
       await onReorder(
         parentId,
-        weekStart,
         reordered.map((task) => task.id!),
       );
     },
@@ -154,31 +126,17 @@ export function SortableTaskTree({
           node={node}
           allTasks={tasks}
           completed={completed}
-          cardVariant={cardVariant}
           showStrikethrough={showStrikethrough}
           useTouchReorder={useTouchReorder}
-          sortable={
-            sortable && (!reorderOnlyTodo || node.status === "Todo")
-          }
-          reorderOnlyTodo={reorderOnlyTodo}
-          showMoveToWeek={showMoveToWeek}
-          weekLabel={getWeekLabel?.(node)}
+          sortable={sortable}
           onToggle={onToggle}
           onEdit={onEdit}
           onDelete={onDelete}
           onAddSubTask={onAddSubTask}
-          onMoveToWeek={onMoveToWeek}
-          onMoveToCategory={onMoveToCategory}
+          onMoveKind={onMoveKind}
           onViewNotes={onViewNotes}
           onViewDetail={onViewDetail}
           onReorder={onReorder}
-          selectionMode={selectionMode}
-          isSelected={selectedIds?.has(node.id!)}
-          onSelectionToggle={
-            onSelectionToggle
-              ? () => onSelectionToggle(node.id!)
-              : undefined
-          }
         />
       ))}
     </ul>

@@ -6,35 +6,16 @@ import { Modal } from "@/components/ui/Modal";
 import {
   FormActions,
   FormField,
-  SelectInput,
   TextArea,
   TextInput,
 } from "@/features/job-search/components/forms/FormFields";
 
-import { CategoryPicker } from "@/features/settings/components/CategoryPicker";
-import { usePriorities } from "@/features/settings/hooks/usePriorities";
-import { UNASSIGNED } from "@/features/settings/types";
-
-import { getMondayOfWeek } from "../lib/weekUtils";
 import type {
   CreateSubTaskInput,
   CreateTaskInput,
   Task,
-  TaskPriority,
   UpdateTaskInput,
 } from "../types";
-
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
-  { value: "High", label: "High" },
-  { value: "Medium", label: "Medium" },
-];
-
-const SUB_TASK_PRIORITY_OPTIONS = [
-  { value: "", label: "None" },
-  { value: "High", label: "High" },
-  { value: "Medium", label: "Medium" },
-  { value: "Low", label: "Low" },
-];
 
 interface TaskFormModalProps {
   isOpen: boolean;
@@ -45,8 +26,6 @@ interface TaskFormModalProps {
     parentId: number,
     input: CreateSubTaskInput,
   ) => Promise<void>;
-  defaultWeekStart: string;
-  defaultCategory?: string;
   task?: Task | null;
   subTaskParent?: Task | null;
 }
@@ -57,31 +36,14 @@ export function TaskFormModal({
   onSubmit,
   onUpdate,
   onCreateSubTask,
-  defaultWeekStart,
-  defaultCategory,
   task,
   subTaskParent,
 }: TaskFormModalProps) {
   const isEdit = Boolean(task);
   const isSubTaskCreate = Boolean(subTaskParent);
-  const isSubTaskForm =
-    isSubTaskCreate || (isEdit && task !== null && task !== undefined && task.depth > 0);
-  const showWeekPicker = !isSubTaskCreate && (!task || task.depth === 0);
-  const showCategoryPicker = !isSubTaskForm;
-  const { activePriorities } = usePriorities();
 
   const [title, setTitle] = useState(task?.title ?? "");
-  const [rootPriority, setRootPriority] = useState<TaskPriority>(
-    task?.priority ?? "Medium",
-  );
-  const [category, setCategory] = useState(
-    task?.category ?? defaultCategory ?? UNASSIGNED,
-  );
-  const [subTaskPriority, setSubTaskPriority] = useState<TaskPriority | null>(
-    task?.priority ?? null,
-  );
   const [notes, setNotes] = useState(task?.notes ?? "");
-  const [weekDate, setWeekDate] = useState(task?.weekStart ?? defaultWeekStart);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const modalTitle = isEdit
@@ -97,31 +59,18 @@ export function TaskFormModal({
     setIsSubmitting(true);
     try {
       if (isEdit && task?.id && onUpdate) {
-        const input: UpdateTaskInput = {
+        await onUpdate(task.id, {
           title: title.trim(),
           notes: notes.trim(),
-          priority: isSubTaskForm ? subTaskPriority : rootPriority,
-        };
-        if (showCategoryPicker) {
-          input.category = category;
-        }
-        if (showWeekPicker) {
-          input.weekStart = getMondayOfWeek(new Date(weekDate + "T00:00:00"));
-        }
-        await onUpdate(task.id, input);
+        });
       } else if (isSubTaskCreate && subTaskParent?.id && onCreateSubTask) {
         await onCreateSubTask(subTaskParent.id, {
           title: title.trim(),
-          priority: subTaskPriority,
           notes: notes.trim(),
         });
       } else if (onSubmit) {
-        const weekStart = getMondayOfWeek(new Date(weekDate + "T00:00:00"));
         await onSubmit({
-          weekStart,
           title: title.trim(),
-          priority: rootPriority,
-          category,
           notes: notes.trim(),
         });
       }
@@ -154,33 +103,6 @@ export function TaskFormModal({
             />
           </FormField>
 
-          <FormField label={isSubTaskForm ? "Urgency (optional)" : "Urgency"}>
-            {isSubTaskForm ? (
-              <SelectInput
-                value={subTaskPriority ?? ""}
-                onChange={(value) =>
-                  setSubTaskPriority(value ? (value as TaskPriority) : null)
-                }
-                options={SUB_TASK_PRIORITY_OPTIONS}
-              />
-            ) : (
-              <SelectInput
-                value={rootPriority}
-                onChange={(value) => setRootPriority(value as TaskPriority)}
-                options={PRIORITY_OPTIONS}
-              />
-            )}
-          </FormField>
-
-          {showCategoryPicker ? (
-            <CategoryPicker
-              value={category}
-              onChange={setCategory}
-              priorities={activePriorities}
-              label="Category"
-            />
-          ) : null}
-
           <FormField label="Notes">
             <TextArea
               value={notes}
@@ -189,17 +111,6 @@ export function TaskFormModal({
               rows={3}
             />
           </FormField>
-
-          {showWeekPicker ? (
-            <FormField label="Week">
-              <input
-                type="date"
-                value={weekDate}
-                onChange={(event) => setWeekDate(event.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-              />
-            </FormField>
-          ) : null}
         </div>
 
         <FormActions

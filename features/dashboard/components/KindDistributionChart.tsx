@@ -1,17 +1,20 @@
 "use client";
 
-import { usePriorities } from "@/features/settings/hooks/usePriorities";
+import type { KindWeekData } from "../lib/dashboardRepository";
 
-import type { CategoryWeekData } from "../lib/dashboardRepository";
-
-interface CategoryDistributionChartProps {
+interface KindDistributionChartProps {
   title: string;
-  categories: CategoryWeekData[];
-  getCount: (data: CategoryWeekData) => number;
+  kinds: KindWeekData[];
+  getCount: (data: KindWeekData) => number;
   total: number;
   weekTotal: number;
   emptyMessage: string;
 }
+
+const KIND_COLORS: Record<KindWeekData["kind"], string> = {
+  sprint: "#0284c7",
+  recursive: "#7c3aed",
+};
 
 function donutSlice(
   cx: number,
@@ -49,51 +52,15 @@ function polarToCartesian(
   };
 }
 
-function buildSlicePaths(
-  segments: { data: CategoryWeekData; count: number }[],
-  total: number,
-  cx: number,
-  cy: number,
-  outerRadius: number,
-  innerRadius: number,
-  getColor: (category: string) => string | null,
-) {
-  const slicePaths: {
-    data: CategoryWeekData;
-    count: number;
-    color: string;
-    path: string;
-  }[] = [];
-  let currentAngle = 0;
-
-  for (const { data, count } of segments) {
-    const sliceAngle = (count / total) * 360;
-    const startAngle = currentAngle;
-    const endAngle = currentAngle + sliceAngle;
-    currentAngle = endAngle;
-
-    slicePaths.push({
-      data,
-      count,
-      color: getColor(data.category) ?? "#a1a1aa",
-      path: donutSlice(cx, cy, outerRadius, innerRadius, startAngle, endAngle),
-    });
-  }
-
-  return slicePaths;
-}
-
-export function CategoryDistributionChart({
+export function KindDistributionChart({
   title,
-  categories,
+  kinds,
   getCount,
   total,
   weekTotal,
   emptyMessage,
-}: CategoryDistributionChartProps) {
-  const { getColor, getDisplayName } = usePriorities();
-
-  const segments = categories
+}: KindDistributionChartProps) {
+  const segments = kinds
     .map((data) => ({
       data,
       count: getCount(data),
@@ -121,15 +88,27 @@ export function CategoryDistributionChart({
   const outerRadius = 70;
   const innerRadius = 48;
 
-  const slicePaths = buildSlicePaths(
-    segments,
-    total,
-    cx,
-    cy,
-    outerRadius,
-    innerRadius,
-    getColor,
-  );
+  const slicePaths: {
+    data: KindWeekData;
+    count: number;
+    color: string;
+    path: string;
+  }[] = [];
+  let currentAngle = 0;
+
+  for (const { data, count } of segments) {
+    const sliceAngle = (count / total) * 360;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + sliceAngle;
+    currentAngle = endAngle;
+
+    slicePaths.push({
+      data,
+      count,
+      color: KIND_COLORS[data.kind],
+      path: donutSlice(cx, cy, outerRadius, innerRadius, startAngle, endAngle),
+    });
+  }
 
   return (
     <div className="space-y-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -142,10 +121,10 @@ export function CategoryDistributionChart({
           <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
             {slicePaths.map(({ data, count, path, color }) => (
               <path
-                key={data.category}
+                key={data.kind}
                 d={path}
                 fill={color}
-                aria-label={`${getDisplayName(data.category)}: ${count}`}
+                aria-label={`${data.label}: ${count}`}
               />
             ))}
           </svg>
@@ -162,15 +141,13 @@ export function CategoryDistributionChart({
 
       <div className="flex flex-wrap gap-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
         {segments.map(({ data, count }) => (
-          <div key={data.category} className="flex items-center gap-2">
+          <div key={data.kind} className="flex items-center gap-2">
             <span
               className="h-3 w-3 shrink-0 rounded-full"
-              style={{
-                backgroundColor: getColor(data.category) ?? "#a1a1aa",
-              }}
+              style={{ backgroundColor: KIND_COLORS[data.kind] }}
             />
             <span className="text-xs text-zinc-600 dark:text-zinc-400">
-              {getDisplayName(data.category)} ({count})
+              {data.label} ({count})
             </span>
           </div>
         ))}

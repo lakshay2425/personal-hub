@@ -1,29 +1,19 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { BulkActionBar } from "@/features/shared/components/BulkActionBar";
-import { useBulkSelection } from "@/features/shared/hooks/useBulkSelection";
-import { UNASSIGNED } from "@/features/settings/types";
 
 import { useTasks } from "../hooks/useTasks";
-import { getCurrentWeekStart } from "../lib/weekUtils";
-import type { CreateSubTaskInput, CreateTaskInput, Task } from "../types";
+import type { CreateSubTaskInput, CreateTaskInput, Task, TaskKind } from "../types";
 import { getDeleteWarningMessage } from "../lib/deleteTaskMessage";
-import { BacklogTab } from "./BacklogTab";
-import { PlannerTabNav, type PlannerTab } from "./PlannerTabNav";
+import { PlannerKindSection } from "./PlannerKindSection";
 import { TaskDetailModal } from "./TaskDetailModal";
 import { TaskFormModal } from "./TaskFormModal";
 import { TaskNotesModal } from "./TaskNotesModal";
-import { TasksView } from "./TasksView";
-import { UpcomingTab } from "./UpcomingTab";
-import { WeekNavigation } from "./WeekNavigation";
 
 export function PlannerWorkspace() {
-  const [weekStart, setWeekStart] = useState(getCurrentWeekStart);
-  const [activeTab, setActiveTab] = useState<PlannerTab>("today");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [subTaskParent, setSubTaskParent] = useState<Task | null>(null);
@@ -31,73 +21,34 @@ export function PlannerWorkspace() {
   const [detailTask, setDetailTask] = useState<Task | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [isBulkApplying, setIsBulkApplying] = useState(false);
-  const [defaultCategory, setDefaultCategory] = useState<string | undefined>();
 
   const {
-    selectedIds,
-    selectedCount,
-    toggle: toggleSelection,
-    clear: clearSelection,
-  } = useBulkSelection<number>();
-
-  const {
-    weekTasks,
-    activeTasks,
-    completedTasks,
-    backlogTasks,
-    backlogCount,
-    upcomingByWeek,
+    tasks,
+    inboxActive,
+    inboxCompleted,
+    sprintActive,
+    sprintCompleted,
+    recursiveTasks,
     isLoading,
     error,
-    currentWeekStart,
     createTask,
     createSubTask,
     updateTask,
     toggleComplete,
-    moveToWeek,
+    moveKind,
     reorderTasks,
     deleteTask,
-    updateTaskCategory,
-    bulkUpdateTaskCategory,
-  } = useTasks(weekStart);
-
-  const allTasks = useMemo(() => {
-    const upcomingFlat = [...upcomingByWeek.values()].flat();
-    const merged = new Map<number, Task>();
-    for (const task of [...weekTasks, ...backlogTasks, ...upcomingFlat]) {
-      if (task.id !== undefined) {
-        merged.set(task.id, task);
-      }
-    }
-    return [...merged.values()];
-  }, [weekTasks, backlogTasks, upcomingByWeek]);
-
-  const selectionProps = {
-    selectionMode,
-    selectedIds,
-    onSelectionToggle: toggleSelection,
-  };
+  } = useTasks();
 
   const closeForm = useCallback(() => {
     setIsFormOpen(false);
     setEditingTask(null);
     setSubTaskParent(null);
-    setDefaultCategory(undefined);
   }, []);
 
   const openCreateForm = useCallback(() => {
     setEditingTask(null);
     setSubTaskParent(null);
-    setDefaultCategory(undefined);
-    setIsFormOpen(true);
-  }, []);
-
-  const openCreateFormForCategory = useCallback((category: string) => {
-    setEditingTask(null);
-    setSubTaskParent(null);
-    setDefaultCategory(category);
     setIsFormOpen(true);
   }, []);
 
@@ -127,55 +78,28 @@ export function PlannerWorkspace() {
     [toggleComplete],
   );
 
-  const handleMoveToCategory = useCallback(
-    async (task: Task, category: string) => {
+  const handleMoveKind = useCallback(
+    async (task: Task, kind: TaskKind) => {
       try {
-        await updateTaskCategory(task.id!, category);
-        toast.success("Task moved to category");
+        await moveKind(task.id!, kind);
+        const labels = {
+          inbox: "Inbox",
+          sprint: "Sprint",
+          recursive: "Recursive",
+        };
+        toast.success(`Moved to ${labels[kind]}`);
       } catch {
         toast.error("Failed to move task");
       }
     },
-    [updateTaskCategory],
-  );
-
-  const handleBulkApplyCategory = useCallback(
-    async (category: string) => {
-      const ids = [...selectedIds];
-      if (ids.length === 0) return;
-
-      setIsBulkApplying(true);
-      try {
-        await bulkUpdateTaskCategory(ids, category || UNASSIGNED);
-        toast.success(`Updated category for ${ids.length} task(s)`);
-        clearSelection();
-        setSelectionMode(false);
-      } catch {
-        toast.error("Failed to update categories");
-      } finally {
-        setIsBulkApplying(false);
-      }
-    },
-    [bulkUpdateTaskCategory, clearSelection, selectedIds],
-  );
-
-  const handleMoveToWeek = useCallback(
-    async (task: Task) => {
-      try {
-        await moveToWeek(task.id!, currentWeekStart);
-        toast.success("Task moved to this week");
-      } catch {
-        toast.error("Failed to move task");
-      }
-    },
-    [moveToWeek, currentWeekStart],
+    [moveKind],
   );
 
   const handleCreateTask = useCallback(
     async (input: CreateTaskInput) => {
       try {
         await createTask(input);
-        toast.success("Task created");
+        toast.success("Task logged");
       } catch {
         toast.error("Failed to create task");
         throw new Error("Failed to create task");
@@ -211,13 +135,9 @@ export function PlannerWorkspace() {
   );
 
   const handleReorder = useCallback(
-    async (
-      parentId: number | null,
-      weekStartValue: string,
-      orderedIds: number[],
-    ) => {
+    async (parentId: number | null, orderedIds: number[]) => {
       try {
-        await reorderTasks(parentId, weekStartValue, orderedIds);
+        await reorderTasks(parentId, orderedIds);
       } catch {
         toast.error("Failed to reorder tasks");
       }
@@ -240,23 +160,11 @@ export function PlannerWorkspace() {
     }
   }, [deleteTask, deletingTask]);
 
-  const toggleSelectionMode = useCallback(() => {
-    setSelectionMode((prev) => {
-      if (prev) {
-        clearSelection();
-      }
-      return !prev;
-    });
-  }, [clearSelection]);
-
-  const defaultFormWeek =
-    activeTab === "today" ? weekStart : currentWeekStart;
-
   const formModalKey = editingTask
     ? `edit-${editingTask.id}`
     : subTaskParent
       ? `sub-${subTaskParent.id}`
-      : `create-${defaultCategory ?? "none"}`;
+      : "create";
 
   if (error) {
     return (
@@ -264,32 +172,20 @@ export function PlannerWorkspace() {
     );
   }
 
-  const treeHandlers = {
+  const sectionHandlers = {
     onToggle: handleToggle,
     onEdit: handleEdit,
     onDelete: setDeletingTask,
     onAddSubTask: handleAddSubTask,
-    onMoveToCategory: handleMoveToCategory,
+    onMoveKind: handleMoveKind,
     onViewNotes: setNotesTask,
     onViewDetail: setDetailTask,
     onReorder: handleReorder,
-    ...selectionProps,
   };
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        <button
-          type="button"
-          onClick={toggleSelectionMode}
-          className={`w-full rounded-lg border px-4 py-2 text-sm font-medium transition-colors sm:w-auto ${
-            selectionMode
-              ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
-              : "border-zinc-300 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          }`}
-        >
-          {selectionMode ? "Cancel Select" : "Select"}
-        </button>
+      <div className="mb-6 flex justify-end">
         <button
           type="button"
           onClick={openCreateForm}
@@ -299,51 +195,39 @@ export function PlannerWorkspace() {
         </button>
       </div>
 
-      <PlannerTabNav
-        activeTab={activeTab}
-        backlogCount={backlogCount}
-        onTabChange={setActiveTab}
-      />
-
       {isLoading ? (
         <p className="py-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
           Loading tasks…
         </p>
       ) : (
-        <>
-          {activeTab === "today" && (
-            <>
-              <WeekNavigation weekStart={weekStart} onWeekChange={setWeekStart} />
-              <TasksView
-                pendingTasks={activeTasks}
-                completedTasks={completedTasks}
-                onAddTask={openCreateForm}
-                onAddTaskInCategory={openCreateFormForCategory}
-                {...treeHandlers}
-              />
-            </>
-          )}
-
-          {activeTab === "backlog" && (
-            <BacklogTab
-              tasks={backlogTasks}
-              {...treeHandlers}
-              onMoveToWeek={handleMoveToWeek}
-            />
-          )}
-
-          {activeTab === "upcoming" && (
-            <UpcomingTab tasksByWeek={upcomingByWeek} {...treeHandlers} />
-          )}
-        </>
+        <div className="space-y-10">
+          <PlannerKindSection
+            title="Inbox"
+            description="Log the task. Classify it later."
+            tasks={inboxActive}
+            completedTasks={inboxCompleted}
+            emptyMessage="No tasks waiting. Capture whatever you want to do."
+            completedEmptyMessage="No completed inbox tasks."
+            {...sectionHandlers}
+          />
+          <PlannerKindSection
+            title="Sprint"
+            description="One-time investments. Finishing the work ends it."
+            tasks={sprintActive}
+            completedTasks={sprintCompleted}
+            emptyMessage="No sprint tasks. Move a one-of-a-kind investment here."
+            completedEmptyMessage="No finished sprints yet."
+            {...sectionHandlers}
+          />
+          <PlannerKindSection
+            title="Recursive"
+            description="Ongoing practices. Completing a slice leaves the practice open."
+            tasks={recursiveTasks}
+            emptyMessage="No recursive tasks. Move a practice you keep doing here."
+            {...sectionHandlers}
+          />
+        </div>
       )}
-
-      <BulkActionBar
-        selectedCount={selectedCount}
-        onApply={handleBulkApplyCategory}
-        onClear={clearSelection}
-        isApplying={isBulkApplying}
-      />
 
       <TaskFormModal
         key={`${formModalKey}-${isFormOpen}`}
@@ -352,8 +236,6 @@ export function PlannerWorkspace() {
         onSubmit={handleCreateTask}
         onUpdate={handleUpdateTask}
         onCreateSubTask={handleCreateSubTask}
-        defaultWeekStart={defaultFormWeek}
-        defaultCategory={defaultCategory}
         task={editingTask}
         subTaskParent={subTaskParent}
       />
@@ -362,7 +244,7 @@ export function PlannerWorkspace() {
         isOpen={detailTask !== null}
         onClose={() => setDetailTask(null)}
         task={detailTask}
-        allTasks={allTasks}
+        allTasks={tasks}
         onToggle={handleToggle}
         onEdit={handleEdit}
         onAddSubTask={handleAddSubTask}
@@ -383,7 +265,7 @@ export function PlannerWorkspace() {
         title="Delete task"
         message={
           deletingTask
-            ? getDeleteWarningMessage(deletingTask, allTasks)
+            ? getDeleteWarningMessage(deletingTask, tasks)
             : ""
         }
         isLoading={isDeleting}

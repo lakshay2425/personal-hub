@@ -1,17 +1,18 @@
 import { getTodayDateString } from "@/features/logger/lib/dateUtils";
 import { createLogEntry } from "@/features/logger/lib/loggerRepository";
 import { getDB } from "@/features/questions/lib/db";
-import { UNASSIGNED } from "@/features/settings/types";
 
 import {
   deleteActivityLogsForTask,
+  deleteAllTaskActivityLogs,
   logTaskActivity,
 } from "./activityLog";
-import { compareTasks } from "./taskTree";
+import { canToggleTaskCompletion, compareTasks } from "./taskTree";
 import type {
   CreateSubTaskInput,
   CreateTaskInput,
   Task,
+  TaskKind,
   UpdateTaskInput,
 } from "../types";
 
@@ -30,13 +31,13 @@ async function collectDescendantIdsFromDb(parentId: number): Promise<number[]> {
 
 async function getNextSortOrder(
   parentId: number | null,
-  weekStart: string,
+  kind: TaskKind,
 ): Promise<number> {
   const db = getDB();
   const siblings = await db.tasks
     .filter(
       (task) =>
-        (task.parentId ?? null) === parentId && task.weekStart === weekStart,
+        (task.parentId ?? null) === parentId && task.kind === kind,
     )
     .toArray();
 
@@ -47,47 +48,23 @@ async function getNextSortOrder(
   return Math.max(...siblings.map((task) => task.sortOrder ?? 0)) + 1;
 }
 
-export async function getTasksForWeek(weekStart: string): Promise<Task[]> {
+export async function getAllTasks(): Promise<Task[]> {
   const db = getDB();
-  const tasks = await db.tasks.where("weekStart").equals(weekStart).toArray();
-  return tasks.sort(compareTasks);
-}
-
-export async function getBacklogTasks(
-  currentWeekStart: string,
-): Promise<Task[]> {
-  const db = getDB();
-  const tasks = await db.tasks
-    .where("status")
-    .equals("Todo")
-    .filter((task) => task.weekStart < currentWeekStart)
-    .toArray();
-  return tasks.sort(compareTasks);
-}
-
-export async function getUpcomingTasks(
-  currentWeekStart: string,
-): Promise<Task[]> {
-  const db = getDB();
-  const tasks = await db.tasks
-    .filter((task) => task.weekStart > currentWeekStart)
-    .toArray();
+  const tasks = await db.tasks.toArray();
   return tasks.sort(compareTasks);
 }
 
 export async function createTask(input: CreateTaskInput): Promise<Task> {
   const db = getDB();
   const now = Date.now();
-  const sortOrder = await getNextSortOrder(null, input.weekStart);
+  const sortOrder = await getNextSortOrder(null, "inbox");
 
   const task: Task = {
-    weekStart: input.weekStart,
+    kind: "inbox",
     parentId: null,
     depth: 0,
     sortOrder,
     title: input.title.trim(),
-    priority: input.priority ?? "Medium",
-    category: input.category ?? UNASSIGNED,
     status: "Todo",
     completedAt: null,
     notes: input.notes?.trim() ?? "",
@@ -111,22 +88,24 @@ export async function createSubTask(
     throw new Error("Parent task not found");
   }
 
+  if (parent.kind === "inbox") {
+    throw new Error("Move this task to Sprint or Recursive before adding sub-tasks");
+  }
+
   if (parent.depth >= 2) {
     throw new Error("Maximum sub-task depth reached");
   }
 
   const now = Date.now();
   const depth = (parent.depth + 1) as Task["depth"];
-  const sortOrder = await getNextSortOrder(parentId, parent.weekStart);
+  const sortOrder = await getNextSortOrder(parentId, parent.kind);
 
   const task: Task = {
-    weekStart: parent.weekStart,
+    kind: parent.kind,
     parentId,
     depth,
     sortOrder,
     title: input.title.trim(),
-    priority: input.priority ?? null,
-    category: parent.category,
     status: "Todo",
     completedAt: null,
     notes: input.notes?.trim() ?? "",
@@ -153,26 +132,8 @@ export async function updateTask(
   const updated: Task = {
     ...existing,
     ...(input.title !== undefined && { title: input.title.trim() }),
-    ...(input.priority !== undefined && { priority: input.priority }),
-    ...(input.category !== undefined && { category: input.category }),
     ...(input.notes !== undefined && { notes: input.notes.trim() }),
-    ...(input.weekStart !== undefined && { weekStart: input.weekStart }),
   };
-
-  if (
-    input.weekStart !== undefined &&
-    input.weekStart !== existing.weekStart
-  ) {
-    const descendantIds = await collectDescendantIdsFromDb(id);
-    await db.tasks.put(updated);
-    for (const descendantId of descendantIds) {
-      const descendant = await db.tasks.get(descendantId);
-      if (descendant) {
-        await db.tasks.put({ ...descendant, weekStart: input.weekStart });
-      }
-    }
-    return updated;
-  }
 
   await db.tasks.put(updated);
   return updated;
@@ -207,7 +168,7 @@ export async function maybeUpdateParentCompletion(
   const db = getDB();
   const parent = await db.tasks.get(parentId);
 
-  if (!parent) {
+  if (!parent || parent.kind === "recursive") {
     return;
   }
 
@@ -249,9 +210,14 @@ export async function toggleTaskComplete(
 ): Promise<Task> {
   const db = getDB();
   const id = task.id!;
+  const hasChildren = await hasDirectChildren(id);
 
-  if (await hasDirectChildren(id)) {
-    throw new Error("Cannot toggle completion on a task with sub-tasks");
+  if (!canToggleTaskCompletion(task, hasChildren)) {
+    throw new Error(
+      hasChildren
+        ? "Cannot toggle completion on a task with sub-tasks"
+        : "Add a slice under this practice before marking work done",
+    );
   }
 
   if (markDone) {
@@ -266,8 +232,6 @@ export async function toggleTaskComplete(
       `✓ Completed task: ${task.title}`,
       {
         source: "planner",
-        category:
-          task.category !== UNASSIGNED ? task.category : undefined,
       },
     );
     await logTaskActivity(id, "Task Completed");
@@ -293,9 +257,9 @@ export async function toggleTaskComplete(
   return updated;
 }
 
-export async function moveTaskToWeek(
+export async function moveTaskKind(
   taskId: number,
-  weekStart: string,
+  kind: TaskKind,
 ): Promise<Task> {
   const db = getDB();
   const existing = await db.tasks.get(taskId);
@@ -304,63 +268,28 @@ export async function moveTaskToWeek(
     throw new Error("Task not found");
   }
 
-  const descendantIds = await collectDescendantIdsFromDb(taskId);
-  const sortOrder = await getNextSortOrder(
-    existing.parentId ?? null,
-    weekStart,
-  );
+  if ((existing.parentId ?? null) !== null) {
+    throw new Error("Only root tasks can be moved between lists");
+  }
 
-  const updated: Task = { ...existing, weekStart, sortOrder };
+  const descendantIds = await collectDescendantIdsFromDb(taskId);
+  const sortOrder = await getNextSortOrder(null, kind);
+  const updated: Task = { ...existing, kind, sortOrder };
   await db.tasks.put(updated);
 
   for (const descendantId of descendantIds) {
     const descendant = await db.tasks.get(descendantId);
     if (descendant) {
-      await db.tasks.put({ ...descendant, weekStart });
+      await db.tasks.put({ ...descendant, kind });
     }
   }
 
-  await logTaskActivity(taskId, "Task Moved to This Week");
+  await logTaskActivity(taskId, "Task Classed");
   return updated;
-}
-
-export async function updateTaskCategory(
-  taskId: number,
-  category: string,
-): Promise<Task> {
-  const db = getDB();
-  const existing = await db.tasks.get(taskId);
-
-  if (!existing) {
-    throw new Error("Task not found");
-  }
-
-  const descendantIds = await collectDescendantIdsFromDb(taskId);
-  const updated: Task = { ...existing, category };
-  await db.tasks.put(updated);
-
-  for (const descendantId of descendantIds) {
-    const descendant = await db.tasks.get(descendantId);
-    if (descendant) {
-      await db.tasks.put({ ...descendant, category });
-    }
-  }
-
-  return updated;
-}
-
-export async function bulkUpdateTaskCategory(
-  taskIds: number[],
-  category: string,
-): Promise<void> {
-  for (const taskId of taskIds) {
-    await updateTaskCategory(taskId, category);
-  }
 }
 
 export async function reorderTasks(
   parentId: number | null,
-  weekStart: string,
   orderedIds: number[],
 ): Promise<void> {
   const db = getDB();
@@ -368,11 +297,7 @@ export async function reorderTasks(
   await Promise.all(
     orderedIds.map(async (id, index) => {
       const task = await db.tasks.get(id);
-      if (
-        !task ||
-        (task.parentId ?? null) !== parentId ||
-        task.weekStart !== weekStart
-      ) {
+      if (!task || (task.parentId ?? null) !== parentId) {
         throw new Error("Invalid reorder: tasks must be siblings");
       }
       await db.tasks.update(id, { sortOrder: index });
@@ -393,7 +318,8 @@ export async function deleteTask(taskId: number): Promise<void> {
   await db.tasks.bulkDelete(idsToDelete);
 }
 
-export async function getAllTasks(): Promise<Task[]> {
+export async function clearAllTasks(): Promise<void> {
   const db = getDB();
-  return db.tasks.toArray();
+  await db.tasks.clear();
+  await deleteAllTaskActivityLogs();
 }

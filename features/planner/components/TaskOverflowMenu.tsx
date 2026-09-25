@@ -4,20 +4,15 @@ import { MoreVertical } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { usePriorities } from "@/features/settings/hooks/usePriorities";
-import { UNASSIGNED } from "@/features/settings/types";
-
-import type { Task } from "../types";
+import type { Task, TaskKind } from "../types";
 
 interface TaskOverflowMenuProps {
   task: Task;
   canAddSubTask: boolean;
-  showMoveToWeek: boolean;
   onAddSubTask: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onMoveToWeek?: () => void;
-  onMoveToCategory?: (category: string) => void;
+  onMoveKind?: (kind: TaskKind) => void;
 }
 
 interface MenuPosition {
@@ -25,22 +20,24 @@ interface MenuPosition {
   right: number;
 }
 
+const KIND_LABELS: Record<TaskKind, string> = {
+  inbox: "Inbox",
+  sprint: "Sprint",
+  recursive: "Recursive",
+};
+
 export function TaskOverflowMenu({
   task,
   canAddSubTask,
-  showMoveToWeek,
   onAddSubTask,
   onEdit,
   onDelete,
-  onMoveToWeek,
-  onMoveToCategory,
+  onMoveKind,
 }: TaskOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const { activePriorities } = usePriorities();
 
   const updateMenuPosition = useCallback(() => {
     const trigger = triggerRef.current;
@@ -67,7 +64,6 @@ export function TaskOverflowMenu({
         return;
       }
       setIsOpen(false);
-      setShowCategoryPicker(false);
     }
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -83,17 +79,12 @@ export function TaskOverflowMenu({
 
   const closeMenu = () => {
     setIsOpen(false);
-    setShowCategoryPicker(false);
     setMenuPosition(null);
   };
 
-  const categoryOptions = [
-    { value: UNASSIGNED, label: "Unassigned" },
-    ...activePriorities.map((priority) => ({
-      value: priority.name,
-      label: priority.name,
-    })),
-  ];
+  const kindOptions = (Object.keys(KIND_LABELS) as TaskKind[]).filter(
+    (kind) => kind !== task.kind,
+  );
 
   const menuContent =
     isOpen && menuPosition ? (
@@ -134,51 +125,22 @@ export function TaskOverflowMenu({
           Edit
         </button>
 
-        {onMoveToCategory ? (
-          <>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => setShowCategoryPicker((value) => !value)}
-              className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Move to Category…
-            </button>
-            {showCategoryPicker ? (
-              <div className="border-t border-zinc-100 dark:border-zinc-800">
-                {categoryOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      onMoveToCategory(option.value);
-                      closeMenu();
-                    }}
-                    disabled={task.category === option.value}
-                    className="w-full px-4 py-2 text-left text-xs text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </>
-        ) : null}
-
-        {showMoveToWeek && onMoveToWeek ? (
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              onMoveToWeek();
-              closeMenu();
-            }}
-            className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            Move to This Week
-          </button>
-        ) : null}
+        {onMoveKind && (task.parentId ?? null) === null
+          ? kindOptions.map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  onMoveKind(kind);
+                  closeMenu();
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Move to {KIND_LABELS[kind]}
+              </button>
+            ))
+          : null}
 
         <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />
 

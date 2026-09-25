@@ -6,50 +6,56 @@ import {
   createSubTask as createSubTaskRepo,
   createTask as createTaskRepo,
   deleteTask as deleteTaskRepo,
-  getBacklogTasks,
-  getTasksForWeek,
-  getUpcomingTasks,
-  moveTaskToWeek as moveTaskToWeekRepo,
+  getAllTasks,
+  moveTaskKind as moveTaskKindRepo,
   reorderTasks as reorderTasksRepo,
   toggleTaskComplete as toggleTaskCompleteRepo,
   updateTask as updateTaskRepo,
-  updateTaskCategory as updateTaskCategoryRepo,
-  bulkUpdateTaskCategory as bulkUpdateTaskCategoryRepo,
 } from "../lib/tasksRepository";
-import {
-  getCurrentWeekStart,
-  groupTasksByWeek,
-  sortBacklogTasks,
-  sortCompletedTasks,
-  sortTasksByOrder,
-} from "../lib/weekUtils";
+import { compareTasks } from "../lib/taskTree";
 import type {
   CreateSubTaskInput,
   CreateTaskInput,
   Task,
+  TaskKind,
   UpdateTaskInput,
 } from "../types";
 
-export function useTasks(viewedWeekStart: string) {
-  const [weekTasks, setWeekTasks] = useState<Task[]>([]);
-  const [backlogTasks, setBacklogTasks] = useState<Task[]>([]);
-  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
+function tasksOfKind(tasks: Task[], kind: TaskKind): Task[] {
+  return tasks.filter((task) => task.kind === kind).sort(compareTasks);
+}
+
+function treesForRoots(tasks: Task[], roots: Task[]): Task[] {
+  const included = new Set<number>();
+
+  function addDescendants(parentId: number) {
+    for (const task of tasks) {
+      if (task.parentId === parentId && task.id !== undefined) {
+        included.add(task.id);
+        addDescendants(task.id);
+      }
+    }
+  }
+
+  for (const root of roots) {
+    if (root.id !== undefined) {
+      included.add(root.id);
+      addDescendants(root.id);
+    }
+  }
+
+  return tasks.filter((task) => task.id !== undefined && included.has(task.id));
+}
+
+export function useTasks() {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const currentWeekStart = getCurrentWeekStart();
-
   const loadAll = useCallback(async () => {
-    const currentWeek = getCurrentWeekStart();
-    const [week, backlog, upcoming] = await Promise.all([
-      getTasksForWeek(viewedWeekStart),
-      getBacklogTasks(currentWeek),
-      getUpcomingTasks(currentWeek),
-    ]);
-    setWeekTasks(week);
-    setBacklogTasks(backlog);
-    setUpcomingTasks(upcoming);
-  }, [viewedWeekStart]);
+    const all = await getAllTasks();
+    setTasks(all);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,16 +63,9 @@ export function useTasks(viewedWeekStart: string) {
     async function load() {
       try {
         setIsLoading(true);
-        const currentWeek = getCurrentWeekStart();
-        const [week, backlog, upcoming] = await Promise.all([
-          getTasksForWeek(viewedWeekStart),
-          getBacklogTasks(currentWeek),
-          getUpcomingTasks(currentWeek),
-        ]);
+        const all = await getAllTasks();
         if (!cancelled) {
-          setWeekTasks(week);
-          setBacklogTasks(backlog);
-          setUpcomingTasks(upcoming);
+          setTasks(all);
           setError(null);
         }
       } catch (err) {
@@ -85,27 +84,42 @@ export function useTasks(viewedWeekStart: string) {
     return () => {
       cancelled = true;
     };
-  }, [viewedWeekStart]);
+  }, []);
 
-  const activeTasks = useMemo(
-    () => sortTasksByOrder(weekTasks.filter((task) => task.status === "Todo")),
-    [weekTasks],
+  const inboxTasks = useMemo(() => tasksOfKind(tasks, "inbox"), [tasks]);
+  const sprintTasks = useMemo(() => tasksOfKind(tasks, "sprint"), [tasks]);
+  const recursiveTasks = useMemo(
+    () => tasksOfKind(tasks, "recursive"),
+    [tasks],
   );
-  const completedTasks = useMemo(
-    () =>
-      sortCompletedTasks(
-        weekTasks.filter((task) => task.status === "Done"),
-      ),
-    [weekTasks],
-  );
-  const sortedBacklog = useMemo(
-    () => sortBacklogTasks(backlogTasks),
-    [backlogTasks],
-  );
-  const upcomingByWeek = useMemo(
-    () => groupTasksByWeek(upcomingTasks),
-    [upcomingTasks],
-  );
+
+  const inboxActive = useMemo(() => {
+    const roots = inboxTasks.filter(
+      (task) => (task.parentId ?? null) === null && task.status === "Todo",
+    );
+    return treesForRoots(inboxTasks, roots);
+  }, [inboxTasks]);
+
+  const inboxCompleted = useMemo(() => {
+    const roots = inboxTasks.filter(
+      (task) => (task.parentId ?? null) === null && task.status === "Done",
+    );
+    return treesForRoots(inboxTasks, roots);
+  }, [inboxTasks]);
+
+  const sprintActive = useMemo(() => {
+    const roots = sprintTasks.filter(
+      (task) => (task.parentId ?? null) === null && task.status === "Todo",
+    );
+    return treesForRoots(sprintTasks, roots);
+  }, [sprintTasks]);
+
+  const sprintCompleted = useMemo(() => {
+    const roots = sprintTasks.filter(
+      (task) => (task.parentId ?? null) === null && task.status === "Done",
+    );
+    return treesForRoots(sprintTasks, roots);
+  }, [sprintTasks]);
 
   const createTask = useCallback(
     async (input: CreateTaskInput) => {
@@ -143,9 +157,9 @@ export function useTasks(viewedWeekStart: string) {
     [loadAll],
   );
 
-  const moveToWeek = useCallback(
-    async (taskId: number, targetWeekStart: string) => {
-      const updated = await moveTaskToWeekRepo(taskId, targetWeekStart);
+  const moveKind = useCallback(
+    async (taskId: number, kind: TaskKind) => {
+      const updated = await moveTaskKindRepo(taskId, kind);
       await loadAll();
       return updated;
     },
@@ -153,12 +167,8 @@ export function useTasks(viewedWeekStart: string) {
   );
 
   const reorderTasks = useCallback(
-    async (
-      parentId: number | null,
-      weekStart: string,
-      orderedIds: number[],
-    ) => {
-      await reorderTasksRepo(parentId, weekStart, orderedIds);
+    async (parentId: number | null, orderedIds: number[]) => {
+      await reorderTasksRepo(parentId, orderedIds);
       await loadAll();
     },
     [loadAll],
@@ -172,42 +182,22 @@ export function useTasks(viewedWeekStart: string) {
     [loadAll],
   );
 
-  const updateTaskCategory = useCallback(
-    async (taskId: number, category: string) => {
-      const updated = await updateTaskCategoryRepo(taskId, category);
-      await loadAll();
-      return updated;
-    },
-    [loadAll],
-  );
-
-  const bulkUpdateTaskCategory = useCallback(
-    async (taskIds: number[], category: string) => {
-      await bulkUpdateTaskCategoryRepo(taskIds, category);
-      await loadAll();
-    },
-    [loadAll],
-  );
-
   return {
-    weekTasks,
-    activeTasks,
-    completedTasks,
-    backlogTasks: sortedBacklog,
-    backlogCount: sortedBacklog.length,
-    upcomingByWeek,
+    tasks,
+    inboxActive,
+    inboxCompleted,
+    sprintActive,
+    sprintCompleted,
+    recursiveTasks,
     isLoading,
     error,
-    currentWeekStart,
     createTask,
     createSubTask,
     updateTask,
     toggleComplete,
-    moveToWeek,
+    moveKind,
     reorderTasks,
     deleteTask,
-    updateTaskCategory,
-    bulkUpdateTaskCategory,
     reload: loadAll,
   };
 }

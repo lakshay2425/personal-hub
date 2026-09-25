@@ -8,21 +8,20 @@ import type {
   ProjectVersion,
 } from "@/features/project-features/types";
 import type { PrioritiesSettings } from "@/features/settings/types";
-import { UNASSIGNED } from "@/features/settings/types";
 
 import { assertBackupShape } from "@/lib/export/validateBackup";
 
 import type { Answer, Project, Question } from "../types";
 import { getDB } from "./db";
 
-const PRIORITY_ORDER = { High: 0, Medium: 1, Low: 2 } as const;
+type LegacyTask = Task & {
+  kind?: Task["kind"];
+  weekStart?: string;
+  priority?: "High" | "Medium" | "Low" | null;
+  category?: string;
+};
 
-function taskPriorityOrder(priority: Task["priority"]): number {
-  if (!priority) return 3;
-  return PRIORITY_ORDER[priority];
-}
-
-function backfillTaskFields(task: Task, allTasks: Task[]): Task {
+function backfillTaskFields(task: LegacyTask, allTasks: LegacyTask[]): Task {
   const parentId = task.parentId ?? null;
   const depth =
     task.depth ??
@@ -32,11 +31,16 @@ function backfillTaskFields(task: Task, allTasks: Task[]): Task {
           1) as Task["depth"]);
 
   return {
-    ...task,
+    id: task.id,
+    kind: task.kind ?? "inbox",
     parentId,
     depth,
     sortOrder: task.sortOrder ?? 0,
-    category: task.category ?? UNASSIGNED,
+    title: task.title,
+    status: task.status,
+    completedAt: task.completedAt,
+    notes: task.notes,
+    createdAt: task.createdAt,
   };
 }
 
@@ -44,7 +48,7 @@ function assignTaskSortOrders(tasks: Task[]): Task[] {
   const byGroup = new Map<string, Task[]>();
 
   for (const task of tasks) {
-    const key = `${task.weekStart}\0${task.parentId ?? "root"}`;
+    const key = `${task.kind}\0${task.parentId ?? "root"}`;
     const group = byGroup.get(key) ?? [];
     group.push(task);
     byGroup.set(key, group);
@@ -53,12 +57,7 @@ function assignTaskSortOrders(tasks: Task[]): Task[] {
   const sortOrderById = new Map<number, number>();
 
   for (const group of byGroup.values()) {
-    group.sort((a, b) => {
-      const priorityDiff =
-        taskPriorityOrder(a.priority) - taskPriorityOrder(b.priority);
-      if (priorityDiff !== 0) return priorityDiff;
-      return a.createdAt - b.createdAt;
-    });
+    group.sort((a, b) => a.createdAt - b.createdAt);
     group.forEach((task, index) => {
       if (task.id !== undefined) {
         sortOrderById.set(task.id, index);
@@ -111,7 +110,7 @@ export function validateProjectsBackup(data: unknown): ProjectsBackupPayload {
     })),
     activityLogs: arrays.activityLogs as QuestionHubActivityLog[],
     tasks: Array.isArray(record.tasks)
-      ? (record.tasks as Task[]).map((task, index, tasks) =>
+      ? (record.tasks as LegacyTask[]).map((task, _index, tasks) =>
           backfillTaskFields(task, tasks),
         )
       : [],

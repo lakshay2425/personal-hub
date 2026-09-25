@@ -65,16 +65,6 @@ export async function savePriorities(
   return settings;
 }
 
-async function migrateCategoryInTasks(
-  fromCategory: string,
-  toCategory: string,
-): Promise<void> {
-  const db = getDB();
-  await db.tasks
-    .filter((task) => task.category === fromCategory)
-    .modify({ category: toCategory });
-}
-
 async function migrateCategoryInLogEntries(
   fromCategory: string,
   toCategory: string,
@@ -122,7 +112,6 @@ export async function renamePriority(
   updatedSlots[slotIndex] = { ...slot, name: trimmedNew };
 
   await savePriorities(updatedSlots);
-  await migrateCategoryInTasks(oldName, trimmedNew);
   await migrateCategoryInLogEntries(oldName, trimmedNew);
 }
 
@@ -132,7 +121,6 @@ export async function deletePriority(name: string): Promise<void> {
     slot?.name === name ? null : slot,
   );
 
-  await migrateCategoryInTasks(name, UNASSIGNED);
   await migrateCategoryInLogEntries(name, UNASSIGNED);
   await savePriorities(updatedSlots);
 }

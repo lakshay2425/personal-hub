@@ -3,23 +3,29 @@ import { addDays, parseISO } from "date-fns";
 import { getAllLogEntries } from "@/features/logger/lib/loggerRepository";
 import type { LogEntry } from "@/features/logger/types";
 import { getAllTasks } from "@/features/planner/lib/tasksRepository";
-import type { Task } from "@/features/planner/types";
+import type { Task, TaskKind } from "@/features/planner/types";
 import { getPriorities } from "@/features/settings/lib/prioritiesRepository";
 import { UNASSIGNED } from "@/features/settings/types";
 
+export interface KindWeekData {
+  kind: Extract<TaskKind, "sprint" | "recursive">;
+  label: string;
+  openRoots: Task[];
+  completedThisWeek: Task[];
+}
+
 export interface CategoryWeekData {
   category: string;
-  completedTasks: Task[];
-  pendingTasks: Task[];
   logEntries: LogEntry[];
 }
 
 export interface DashboardWeekData {
   weekStart: string;
   weekEnd: string;
+  kinds: KindWeekData[];
+  totalOpenRoots: number;
+  totalCompletedThisWeek: number;
   categories: CategoryWeekData[];
-  totalCompletedTasks: number;
-  totalPendingTasks: number;
 }
 
 function getWeekEnd(weekStart: string): string {
@@ -39,8 +45,8 @@ function normalizeCategory(category?: string): string {
   return category && category.trim() !== "" ? category : UNASSIGNED;
 }
 
-function countRootTasks(tasks: Task[]): number {
-  return tasks.filter((task) => (task.parentId ?? null) === null).length;
+function isRoot(task: Task): boolean {
+  return (task.parentId ?? null) === null;
 }
 
 export async function getDashboardWeekData(
@@ -53,16 +59,32 @@ export async function getDashboardWeekData(
     getPriorities(),
   ]);
 
-  const completedTasks = tasks.filter(
+  const completedThisWeek = tasks.filter(
     (task) =>
       task.status === "Done" &&
       task.completedAt !== null &&
       isDateInWeek(completedAtToDate(task.completedAt), weekStart, weekEnd),
   );
 
-  const pendingTasks = tasks.filter(
-    (task) => task.status === "Todo" && task.weekStart === weekStart,
-  );
+  function kindData(
+    kind: Extract<TaskKind, "sprint" | "recursive">,
+    label: string,
+  ): KindWeekData {
+    return {
+      kind,
+      label,
+      openRoots: tasks.filter(
+        (task) =>
+          task.kind === kind && isRoot(task) && task.status === "Todo",
+      ),
+      completedThisWeek: completedThisWeek.filter((task) => task.kind === kind),
+    };
+  }
+
+  const kinds: KindWeekData[] = [
+    kindData("sprint", "Sprint"),
+    kindData("recursive", "Recursive"),
+  ];
 
   const weekLogs = logEntries.filter((entry) =>
     isDateInWeek(entry.date, weekStart, weekEnd),
@@ -77,12 +99,6 @@ export async function getDashboardWeekData(
 
   const categories: CategoryWeekData[] = categoryNames.map((category) => ({
     category,
-    completedTasks: completedTasks.filter(
-      (task) => normalizeCategory(task.category) === category,
-    ),
-    pendingTasks: pendingTasks.filter(
-      (task) => normalizeCategory(task.category) === category,
-    ),
     logEntries: weekLogs.filter(
       (entry) => normalizeCategory(entry.category) === category,
     ),
@@ -91,8 +107,12 @@ export async function getDashboardWeekData(
   return {
     weekStart,
     weekEnd,
+    kinds,
+    totalOpenRoots: kinds.reduce((sum, kind) => sum + kind.openRoots.length, 0),
+    totalCompletedThisWeek: kinds.reduce(
+      (sum, kind) => sum + kind.completedThisWeek.length,
+      0,
+    ),
     categories,
-    totalCompletedTasks: countRootTasks(completedTasks),
-    totalPendingTasks: countRootTasks(pendingTasks),
   };
 }
