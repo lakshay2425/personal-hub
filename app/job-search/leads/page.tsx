@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useMemo, useState, useEffect } from "react";
+import { Suspense, useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -72,6 +73,66 @@ export default function LeadsPage() {
   return <Suspense fallback={<LoadingState message="Loading leads..." />}><LeadsPageContent /></Suspense>;
 }
 
+function TypeMultiSelect({
+  value,
+  options,
+  onChange,
+}: {
+  value: string[];
+  options: string[];
+  onChange: (types: string[]) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonLabel = value.length === 0
+    ? "All touchpoint types"
+    : value.length === 1
+      ? value[0]
+      : `${value.length} types selected`;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [isOpen]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        aria-label="Filter by touchpoint type"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+        className="flex w-full items-center justify-between gap-3 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-left text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+      >
+        <span className="truncate">{buttonLabel}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+      </button>
+      {isOpen ? (
+        <div className="absolute z-30 mt-2 max-h-64 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+          {options.map((type) => (
+            <label key={type} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800">
+              <input
+                type="checkbox"
+                checked={value.includes(type)}
+                onChange={(event) => onChange(event.target.checked ? [...value, type] : value.filter((selected) => selected !== type))}
+                className="rounded border-zinc-300 dark:border-zinc-600"
+              />
+              {type}
+            </label>
+          ))}
+          {value.length > 0 ? (
+            <button type="button" onClick={() => onChange([])} className="mt-1 w-full rounded-md px-2 py-2 text-left text-xs font-medium text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800">Clear type filter</button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function LeadsPageContent() {
   const { companies, addCompany } = useCompanies();
   const { addLead, editLead, removeLead } = useLeads();
@@ -98,7 +159,6 @@ function LeadsPageContent() {
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [groupByCompany, setGroupByCompany] = useState(false);
-  const [channelFilter, setChannelFilter] = useState(searchParams.get("channel") ?? "");
   const [touchpointChannelFilter, setTouchpointChannelFilter] = useState(searchParams.get("touchpointChannel") ?? "");
   const [touchpointTypeFilter, setTouchpointTypeFilter] = useState(searchParams.getAll("touchpointType"));
   const [touchpointStatusFilter, setTouchpointStatusFilter] = useState(searchParams.get("touchpointStatus") ?? "");
@@ -159,9 +219,6 @@ function LeadsPageContent() {
         (lead) => lead.companyId === Number(companyFilter),
       );
     }
-    if (channelFilter) {
-      result = result.filter((lead) => lead.channel === channelFilter);
-    }
     if (viewMode === "allLeads") {
       if (weekFilter) {
         result = result.filter((lead) => leadCreatedInWeek(lead, weekFilter));
@@ -181,7 +238,6 @@ function LeadsPageContent() {
     leadsWithTouchpoints,
     search,
     companyFilter,
-    channelFilter,
     touchpointChannelFilter,
     touchpointTypeFilter,
     touchpointStatusFilter,
@@ -439,83 +495,60 @@ function LeadsPageContent() {
         }
       />
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search leads and touchpoints..."
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:min-w-[200px] sm:flex-1 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        />
-        <CompanyFilterCombobox
-          value={companyFilter}
-          onChange={setCompanyFilter}
-          companies={companies}
-        />
-        <label className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+      <div className="mb-6 space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(200px,1fr)_auto]">
           <input
-            type="checkbox"
-            checked={groupByCompany}
-            onChange={(event) => setGroupByCompany(event.target.checked)}
-            className="rounded border-zinc-300 dark:border-zinc-600"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search leads and touchpoints..."
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
           />
-          Group by company
-        </label>
-        <select
-          value={channelFilter}
-          onChange={(event) => setChannelFilter(event.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        >
-          <option value="">All Lead Channels</option>
-          {LEAD_CHANNELS.map((channel) => (
-            <option key={channel} value={channel}>
-              {channel}
-            </option>
-          ))}
-        </select>
+          <CompanyFilterCombobox value={companyFilter} onChange={setCompanyFilter} companies={companies} />
+          <label className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            <input type="checkbox" checked={groupByCompany} onChange={(event) => setGroupByCompany(event.target.checked)} className="rounded border-zinc-300 dark:border-zinc-600" />
+            Group by company
+          </label>
+        </div>
+
         {viewMode === "byTouchpoint" ? (
-          <>
-            <select
-              value={touchpointChannelFilter}
-              onChange={(event) => {
-                const nextChannel = event.target.value;
-                setTouchpointChannelFilter(nextChannel);
-                if (nextChannel === "Email" && ACCEPTANCE_RESPONSE_STATUSES.includes(touchpointResponseFilter)) setTouchpointResponseFilter("");
-              }}
-              aria-label="Touchpoint channel"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[160px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-            >
-              <option value="">All Touchpoint Channels</option>
-              {LEAD_CHANNELS.map((channel) => <option key={channel} value={channel}>{channel}</option>)}
-            </select>
-            <select
-              multiple
-              value={touchpointTypeFilter}
-              onChange={(event) => setTouchpointTypeFilter(Array.from(event.target.selectedOptions, (option) => option.value))}
-              aria-label="Touchpoint types"
-              className="min-h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[170px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-            >
-              {touchpointTypeOptions.map((type) => <option key={type} value={type}>{type}</option>)}
-            </select>
-            <select
-              value={touchpointStatusFilter}
-              onChange={(event) => setTouchpointStatusFilter(event.target.value)}
-              aria-label="Touchpoint status"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-            >
-              <option value="">All Touchpoint Statuses</option>
-              {listSettings.touchpointStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
-            </select>
-            <select
-              value={touchpointResponseFilter}
-              onChange={(event) => setTouchpointResponseFilter(event.target.value)}
-              aria-label="Touchpoint response"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[160px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-            >
-              <option value="">All Responses</option>
-              {touchpointResponseOptions.map((response) => <option key={response} value={response}>{response}</option>)}
-            </select>
-          </>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Touchpoint filters</p>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <select
+                value={touchpointChannelFilter}
+                onChange={(event) => {
+                  const nextChannel = event.target.value;
+                  setTouchpointChannelFilter(nextChannel);
+                  if (nextChannel === "Email" && ACCEPTANCE_RESPONSE_STATUSES.includes(touchpointResponseFilter)) setTouchpointResponseFilter("");
+                }}
+                aria-label="Touchpoint channel"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+              >
+                <option value="">All touchpoint channels</option>
+                {LEAD_CHANNELS.map((channel) => <option key={channel} value={channel}>{channel}</option>)}
+              </select>
+              <TypeMultiSelect value={touchpointTypeFilter} options={touchpointTypeOptions} onChange={setTouchpointTypeFilter} />
+              <select
+                value={touchpointStatusFilter}
+                onChange={(event) => setTouchpointStatusFilter(event.target.value)}
+                aria-label="Touchpoint status"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+              >
+                <option value="">All touchpoint statuses</option>
+                {listSettings.touchpointStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+              </select>
+              <select
+                value={touchpointResponseFilter}
+                onChange={(event) => setTouchpointResponseFilter(event.target.value)}
+                aria-label="Touchpoint response"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+              >
+                <option value="">All responses</option>
+                {touchpointResponseOptions.map((response) => <option key={response} value={response}>{response}</option>)}
+              </select>
+            </div>
+          </div>
         ) : null}
       </div>
 
