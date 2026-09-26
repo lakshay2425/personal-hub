@@ -1,85 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { getDashboardLists, getDashboardStats } from "../repositories/dashboardRepository";
+import type { DashboardFollowUpItem, DashboardStaleOutreachItem, DashboardStats, TimeFilter } from "../types";
 
-import {
-  getDashboardRecent,
-  getDashboardStats,
-} from "../repositories/dashboardRepository";
-import type {
-  Application,
-  Company,
-  DashboardStats,
-  Lead,
-  LeadTouchpoint,
-  TimeFilter,
-} from "../types";
+const EMPTY_STATS: DashboardStats = { linkedinNew: 0, linkedinContacted: 0, linkedinReplied: 0, emailNoReply: 0, emailReplied: 0, applicationsApplied: 0, interviews: 0, offers: 0 };
 
 export function useDashboard(filter: TimeFilter) {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalCompanies: 0,
-    totalLeads: 0,
-    totalApplications: 0,
-    interviews: 0,
-    offers: 0,
-  });
-  const [recentCompanies, setRecentCompanies] = useState<Company[]>([]);
-  const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
-  const [recentApplications, setRecentApplications] = useState<Application[]>(
-    [],
-  );
-  const [recentTouchpoints, setRecentTouchpoints] = useState<
-    (LeadTouchpoint & { lead?: Lead })[]
-  >([]);
+  const [stats, setStats] = useState(EMPTY_STATS);
+  const [followUps, setFollowUps] = useState<DashboardFollowUpItem[]>([]);
+  const [staleOutreach, setStaleOutreach] = useState<DashboardStaleOutreachItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
+  const load = useCallback(async () => {
     setIsLoading(true);
-    const [statsData, recent] = await Promise.all([
-      getDashboardStats(filter),
-      getDashboardRecent(),
-    ]);
-    setStats(statsData);
-    setRecentCompanies(recent.companies);
-    setRecentLeads(recent.leads);
-    setRecentApplications(recent.applications);
-    setRecentTouchpoints(recent.recentTouchpoints);
-    setIsLoading(false);
+    const [statsData, lists] = await Promise.all([getDashboardStats(filter), getDashboardLists()]);
+    setStats(statsData); setFollowUps(lists.followUps); setStaleOutreach(lists.staleOutreach); setIsLoading(false);
   }, [filter]);
-
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      const [statsData, recent] = await Promise.all([
-        getDashboardStats(filter),
-        getDashboardRecent(),
-      ]);
-      if (!cancelled) {
-        setStats(statsData);
-        setRecentCompanies(recent.companies);
-        setRecentLeads(recent.leads);
-        setRecentApplications(recent.applications);
-        setRecentTouchpoints(recent.recentTouchpoints);
-        setIsLoading(false);
-      }
-    }
-
+    // Dashboard data is an external IndexedDB source; refresh when the selected range changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [filter]);
-
-  return {
-    stats,
-    recentCompanies,
-    recentLeads,
-    recentApplications,
-    recentTouchpoints,
-    isLoading,
-    refresh,
-  };
+  }, [load]);
+  return { stats, followUps, staleOutreach, isLoading, refresh: load };
 }

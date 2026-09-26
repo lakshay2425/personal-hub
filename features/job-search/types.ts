@@ -158,11 +158,32 @@ export type TimeFilter =
   | "all";
 
 export interface DashboardStats {
-  totalCompanies: number;
-  totalLeads: number;
-  totalApplications: number;
+  linkedinNew: number;
+  linkedinContacted: number;
+  linkedinReplied: number;
+  emailNoReply: number;
+  emailReplied: number;
+  applicationsApplied: number;
   interviews: number;
   offers: number;
+}
+
+export interface DashboardFollowUpItem {
+  id: number;
+  name: string;
+  companyName: string;
+  channel: "LinkedIn" | "Email";
+  type: "Lead" | "Cold Email";
+  href: string;
+}
+
+export interface DashboardStaleOutreachItem {
+  id: number;
+  name: string;
+  companyName: string;
+  channel: "LinkedIn" | "Email";
+  daysSinceLastTouchpoint: number;
+  href: string;
 }
 
 /** @deprecated Used only for import/migration from legacy backups */

@@ -2,292 +2,62 @@
 
 import Link from "next/link";
 import { useState } from "react";
-
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
-import {
-  MobileCardHeader,
-  MobileCardMeta,
-  MobileCardMetaRow,
-  MobileList,
-  MobileListItem,
-} from "@/features/job-search/components/MobileListCard";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatsCard } from "@/features/job-search/components/StatsCard";
-import { StatusBadge } from "@/features/job-search/components/StatusBadge";
 import { TimeFilterPills } from "@/features/job-search/components/TimeFilterPills";
-import { DEFAULT_RESPONSE_STATUS } from "@/features/job-search/constants";
 import { useDashboard } from "@/features/job-search/hooks/useDashboard";
-import { useCompanies } from "@/features/job-search/hooks/useCompanies";
-import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
-import { formatDate } from "@/features/job-search/lib/dateUtils";
 import type { TimeFilter } from "@/features/job-search/types";
 
-function getCompanyName(
-  companyId: number,
-  companies: { id?: number; companyName: string }[],
-) {
-  return companies.find((c) => c.id === companyId)?.companyName ?? "Unknown";
-}
+const sectionClass = "mb-10";
+const gridClass = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
 
 export default function DashboardPage() {
   const [filter, setFilter] = useState<TimeFilter>("last30");
-  const { showApplications } = useJobSearchPreferences();
-  const {
-    stats,
-    recentCompanies,
-    recentLeads,
-    recentApplications,
-    recentTouchpoints,
-    isLoading,
-  } = useDashboard(filter);
-  const { companies } = useCompanies();
-
+  const { stats, followUps, staleOutreach, isLoading } = useDashboard(filter);
   if (isLoading) return <LoadingState message="Loading dashboard..." />;
+  return <div>
+    <PageHeader title="Dashboard" description="Actionable outreach and application activity" />
+    <div className="mb-8"><TimeFilterPills value={filter} onChange={setFilter} /></div>
 
-  return (
-    <div>
-      <PageHeader
-        title="Dashboard"
-        description="Overview of your job search activity"
-      />
-
-      <div className="mb-8">
-        <TimeFilterPills value={filter} onChange={setFilter} />
+    <DashboardSection title="LinkedIn Outreach Stats" className={sectionClass}>
+      <div className={gridClass}>
+        <StatsCard label="Requests Sent — Not Accepted" value={stats.linkedinNew} href="/job-search/leads?channel=LinkedIn&status=New" />
+        <StatsCard label="Messages Sent — No Reply" value={stats.linkedinContacted} href="/job-search/leads?channel=LinkedIn&status=Contacted" />
+        <StatsCard label="Messages Sent — Replied" value={stats.linkedinReplied} href="/job-search/leads?channel=LinkedIn&status=Replied" />
       </div>
+    </DashboardSection>
 
-      <div
-        className={`mb-10 grid gap-4 sm:grid-cols-2 ${
-          showApplications ? "lg:grid-cols-5" : "lg:grid-cols-2"
-        }`}
-      >
-        <StatsCard label="Total Companies" value={stats.totalCompanies} />
-        <StatsCard label="Total Leads" value={stats.totalLeads} />
-        {showApplications ? (
-          <>
-            <StatsCard label="Applications" value={stats.totalApplications} />
-            <StatsCard label="Interviews" value={stats.interviews} />
-            <StatsCard label="Offers" value={stats.offers} />
-          </>
-        ) : null}
+    <DashboardSection title="Email Outreach Stats" className={sectionClass}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <StatsCard label="Emails Sent — No Reply" value={stats.emailNoReply} href="/job-search/cold-emails?status=Sent" />
+        <StatsCard label="Emails Sent — Replied" value={stats.emailReplied} href="/job-search/cold-emails?status=Replied" />
       </div>
+    </DashboardSection>
 
-      <div
-        className={`mb-10 grid gap-8 ${
-          showApplications ? "lg:grid-cols-3" : "lg:grid-cols-2"
-        }`}
-      >
-        <RecentSection title="Recently Added Companies">
-          {recentCompanies.length === 0 ? (
-            <EmptyState
-              title="No companies yet"
-              description="Add your first company to get started."
-              action={
-                <Link
-                  href="/job-search/companies"
-                  className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
-                >
-                  Go to Companies →
-                </Link>
-              }
-            />
-          ) : (
-            <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-              {recentCompanies.map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`/job-search/companies/${c.id}`}
-                    className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                  >
-                    <span className="min-w-0 flex-1 break-words font-medium text-zinc-900 dark:text-zinc-50">
-                      {c.companyName}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </RecentSection>
-
-        <RecentSection title="Recently Added Leads">
-          {recentLeads.length === 0 ? (
-            <EmptyState
-              title="No leads yet"
-              description="Add leads to track your network."
-            />
-          ) : (
-            <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-              {recentLeads.map((l) => (
-                <li
-                  key={l.id}
-                  className="flex items-center justify-between gap-3 px-4 py-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="break-words font-medium text-zinc-900 dark:text-zinc-50">
-                      {l.name}
-                    </p>
-                    <p className="break-words text-xs text-zinc-500">
-                      {getCompanyName(l.companyId, companies)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </RecentSection>
-
-        {showApplications ? (
-          <RecentSection title="Recently Applied Jobs">
-            {recentApplications.length === 0 ? (
-              <EmptyState
-                title="No applications yet"
-                description="Track your job applications here."
-              />
-            ) : (
-              <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-                {recentApplications.map((a) => (
-                  <li
-                    key={a.id}
-                    className="flex items-center justify-between gap-3 px-4 py-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words font-medium text-zinc-900 dark:text-zinc-50">
-                        {a.role}
-                      </p>
-                      <p className="break-words text-xs text-zinc-500">
-                        {getCompanyName(a.companyId, companies)} ·{" "}
-                        {formatDate(a.appliedDate)}
-                      </p>
-                    </div>
-                    <StatusBadge status={a.status} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </RecentSection>
-        ) : null}
+    <DashboardSection title="Applications Stats" className={sectionClass}>
+      <div className={gridClass}>
+        <StatsCard label="Applied — No Update" value={stats.applicationsApplied} href="/job-search/applications?status=Applied" />
+        <StatsCard label="Interview Stage" value={stats.interviews} href="/job-search/applications?status=Interview" />
+        <StatsCard label="Offers" value={stats.offers} href="/job-search/applications?status=Offer" />
       </div>
+    </DashboardSection>
 
-      <section>
-        <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          Recent Touchpoints
-        </h2>
-        {recentTouchpoints.length === 0 ? (
-          <EmptyState
-            title="No touchpoints yet"
-            description="Log outreach touchpoints from the Leads page."
-            action={
-              <Link
-                href="/job-search/leads"
-                className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
-              >
-                Go to Leads →
-              </Link>
-            }
-          />
-        ) : (
-          <>
-            <MobileList>
-              {recentTouchpoints.map((touchpoint) => (
-                <MobileListItem key={touchpoint.id}>
-                  <MobileCardHeader
-                    title={touchpoint.lead?.name ?? "Unknown lead"}
-                    subtitle={touchpoint.type}
-                    badge={<StatusBadge status={touchpoint.status} />}
-                  />
-                  <MobileCardMeta>
-                    <MobileCardMetaRow
-                      label="Channel"
-                      value={touchpoint.channel}
-                    />
-                    <MobileCardMetaRow
-                      label="Response"
-                      value={
-                        touchpoint.responseStatus || DEFAULT_RESPONSE_STATUS
-                      }
-                    />
-                    <MobileCardMetaRow
-                      label="Date"
-                      value={formatDate(touchpoint.occurredAt)}
-                    />
-                  </MobileCardMeta>
-                </MobileListItem>
-              ))}
-            </MobileList>
-            <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-            <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Lead
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Type
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Channel
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Date
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">
-                    Response
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {recentTouchpoints.map((touchpoint) => (
-                  <tr key={touchpoint.id}>
-                    <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                      {touchpoint.lead?.name ?? "Unknown"}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {touchpoint.type}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {touchpoint.channel}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                      {formatDate(touchpoint.occurredAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={touchpoint.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge
-                        status={
-                          touchpoint.responseStatus || DEFAULT_RESPONSE_STATUS
-                        }
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          </>
-        )}
-      </section>
-    </div>
-  );
+    <DashboardSection title="Follow-ups Due Today" className={sectionClass}>
+      {followUps.length === 0 ? <EmptyState title="No follow-ups due today." description="You have no outreach scheduled for today." /> : <DashboardList items={followUps.map((item) => ({ ...item, detail: `${item.channel} · ${item.type}` }))} />}
+    </DashboardSection>
+
+    <DashboardSection title="Stale Outreach">
+      {staleOutreach.length === 0 ? <EmptyState title="No stale outreach. You're on top of things." description="All active outreach has been touched recently." /> : <DashboardList items={staleOutreach.map((item) => ({ ...item, detail: `${item.channel} · ${item.daysSinceLastTouchpoint} days since last touchpoint` }))} />}
+    </DashboardSection>
+  </div>;
 }
 
-function RecentSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <h2 className="mb-4 text-base font-semibold text-zinc-900 dark:text-zinc-50">
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
+function DashboardSection({ title, className = "", children }: { title: string; className?: string; children: React.ReactNode }) {
+  return <section className={className}><h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">{title}</h2>{children}</section>;
+}
+
+function DashboardList({ items }: { items: Array<{ id: number; name: string; companyName: string; detail: string; href: string }> }) {
+  return <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">{items.map((item) => <li key={`${item.id}-${item.detail}`}><Link href={item.href} className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"><span className="min-w-0"><span className="block break-words font-medium text-zinc-900 dark:text-zinc-50">{item.name}</span><span className="block break-words text-sm text-zinc-500">{item.companyName} · {item.detail}</span></span><span className="text-zinc-400">→</span></Link></li>)}</ul>;
 }

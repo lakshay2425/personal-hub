@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -23,6 +23,7 @@ import type { Application } from "@/features/job-search/types";
 
 export default function ApplicationsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showApplications } = useJobSearchPreferences();
   const { companies, addCompany } = useCompanies();
   const { applications, isLoading, addApplication, editApplication, removeApplication } =
@@ -31,8 +32,8 @@ export default function ApplicationsPage() {
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [portalFilter, setPortalFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [weekFilter, setWeekFilter] = useState<string | null>(getCurrentWeekStart());
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "");
+  const [weekFilter, setWeekFilter] = useState<string | null>(searchParams.has("status") ? null : getCurrentWeekStart());
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<Application | null>(null);
   const [deletingApp, setDeletingApp] = useState<Application | null>(null);
