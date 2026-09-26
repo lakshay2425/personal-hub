@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { Suspense, useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -65,6 +65,10 @@ const VIEW_OPTIONS: { value: LeadsViewMode; label: string }[] = [
 ];
 
 export default function LeadsPage() {
+  return <Suspense fallback={<LoadingState message="Loading leads..." />}><LeadsPageContent /></Suspense>;
+}
+
+function LeadsPageContent() {
   const { companies, addCompany } = useCompanies();
   const { addLead, editLead, removeLead } = useLeads();
   const {

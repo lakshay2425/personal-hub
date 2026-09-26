@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -22,6 +22,10 @@ import {
 import type { Application } from "@/features/job-search/types";
 
 export default function ApplicationsPage() {
+  return <Suspense fallback={<LoadingState message="Loading applications..." />}><ApplicationsPageContent /></Suspense>;
+}
+
+function ApplicationsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showApplications } = useJobSearchPreferences();
