@@ -309,18 +309,16 @@ class JobSearchDatabase extends Dexie {
         const leads = await leadsTable.toArray();
 
         for (const lead of leads) {
-          const {
-            firstFollowUpDate: _firstFollowUpDate,
-            secondFollowUpDate: _secondFollowUpDate,
-            followUpTemplateId: _followUpTemplateId,
-            templateId: _templateId,
-            ...rest
-          } = lead as Lead & {
+          const rest = { ...lead } as Lead & {
             firstFollowUpDate?: string | null;
             secondFollowUpDate?: string | null;
             followUpTemplateId?: number | null;
             templateId?: number | null;
           };
+          delete rest.firstFollowUpDate;
+          delete rest.secondFollowUpDate;
+          delete rest.followUpTemplateId;
+          delete rest.templateId;
 
           await leadsTable.put(rest);
         }

@@ -162,16 +162,14 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       ? lead.channel
       : LEGACY_LEAD_CHANNEL;
 
-    const {
-      firstFollowUpDate: _firstFollowUpDate,
-      secondFollowUpDate: _secondFollowUpDate,
-      followUpTemplateId: _followUpTemplateId,
-      ...leadWithoutFollowUps
-    } = lead as Lead & {
+    const leadWithoutFollowUps = { ...lead } as Lead & {
       firstFollowUpDate?: string | null;
       secondFollowUpDate?: string | null;
       followUpTemplateId?: number | null;
     };
+    delete leadWithoutFollowUps.firstFollowUpDate;
+    delete leadWithoutFollowUps.secondFollowUpDate;
+    delete leadWithoutFollowUps.followUpTemplateId;
 
     return backfillLeadProfileFields({
       ...leadWithoutFollowUps,
