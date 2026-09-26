@@ -33,6 +33,28 @@ export const DEFAULT_TOUCHPOINT_TYPES = [
   "Other",
 ];
 
+export const LINKEDIN_TOUCHPOINT_TYPES = [
+  "Connection Request",
+  "Follow-up",
+  "Message",
+  "Reply",
+];
+
+export const EMAIL_TOUCHPOINT_TYPES = [
+  "Message",
+  "First Follow-up",
+  "Second Follow-up",
+  "Reply",
+];
+
+export const ACCEPTANCE_RESPONSE_STATUSES = ["Accepted", "Not accepted"];
+export const EMAIL_RESPONSE_STATUSES = ["Not responded", "Replied"];
+export const LINKEDIN_RESPONSE_STATUSES = [
+  "Not responded",
+  "Replied",
+  ...ACCEPTANCE_RESPONSE_STATUSES,
+];
+
 export const DEFAULT_CONTACTED_TRIGGER_STATUSES = ["Sent"];
 
 export function separateResponseFromStatus(

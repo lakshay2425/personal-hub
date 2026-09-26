@@ -21,9 +21,15 @@ import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatsCard } from "@/features/job-search/components/StatsCard";
 import { WeekFilter } from "@/features/job-search/components/WeekFilter";
 import {
+  ACCEPTANCE_RESPONSE_STATUSES,
   DEFAULT_LEAD_CHANNEL,
   DEFAULT_NEW_LEAD_STATUS,
+  DEFAULT_TOUCHPOINT_TYPES,
+  EMAIL_TOUCHPOINT_TYPES,
+  EMAIL_RESPONSE_STATUSES,
   LEAD_CHANNELS,
+  LINKEDIN_TOUCHPOINT_TYPES,
+  LINKEDIN_RESPONSE_STATUSES,
 } from "@/features/job-search/constants";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeadListSettings } from "@/features/job-search/hooks/useLeadListSettings";
@@ -39,13 +45,11 @@ import {
   filterTouchpointsByWeek,
   groupLeadsByCompany,
   leadCreatedInWeek,
-  leadHasAnyTouchpoint,
   type LeadsViewMode,
 } from "@/features/job-search/lib/leadListUtils";
 import { buildTemplateMap } from "@/features/job-search/lib/templateUtils";
 import {
   countTouchpointsInWeek,
-  leadHasTouchpointInWeek,
   matchesLeadTouchpointQuery,
 } from "@/features/job-search/repositories/leadTouchpointsRepository";
 import type {
@@ -95,10 +99,11 @@ function LeadsPageContent() {
   const [companyFilter, setCompanyFilter] = useState("");
   const [groupByCompany, setGroupByCompany] = useState(false);
   const [channelFilter, setChannelFilter] = useState(searchParams.get("channel") ?? "");
-  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "");
   const [touchpointChannelFilter, setTouchpointChannelFilter] = useState(searchParams.get("touchpointChannel") ?? "");
-  const [touchpointStatusFilter] = useState(searchParams.get("touchpointStatus") ?? "");
-  const [weekFilter, setWeekFilter] = useState<string | null>(searchParams.has("channel") || searchParams.has("status") ? null : null);
+  const [touchpointTypeFilter, setTouchpointTypeFilter] = useState(searchParams.getAll("touchpointType"));
+  const [touchpointStatusFilter, setTouchpointStatusFilter] = useState(searchParams.get("touchpointStatus") ?? "");
+  const [touchpointResponseFilter, setTouchpointResponseFilter] = useState(searchParams.get("touchpointResponse") ?? "");
+  const [weekFilter, setWeekFilter] = useState<string | null>(null);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [detailLead, setDetailLead] = useState<LeadWithTouchpoints | null>(
@@ -119,6 +124,22 @@ function LeadsPageContent() {
     () => new Map(companies.map((company) => [company.id!, company])),
     [companies],
   );
+
+  const knownTouchpointTypes = [...DEFAULT_TOUCHPOINT_TYPES, ...EMAIL_TOUCHPOINT_TYPES, ...LINKEDIN_TOUCHPOINT_TYPES];
+  const customTouchpointTypes = listSettings?.touchpointTypes.filter((type) => !knownTouchpointTypes.includes(type)) ?? [];
+  const touchpointTypeOptions = touchpointChannelFilter === "Email"
+    ? [...EMAIL_TOUCHPOINT_TYPES, ...customTouchpointTypes]
+    : touchpointChannelFilter === "LinkedIn"
+      ? [...LINKEDIN_TOUCHPOINT_TYPES, ...customTouchpointTypes]
+      : (listSettings?.touchpointTypes ?? []);
+  const customResponseStatuses = listSettings?.responseStatuses.filter((status) =>
+    ![...LINKEDIN_RESPONSE_STATUSES, "Positive Response"].includes(status),
+  ) ?? [];
+  const touchpointResponseOptions = touchpointChannelFilter === "Email"
+    ? [...EMAIL_RESPONSE_STATUSES, ...customResponseStatuses]
+    : touchpointChannelFilter === "LinkedIn"
+      ? [...LINKEDIN_RESPONSE_STATUSES, ...customResponseStatuses]
+      : [...new Set([...(listSettings?.responseStatuses ?? []), ...LINKEDIN_RESPONSE_STATUSES])];
 
   const currentWeekStart = getCurrentWeekStart();
 
@@ -141,41 +162,18 @@ function LeadsPageContent() {
     if (channelFilter) {
       result = result.filter((lead) => lead.channel === channelFilter);
     }
-    if (statusFilter) {
-      result = result.filter((lead) => lead.status === statusFilter);
-    }
-
     if (viewMode === "allLeads") {
       if (weekFilter) {
         result = result.filter((lead) => leadCreatedInWeek(lead, weekFilter));
       }
     } else {
-      if (weekFilter === null) {
-        result = result.filter((lead) => leadHasAnyTouchpoint(lead));
-      } else {
-        result = result.filter((lead) =>
-          leadHasTouchpointInWeek(lead, weekFilter),
-        );
-      }
-
-      if (touchpointChannelFilter) {
-        result = result.filter((lead) =>
-          lead.touchpoints.some(
-            (touchpoint) =>
-              touchpoint.channel === touchpointChannelFilter &&
-              (!weekFilter ||
-                isTimestampInWeek(touchpoint.occurredAt, weekFilter)),
-          ),
-        );
-      }
-      if (touchpointStatusFilter) {
-        result = result.filter((lead) =>
-          lead.touchpoints.some((touchpoint) =>
-            touchpoint.status === touchpointStatusFilter ||
-            touchpoint.responseStatus === touchpointStatusFilter,
-          ),
-        );
-      }
+      result = result.filter((lead) => lead.touchpoints.some((touchpoint) =>
+        (!weekFilter || isTimestampInWeek(touchpoint.occurredAt, weekFilter)) &&
+        (!touchpointChannelFilter || touchpoint.channel === touchpointChannelFilter) &&
+        (touchpointTypeFilter.length === 0 || touchpointTypeFilter.includes(touchpoint.type)) &&
+        (!touchpointStatusFilter || touchpoint.status === touchpointStatusFilter) &&
+        (!touchpointResponseFilter || touchpoint.responseStatus === touchpointResponseFilter),
+      ));
     }
 
     return result;
@@ -184,9 +182,10 @@ function LeadsPageContent() {
     search,
     companyFilter,
     channelFilter,
-    statusFilter,
     touchpointChannelFilter,
+    touchpointTypeFilter,
     touchpointStatusFilter,
+    touchpointResponseFilter,
     weekFilter,
     viewMode,
   ]);
@@ -474,29 +473,49 @@ function LeadsPageContent() {
             </option>
           ))}
         </select>
-        <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-        >
-          <option value="">All Lead Statuses</option>
-          {listSettings.leadStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
-        </select>
         {viewMode === "byTouchpoint" ? (
-          <select
-            value={touchpointChannelFilter}
-            onChange={(event) =>
-              setTouchpointChannelFilter(event.target.value)
-            }
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[160px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-          >
-            <option value="">All Touchpoint Channels</option>
-            {LEAD_CHANNELS.map((channel) => (
-              <option key={channel} value={channel}>
-                {channel}
-              </option>
-            ))}
-          </select>
+          <>
+            <select
+              value={touchpointChannelFilter}
+              onChange={(event) => {
+                const nextChannel = event.target.value;
+                setTouchpointChannelFilter(nextChannel);
+                if (nextChannel === "Email" && ACCEPTANCE_RESPONSE_STATUSES.includes(touchpointResponseFilter)) setTouchpointResponseFilter("");
+              }}
+              aria-label="Touchpoint channel"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[160px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+            >
+              <option value="">All Touchpoint Channels</option>
+              {LEAD_CHANNELS.map((channel) => <option key={channel} value={channel}>{channel}</option>)}
+            </select>
+            <select
+              multiple
+              value={touchpointTypeFilter}
+              onChange={(event) => setTouchpointTypeFilter(Array.from(event.target.selectedOptions, (option) => option.value))}
+              aria-label="Touchpoint types"
+              className="min-h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[170px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+            >
+              {touchpointTypeOptions.map((type) => <option key={type} value={type}>{type}</option>)}
+            </select>
+            <select
+              value={touchpointStatusFilter}
+              onChange={(event) => setTouchpointStatusFilter(event.target.value)}
+              aria-label="Touchpoint status"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[140px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+            >
+              <option value="">All Touchpoint Statuses</option>
+              {listSettings.touchpointStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+            </select>
+            <select
+              value={touchpointResponseFilter}
+              onChange={(event) => setTouchpointResponseFilter(event.target.value)}
+              aria-label="Touchpoint response"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm sm:w-auto sm:min-w-[160px] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+            >
+              <option value="">All Responses</option>
+              {touchpointResponseOptions.map((response) => <option key={response} value={response}>{response}</option>)}
+            </select>
+          </>
         ) : null}
       </div>
 

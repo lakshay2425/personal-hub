@@ -7,7 +7,13 @@ import { Modal } from "@/components/ui/Modal";
 import {
   DEFAULT_RESPONSE_STATUS,
   DEFAULT_TOUCHPOINT_STATUS,
+  DEFAULT_TOUCHPOINT_TYPES,
+  ACCEPTANCE_RESPONSE_STATUSES,
+  EMAIL_RESPONSE_STATUSES,
+  EMAIL_TOUCHPOINT_TYPES,
   LEAD_CHANNELS,
+  LINKEDIN_RESPONSE_STATUSES,
+  LINKEDIN_TOUCHPOINT_TYPES,
 } from "../../constants";
 import { getOutreachTemplateTypeForChannel } from "../../lib/templateUtils";
 import type { LeadTouchpoint, Template } from "../../types";
@@ -83,7 +89,10 @@ function LeadTouchpointFormFields({
     touchpoint?.status ?? DEFAULT_TOUCHPOINT_STATUS,
   );
   const [responseStatus, setResponseStatus] = useState(
-    touchpoint?.responseStatus ?? DEFAULT_RESPONSE_STATUS,
+    touchpoint?.channel === "Email" &&
+      ACCEPTANCE_RESPONSE_STATUSES.includes(touchpoint.responseStatus)
+      ? DEFAULT_RESPONSE_STATUS
+      : touchpoint?.responseStatus ?? DEFAULT_RESPONSE_STATUS,
   );
   const [templateId, setTemplateId] = useState(
     touchpoint?.templateId != null ? String(touchpoint.templateId) : "",
@@ -97,6 +106,36 @@ function LeadTouchpointFormFields({
   const outreachTemplateType = getOutreachTemplateTypeForChannel(channel);
   const templateFilterType =
     channel === "Email" ? "Cold Email" : outreachTemplateType;
+  const builtInTypes = [...LINKEDIN_TOUCHPOINT_TYPES, ...EMAIL_TOUCHPOINT_TYPES, ...DEFAULT_TOUCHPOINT_TYPES];
+  const customTypes = touchpointTypeOptions.filter((option) => !builtInTypes.includes(option));
+  const availableTypes = channel === "Email"
+    ? [...EMAIL_TOUCHPOINT_TYPES, ...customTypes]
+    : channel === "LinkedIn"
+      ? [...LINKEDIN_TOUCHPOINT_TYPES, ...customTypes]
+      : touchpointTypeOptions;
+  const builtInResponses = [...LINKEDIN_RESPONSE_STATUSES, "Positive Response"];
+  const customResponses = responseStatusOptions.filter((option) => !builtInResponses.includes(option));
+  const availableResponses = channel === "Email"
+    ? [...EMAIL_RESPONSE_STATUSES, ...customResponses]
+    : channel === "LinkedIn"
+      ? [...LINKEDIN_RESPONSE_STATUSES, ...customResponses]
+      : responseStatusOptions;
+
+  const changeChannel = (nextChannel: LeadTouchpoint["channel"]) => {
+    setChannel(nextChannel);
+    const nextTypes = nextChannel === "Email"
+      ? [...EMAIL_TOUCHPOINT_TYPES, ...customTypes]
+      : nextChannel === "LinkedIn"
+        ? [...LINKEDIN_TOUCHPOINT_TYPES, ...customTypes]
+        : touchpointTypeOptions;
+    if (type && !nextTypes.includes(type)) setType("");
+    const nextResponses = nextChannel === "Email"
+      ? [...EMAIL_RESPONSE_STATUSES, ...customResponses]
+      : nextChannel === "LinkedIn"
+        ? [...LINKEDIN_RESPONSE_STATUSES, ...customResponses]
+        : responseStatusOptions;
+    if (!nextResponses.includes(responseStatus)) setResponseStatus(DEFAULT_RESPONSE_STATUS);
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -123,7 +162,7 @@ function LeadTouchpointFormFields({
         <FormField label="Channel" required>
           <SelectInput
             value={channel}
-            onChange={(value) => setChannel(value as LeadTouchpoint["channel"])}
+            onChange={(value) => changeChannel(value as LeadTouchpoint["channel"])}
             options={LEAD_CHANNELS.map((option) => ({
               value: option,
               label: option,
@@ -135,7 +174,7 @@ function LeadTouchpointFormFields({
           <CreatableSelectInput
             value={type}
             onChange={setType}
-            options={touchpointTypeOptions}
+            options={availableTypes}
             placeholder="Select type..."
             createLabel="Add new type..."
             newValuePlaceholder="Initial, Follow-up..."
@@ -155,7 +194,7 @@ function LeadTouchpointFormFields({
           <CreatableSelectInput
             value={responseStatus}
             onChange={setResponseStatus}
-            options={responseStatusOptions}
+            options={availableResponses}
             placeholder="Select response..."
             createLabel="Add new response..."
             newValuePlaceholder="Not responded, Replied..."

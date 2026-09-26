@@ -4,6 +4,10 @@ import { getDB } from "../db";
 import { getTimeFilterStart } from "../lib/dateUtils";
 import type { DashboardFollowUpItem, DashboardStaleOutreachItem, DashboardStats, Lead, LeadTouchpoint, TimeFilter } from "../types";
 
+const LINKEDIN_MESSAGES = ["Message", "Follow-up"];
+const EMAIL_NO_REPLY_TYPES = ["Message", "First Follow-up", "Second Follow-up"];
+const EMAIL_REPLIED_TYPES = ["Message", "First Follow-up", "Second Follow-up"];
+
 function latestTouchpoints(touchpoints: LeadTouchpoint[]) {
   const latest = new Map<number, LeadTouchpoint>();
   for (const touchpoint of touchpoints) {
@@ -13,29 +17,49 @@ function latestTouchpoints(touchpoints: LeadTouchpoint[]) {
   return latest;
 }
 
+function matchesOutreach(
+  touchpoint: LeadTouchpoint,
+  channel: "LinkedIn" | "Email",
+  types: string[],
+  responseStatus: string,
+  since: number | null,
+) {
+  return touchpoint.channel === channel &&
+    types.includes(touchpoint.type) &&
+    touchpoint.status === "Sent" &&
+    touchpoint.responseStatus === responseStatus &&
+    (since === null || touchpoint.occurredAt >= since);
+}
+
 function isReplied(touchpoint?: LeadTouchpoint) {
-  return Boolean(touchpoint && (["Replied", "Positive Response"].includes(touchpoint.responseStatus) || ["Replied", "Positive Response"].includes(touchpoint.status)));
+  return Boolean(
+    touchpoint &&
+      (["Replied", "Positive Response"].includes(touchpoint.responseStatus) ||
+        ["Replied", "Positive Response"].includes(touchpoint.status)),
+  );
 }
 
 export async function getDashboardStats(filter: TimeFilter): Promise<DashboardStats> {
   const since = getTimeFilterStart(filter);
   const database = getDB();
-  const [leads, touchpoints, applications] = await Promise.all([
-    database.leads.toArray(), database.leadTouchpoints.toArray(), database.applications.toArray(),
+  const [touchpoints, applications] = await Promise.all([
+    database.leadTouchpoints.toArray(), database.applications.toArray(),
   ]);
-  const latest = latestTouchpoints(touchpoints);
   const inRange = (timestamp: number) => since === null || timestamp >= since;
-  const leadTimestamp = (lead: Lead) => latest.get(lead.id!)?.occurredAt ?? lead.createdAt;
-  const leadsInRange = leads.filter((lead) => inRange(leadTimestamp(lead)));
-  const linkedin = leadsInRange.filter((lead) => lead.channel === "LinkedIn");
-  const emailTouchpoints = leadsInRange.filter((lead) => lead.channel === "Email").map((lead) => latest.get(lead.id!)).filter((touchpoint): touchpoint is LeadTouchpoint => Boolean(touchpoint));
+  const countMatchingLeads = (predicate: (touchpoint: LeadTouchpoint) => boolean) => {
+    const matchingLeadIds = new Set(
+      touchpoints.filter(predicate).map((touchpoint) => touchpoint.leadId),
+    );
+    return matchingLeadIds.size;
+  };
 
   return {
-    linkedinNew: linkedin.filter((lead) => lead.status === "New").length,
-    linkedinContacted: linkedin.filter((lead) => lead.status === "Contacted").length,
-    linkedinReplied: linkedin.filter((lead) => lead.status === "Replied").length,
-    emailNoReply: emailTouchpoints.filter((touchpoint) => ["Sent", "No Response"].includes(touchpoint.status) && !isReplied(touchpoint)).length,
-    emailReplied: emailTouchpoints.filter(isReplied).length,
+    linkedinConnectionNotAccepted: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", ["Connection Request"], "Not accepted", since)),
+    linkedinMessagesNoReply: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", LINKEDIN_MESSAGES, "Not responded", since)),
+    linkedinMessagesReplied: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", LINKEDIN_MESSAGES, "Replied", since)),
+    linkedinConnectionAccepted: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", ["Connection Request"], "Accepted", since)),
+    emailNoReply: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "Email", EMAIL_NO_REPLY_TYPES, "Not responded", since)),
+    emailReplied: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "Email", EMAIL_REPLIED_TYPES, "Replied", since)),
     applicationsApplied: applications.filter((a) => a.status === "Applied" && inRange(a.createdAt)).length,
     interviews: applications.filter((a) => a.status === "Interview" && inRange(a.createdAt)).length,
     offers: applications.filter((a) => a.status === "Offer" && inRange(a.createdAt)).length,

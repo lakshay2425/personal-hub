@@ -13,6 +13,18 @@ import type { TimeFilter } from "@/features/job-search/types";
 const sectionClass = "mb-10";
 const gridClass = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
 
+function outreachHref(channel: string, types: string[], responseStatus: string) {
+  const query = new URLSearchParams({
+    view: "byTouchpoint",
+    touchpointChannel: channel,
+    touchpointStatus: "Sent",
+    touchpointResponse: responseStatus,
+  });
+  for (const type of types) query.append("touchpointType", type);
+  const route = channel === "Email" ? "/job-search/cold-emails" : "/job-search/leads";
+  return `${route}?${query.toString()}`;
+}
+
 export default function DashboardPage() {
   const [filter, setFilter] = useState<TimeFilter>("last30");
   const { stats, followUps, staleOutreach, isLoading } = useDashboard(filter);
@@ -22,17 +34,18 @@ export default function DashboardPage() {
     <div className="mb-8"><TimeFilterPills value={filter} onChange={setFilter} /></div>
 
     <DashboardSection title="LinkedIn Outreach Stats" className={sectionClass}>
-      <div className={gridClass}>
-        <StatsCard label="Requests Sent — Not Accepted" value={stats.linkedinNew} href="/job-search/leads?channel=LinkedIn&status=New" />
-        <StatsCard label="Messages Sent — No Reply" value={stats.linkedinContacted} href="/job-search/leads?channel=LinkedIn&status=Contacted" />
-        <StatsCard label="Messages Sent — Replied" value={stats.linkedinReplied} href="/job-search/leads?channel=LinkedIn&status=Replied" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatsCard label="Connection Requests — Not Accepted" value={stats.linkedinConnectionNotAccepted} href={outreachHref("LinkedIn", ["Connection Request"], "Not accepted")} />
+        <StatsCard label="Messages Sent — No Reply" value={stats.linkedinMessagesNoReply} href={outreachHref("LinkedIn", ["Follow-up", "Message"], "Not responded")} />
+        <StatsCard label="Messages Sent — Replied" value={stats.linkedinMessagesReplied} href={outreachHref("LinkedIn", ["Message", "Follow-up"], "Replied")} />
+        <StatsCard label="Connection Requests — Accepted" value={stats.linkedinConnectionAccepted} href={outreachHref("LinkedIn", ["Connection Request"], "Accepted")} />
       </div>
     </DashboardSection>
 
     <DashboardSection title="Email Outreach Stats" className={sectionClass}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <StatsCard label="Emails Sent — No Reply" value={stats.emailNoReply} href="/job-search/cold-emails?status=Sent" />
-        <StatsCard label="Emails Sent — Replied" value={stats.emailReplied} href="/job-search/cold-emails?status=Replied" />
+        <StatsCard label="Emails Sent — No Reply" value={stats.emailNoReply} href={outreachHref("Email", ["Message", "Follow-up", "First Follow-up", "Second Follow-up"], "Not responded")} />
+        <StatsCard label="Emails Sent — Replied" value={stats.emailReplied} href={outreachHref("Email", ["Message", "First Follow-up", "Second Follow-up"], "Replied")} />
       </div>
     </DashboardSection>
 

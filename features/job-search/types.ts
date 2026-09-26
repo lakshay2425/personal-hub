@@ -158,9 +158,10 @@ export type TimeFilter =
   | "all";
 
 export interface DashboardStats {
-  linkedinNew: number;
-  linkedinContacted: number;
-  linkedinReplied: number;
+  linkedinConnectionNotAccepted: number;
+  linkedinMessagesNoReply: number;
+  linkedinMessagesReplied: number;
+  linkedinConnectionAccepted: number;
   emailNoReply: number;
   emailReplied: number;
   applicationsApplied: number;
