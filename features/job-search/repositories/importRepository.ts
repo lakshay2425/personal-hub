@@ -163,10 +163,12 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       : LEGACY_LEAD_CHANNEL;
 
     const leadWithoutFollowUps = { ...lead } as Lead & {
+      type?: string;
       firstFollowUpDate?: string | null;
       secondFollowUpDate?: string | null;
       followUpTemplateId?: number | null;
     };
+    delete leadWithoutFollowUps.type;
     delete leadWithoutFollowUps.firstFollowUpDate;
     delete leadWithoutFollowUps.secondFollowUpDate;
     delete leadWithoutFollowUps.followUpTemplateId;

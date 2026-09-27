@@ -216,7 +216,6 @@ export function matchesLeadTouchpointQuery(
 
   if (lead.name.toLowerCase().includes(lower)) return true;
   if (lead.role.toLowerCase().includes(lower)) return true;
-  if (lead.type.toLowerCase().includes(lower)) return true;
   if (lead.channel.toLowerCase().includes(lower)) return true;
 
   return lead.touchpoints.some(

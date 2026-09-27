@@ -5,7 +5,7 @@ import { DEFAULT_RESPONSE_STATUS } from "../constants";
 import { formatDate } from "../lib/dateUtils";
 import type { LeadTouchpoint, Template } from "../types";
 import { StatusBadge } from "./StatusBadge";
-import { mobileActionClass } from "./MobileListCard";
+import { CompanyOverflowMenu } from "./CompanyOverflowMenu";
 
 interface LeadTouchpointRowProps {
   touchpoint: LeadTouchpoint;
@@ -56,21 +56,12 @@ export function LeadTouchpointRow({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onEdit}
-          className={mobileActionClass.edit}
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className={mobileActionClass.delete}
-        >
-          Delete
-        </button>
+      <div className="flex justify-end">
+        <CompanyOverflowMenu
+          label="Touchpoint options"
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       </div>
     </div>
   );

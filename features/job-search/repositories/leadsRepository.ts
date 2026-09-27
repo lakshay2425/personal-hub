@@ -86,9 +86,3 @@ export async function getUniqueLeadRoles(): Promise<string[]> {
   const leads = await database.leads.toArray();
   return getUniqueStringValues(leads.map((lead) => lead.role));
 }
-
-export async function getUniqueLeadTypes(): Promise<string[]> {
-  const database = getDB();
-  const leads = await database.leads.toArray();
-  return getUniqueStringValues(leads.map((lead) => lead.type));
-}

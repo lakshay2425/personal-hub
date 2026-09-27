@@ -12,7 +12,6 @@ import {
 import { backfillLeadProfileFields } from "../../lib/leadProfileUtils";
 import {
   getUniqueLeadRoles,
-  getUniqueLeadTypes,
 } from "../../repositories/leadsRepository";
 import type { Company, Lead } from "../../types";
 import { CompanyCombobox } from "./CompanyCombobox";
@@ -64,7 +63,6 @@ function LeadFormFields({
   );
   const [name, setName] = useState(lead?.name ?? "");
   const [role, setRole] = useState(lead?.role ?? "");
-  const [type, setType] = useState(lead?.type ?? "");
   const [email, setEmail] = useState(lead?.email ?? "");
   const initialProfiles = lead ? backfillLeadProfileFields(lead) : null;
   const [linkedin, setLinkedin] = useState(initialProfiles?.linkedin ?? "");
@@ -74,7 +72,6 @@ function LeadFormFields({
   );
   const [notes, setNotes] = useState(lead?.notes ?? "");
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
-  const [typeOptions, setTypeOptions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyError, setCompanyError] = useState<string | null>(null);
 
@@ -82,13 +79,9 @@ function LeadFormFields({
     let cancelled = false;
 
     async function loadOptions() {
-      const [roles, types] = await Promise.all([
-        getUniqueLeadRoles(),
-        getUniqueLeadTypes(),
-      ]);
+      const roles = await getUniqueLeadRoles();
       if (!cancelled) {
         setRoleOptions(roles);
-        setTypeOptions(types);
       }
     }
 
@@ -113,7 +106,6 @@ function LeadFormFields({
         companyId: Number(companyId),
         name,
         role,
-        type,
         email,
         linkedin,
         xProfile,
@@ -165,16 +157,6 @@ function LeadFormFields({
             placeholder="Select role..."
             createLabel="Add new role..."
             newValuePlaceholder="Enter role title"
-          />
-        </FormField>
-        <FormField label="Type">
-          <CreatableSelectInput
-            value={type}
-            onChange={setType}
-            options={typeOptions}
-            placeholder="Select type..."
-            createLabel="Add new type..."
-            newValuePlaceholder="Founder, HR, Recruiter..."
           />
         </FormField>
         <FormField label="Email">

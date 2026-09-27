@@ -55,7 +55,6 @@ export function LeadTouchpointCard({
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
             <LeadCompanyButton company={company} onView={onViewCompany} />
             {lead.role ? <span>{lead.role}</span> : null}
-            {lead.type ? <span>{lead.type}</span> : null}
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
             <LeadEmailButton email={lead.email} />

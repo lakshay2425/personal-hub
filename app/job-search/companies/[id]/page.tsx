@@ -179,9 +179,6 @@ export default function CompanyDetailPage() {
                         subtitle={lead.role || undefined}
                       />
                       <MobileCardMeta>
-                        {lead.type ? (
-                          <MobileCardMetaRow label="Type" value={lead.type} />
-                        ) : null}
                         <MobileCardMetaRow
                           label="Touchpoints"
                           value={String(touchpoints.length)}
@@ -203,12 +200,11 @@ export default function CompanyDetailPage() {
                 })}
               </MobileList>
               <div className="hidden overflow-x-auto rounded-xl border border-zinc-200 lg:block dark:border-zinc-800">
-                <table className="w-full min-w-[720px] text-left text-sm">
+                <table className="w-full min-w-[640px] text-left text-sm">
                   <thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50">
                     <tr>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Name</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Role</th>
-                      <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Type</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Touchpoints</th>
                       <th className="px-4 py-3 font-medium text-zinc-600 dark:text-zinc-400">Action</th>
                     </tr>
@@ -222,7 +218,6 @@ export default function CompanyDetailPage() {
                         <tr key={lead.id}>
                           <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">{lead.name}</td>
                           <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.role || "—"}</td>
-                          <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{lead.type || "—"}</td>
                           <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{touchpoints.length}</td>
                           <td className="px-4 py-3">
                             <Link

@@ -45,7 +45,6 @@ export interface Lead {
   companyId: number;
   name: string;
   role: string;
-  type: string;
   email: string;
   linkedin: string;
   xProfile: string;

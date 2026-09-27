@@ -65,14 +65,6 @@ export function LeadDetailModal({
                 </p>
               </div>
             ) : null}
-            {lead.type ? (
-              <div>
-                <span className="text-zinc-500 dark:text-zinc-400">Type</span>
-                <p className="mt-0.5 text-zinc-900 dark:text-zinc-50">
-                  {lead.type}
-                </p>
-              </div>
-            ) : null}
             <div>
               <span className="text-zinc-500 dark:text-zinc-400">Email</span>
               <div className="mt-0.5">

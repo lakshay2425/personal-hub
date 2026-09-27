@@ -24,7 +24,6 @@ export function LeadListRow({ lead, company, onClick }: LeadListRowProps) {
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
           <span>{company?.companyName ?? "Unknown company"}</span>
           {lead.role ? <span>{lead.role}</span> : null}
-          {lead.type ? <span>{lead.type}</span> : null}
         </div>
       </div>
       <div className="shrink-0 text-sm text-zinc-500 dark:text-zinc-400">
