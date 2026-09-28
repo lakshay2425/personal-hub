@@ -12,6 +12,7 @@ export async function exportJobSearchData() {
     productOutreachContacts,
     productOutreachInteractions,
     listSettings,
+    weeklyTargetSettings,
   ] = await Promise.all([
     db.companies.toArray(),
     db.leads.toArray(),
@@ -22,10 +23,11 @@ export async function exportJobSearchData() {
     db.productOutreachContacts.toArray(),
     db.productOutreachInteractions.toArray(),
     db.listSettings.toArray(),
+    db.weeklyTargetSettings.toArray(),
   ]);
 
   return {
-    version: 6,
+    version: 7,
     exportedAt: new Date().toISOString(),
     companies,
     leads,
@@ -36,5 +38,6 @@ export async function exportJobSearchData() {
     productOutreachContacts,
     productOutreachInteractions,
     listSettings,
+    weeklyTargetSettings,
   };
 }

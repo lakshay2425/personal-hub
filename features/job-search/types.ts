@@ -39,6 +39,24 @@ export interface Company {
   createdAt: number;
   updatedAt: number;
 }
+export type WeeklyTargetCategory =
+  | "applications"
+  | "emails"
+  | "linkedinMessages"
+  | "linkedinConnections";
+
+export interface WeeklyTarget {
+  enabled: boolean;
+  target: number;
+}
+
+export interface WeeklyTargetSettings {
+  id: 1;
+  combinedEnabled: boolean;
+  combinedTarget: number;
+  combinedCategories: WeeklyTargetCategory[];
+  categoryTargets: Record<WeeklyTargetCategory, WeeklyTarget>;
+}
 
 export interface Lead {
   id?: number;

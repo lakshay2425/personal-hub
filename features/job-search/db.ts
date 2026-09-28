@@ -20,6 +20,7 @@ import type {
   ProductOutreachContact,
   ProductOutreachInteraction,
   Template,
+  WeeklyTargetSettings,
 } from "./types";
 
 function parseDateToTimestamp(dateStr: string, fallback: number): number {
@@ -69,6 +70,7 @@ class JobSearchDatabase extends Dexie {
   >;
   leadTouchpoints!: EntityTable<LeadTouchpoint, "id">;
   listSettings!: EntityTable<JobSearchListSettings, "id">;
+  weeklyTargetSettings!: EntityTable<WeeklyTargetSettings, "id">;
 
   constructor() {
     super("job-search-tracker-db");
@@ -375,6 +377,19 @@ class JobSearchDatabase extends Dexie {
           delete (lead as Lead & { type?: string }).type;
         });
       });
+
+    this.version(11).stores({
+      companies: "++id, companyName, sector, createdAt",
+      leads: "++id, companyId, name, role, channel, status, createdAt",
+      applications: "++id, companyId, role, portal, status, appliedDate, createdAt",
+      templates: "++id, type, title, createdAt, updatedAt",
+      activityLogs: "++id, entityType, entityId, action, timestamp",
+      productOutreachContacts: "++id, label, createdAt",
+      productOutreachInteractions: "++id, contactId, channel, handle, createdAt",
+      leadTouchpoints: "++id, leadId, channel, status, type, occurredAt, createdAt",
+      listSettings: "id",
+      weeklyTargetSettings: "id",
+    });
   }
 }
 

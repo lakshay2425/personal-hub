@@ -27,7 +27,9 @@ import type {
   ProductOutreachContact,
   ProductOutreachInteraction,
   Template,
+  WeeklyTargetSettings,
 } from "../types";
+import { createDefaultWeeklyTargetSettings } from "./weeklyTargetsRepository";
 
 const CORE_ARRAYS = [
   "companies",
@@ -37,7 +39,7 @@ const CORE_ARRAYS = [
 ] as const;
 
 export type JobSearchBackupPayload = {
-  version: 1 | 2 | 3 | 4 | 5 | 6;
+  version: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   companies: Company[];
   leads: Lead[];
   applications: Application[];
@@ -47,6 +49,7 @@ export type JobSearchBackupPayload = {
   productOutreachContacts: ProductOutreachContact[];
   productOutreachInteractions: ProductOutreachInteraction[];
   listSettings: JobSearchListSettings[];
+  weeklyTargetSettings: WeeklyTargetSettings[];
 };
 
 function normalizeTemplateRef(value: unknown): number | null {
@@ -134,7 +137,8 @@ function assertCoreBackupShape(data: unknown): Record<string, unknown[]> {
     version !== 3 &&
     version !== 4 &&
     version !== 5 &&
-    version !== 6
+    version !== 6 &&
+    version !== 7
   ) {
     throw new InvalidBackupError();
   }
@@ -235,9 +239,14 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       ? (record.listSettings as JobSearchListSettings[])
       : [createDefaultListSettings()]
   ).map(withResponseStatusDefaults);
+  const weeklyTargetSettings =
+    Array.isArray(record.weeklyTargetSettings) &&
+    record.weeklyTargetSettings.length > 0
+      ? (record.weeklyTargetSettings as WeeklyTargetSettings[])
+      : [createDefaultWeeklyTargetSettings()];
 
   return {
-    version: 6,
+    version: 7,
     companies: arrays.companies as Company[],
     leads: leadsWithStatus,
     applications: arrays.applications as Application[],
@@ -260,6 +269,7 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
         }))
       : [],
     listSettings,
+    weeklyTargetSettings,
   };
 }
 
@@ -280,6 +290,7 @@ export async function importJobSearchData(
       db.productOutreachContacts,
       db.productOutreachInteractions,
       db.listSettings,
+      db.weeklyTargetSettings,
     ],
     async () => {
       await Promise.all([
@@ -292,6 +303,7 @@ export async function importJobSearchData(
         db.productOutreachContacts.clear(),
         db.productOutreachInteractions.clear(),
         db.listSettings.clear(),
+        db.weeklyTargetSettings.clear(),
       ]);
 
       await Promise.all([
@@ -306,6 +318,7 @@ export async function importJobSearchData(
           payload.productOutreachInteractions,
         ),
         db.listSettings.bulkPut(payload.listSettings),
+        db.weeklyTargetSettings.bulkPut(payload.weeklyTargetSettings),
       ]);
     },
   );

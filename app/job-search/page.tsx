@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
@@ -9,6 +9,8 @@ import { StatsCard } from "@/features/job-search/components/StatsCard";
 import { TimeFilterPills } from "@/features/job-search/components/TimeFilterPills";
 import { useDashboard } from "@/features/job-search/hooks/useDashboard";
 import type { TimeFilter } from "@/features/job-search/types";
+import { getWeeklyGoalProgress, type WeeklyGoalProgress } from "@/features/job-search/repositories/weeklyTargetsRepository";
+import { formatWeekRange } from "@/features/job-search/lib/dateUtils";
 
 const sectionClass = "mb-10";
 const gridClass = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
@@ -28,10 +30,45 @@ function outreachHref(channel: string, types: string[], responseStatus: string) 
 export default function DashboardPage() {
   const [filter, setFilter] = useState<TimeFilter>("last30");
   const { stats, followUps, staleOutreach, isLoading } = useDashboard(filter);
+  const [weeklyGoals, setWeeklyGoals] = useState<WeeklyGoalProgress[]>([]);
+  const [weekStart, setWeekStart] = useState("");
+  useEffect(() => {
+    let active = true;
+    void getWeeklyGoalProgress().then(({ goals, weekStart: start }) => {
+      if (active) {
+        setWeeklyGoals(goals);
+        setWeekStart(start);
+      }
+    });
+    return () => { active = false; };
+  }, []);
   if (isLoading) return <LoadingState message="Loading dashboard..." />;
   return <div>
     <PageHeader title="Dashboard" description="Actionable outreach and application activity" />
     <div className="mb-8"><TimeFilterPills value={filter} onChange={setFilter} /></div>
+
+    {weeklyGoals.length > 0 ? <DashboardSection title={`Weekly targets · ${formatWeekRange(weekStart)}`} className={sectionClass}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {weeklyGoals.map((goal) => {
+          const remaining = Math.max(0, goal.target - goal.count);
+          const today = new Date();
+          const daysLeft = Math.max(1, 7 - ((today.getDay() + 6) % 7));
+          const percent = Math.min(100, Math.round((goal.count / goal.target) * 100));
+          return <div key={goal.id} className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{goal.label}</h3>
+              <span className="text-sm text-zinc-500">{goal.count} / {goal.target}</span>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label={`${goal.label} weekly progress`}>
+              <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${percent}%` }} />
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">{percent}% · {remaining === 0 ? "Target reached" : `${remaining} remaining · ${Math.ceil(remaining / daysLeft)} per day to stay on pace`}</p>
+          </div>;
+        })}
+      </div>
+    </DashboardSection> : <DashboardSection title="Weekly targets" className={sectionClass}>
+      <Link href="/job-search/settings" className="block rounded-xl border border-dashed border-zinc-300 p-5 text-sm text-zinc-500 hover:border-zinc-500 dark:border-zinc-700">Set weekly targets for applications and outreach →</Link>
+    </DashboardSection>}
 
     <DashboardSection title="LinkedIn Outreach Stats" className={sectionClass}>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
