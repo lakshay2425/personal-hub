@@ -232,7 +232,25 @@ Named release buckets for grouping project features (e.g. `"v1.0"`, `"Backlog"`)
 **Import:** Full overwrite — clears all eight tables, then inserts exported records. Older backups without `tasks`, `features`, or `versions` import with empty arrays for missing keys. Tasks missing hierarchy fields are backfilled on import (`parentId: null`, `depth: 0`, `sortOrder` from priority then `createdAt`).  
 **Source:** `features/questions/lib/exportRepository.ts`, `features/questions/lib/importRepository.ts`
 
-Standalone content ideas (`projectId: null`), planner tasks, and per-project features/versions are included in this export. They are not exported separately.
+Standalone content ideas (`projectId: null`), planner tasks, and per-project features/versions are included in this export. Planner tasks can also be exported separately from Planner settings.
+
+### Export / import (Planner module)
+
+**Export:** JSON from the Planner settings page.  
+**Shape:**
+
+```json
+{
+  "version": 1,
+  "exportedAt": "ISO-8601 string",
+  "tasks": [],
+  "activityLogs": [],
+  "settings": []
+}
+```
+
+**Import:** Scoped overwrite — clears planner tasks, task activity logs, and priority settings, then inserts exported records. Other projects, content ideas, feature activity logs, and logger entries stay unchanged. Backups with a `tasks` array, including full Projects exports, can be imported; non-task activity logs are ignored.  
+**Source:** `features/planner/lib/backupRepository.ts`
 
 **Project delete cascade:** Deleting a project always removes its questions, answers, features, and versions. Content ideas are either deleted or orphaned (`projectId → null`) based on user choice at delete time.
 

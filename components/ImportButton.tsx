@@ -12,6 +12,7 @@ type ImportButtonProps<T> = {
   onImport: (data: T) => Promise<void>;
   onImported?: () => void;
   label?: string;
+  confirmMessage?: string;
   className?: string;
 };
 
@@ -20,6 +21,7 @@ export function ImportButton<T>({
   onImport,
   onImported,
   label = "Import",
+  confirmMessage = "This will replace ALL existing data. Are you sure?",
   className,
 }: ImportButtonProps<T>) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -102,7 +104,7 @@ export function ImportButton<T>({
         onClose={handleCloseConfirm}
         onConfirm={handleConfirm}
         title="Import data"
-        message="This will replace ALL existing data. Are you sure?"
+        message={confirmMessage}
         confirmLabel="Import"
         loadingLabel="Importing..."
         isLoading={isImporting}

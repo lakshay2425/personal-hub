@@ -11,6 +11,7 @@ type DataBackupSectionProps<T> = {
   onValidate: (data: unknown) => T;
   onImport: (data: T) => Promise<void>;
   onImported?: () => void;
+  importConfirmMessage?: string;
   className?: string;
 };
 
@@ -22,6 +23,7 @@ export function DataBackupSection<T>({
   onValidate,
   onImport,
   onImported,
+  importConfirmMessage,
   className = "mt-6",
 }: DataBackupSectionProps<T>) {
   const buttonClassName =
@@ -50,6 +52,7 @@ export function DataBackupSection<T>({
           onValidate={onValidate}
           onImport={onImport}
           onImported={onImported}
+          confirmMessage={importConfirmMessage}
           className={buttonClassName}
         />
       </div>
