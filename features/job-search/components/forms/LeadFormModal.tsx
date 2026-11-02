@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/Modal";
 
@@ -10,9 +10,11 @@ import {
 } from "../../constants";
 import { backfillLeadProfileFields } from "../../lib/leadProfileUtils";
 import {
+  canonicalizeLeadRole,
   getUniqueLeadRoles,
   type LeadInput,
 } from "../../repositories/leadsRepository";
+import { useLeadDraftStorage } from "../../hooks/useLeadDraftStorage";
 import type { Company, Lead } from "../../types";
 import { BulkLeadForm } from "./BulkLeadForm";
 import { CompanyCombobox } from "./CompanyCombobox";
@@ -45,6 +47,36 @@ interface LeadFormFieldsProps {
   onCreateCompany: (companyName: string) => Promise<Company>;
 }
 
+interface SingleLeadDraft {
+  companyId: string;
+  values: LeadFormValues;
+}
+
+const SINGLE_LEAD_DRAFT_KEY = "job-search-lead-draft:single:v1";
+
+function isLeadFormValues(value: unknown): value is LeadFormValues {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.name === "string" &&
+    typeof record.role === "string" &&
+    typeof record.email === "string" &&
+    typeof record.linkedin === "string" &&
+    typeof record.xProfile === "string" &&
+    typeof record.channel === "string" &&
+    typeof record.notes === "string" &&
+    typeof record.isAlumni === "boolean"
+  );
+}
+
+function isSingleLeadDraft(value: unknown): value is SingleLeadDraft {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.companyId === "string" && isLeadFormValues(record.values)
+  );
+}
+
 function LeadFormFields({
   lead,
   companies,
@@ -55,30 +87,51 @@ function LeadFormFields({
   onSubmit,
   onCreateCompany,
 }: LeadFormFieldsProps) {
-  const [companyId, setCompanyId] = useState(
-    lead
-      ? String(lead.companyId)
-      : defaultCompanyId
-        ? String(defaultCompanyId)
-        : "",
+  const initialDraft = useMemo<SingleLeadDraft>(
+    () => {
+      const initialLead = lead ? backfillLeadProfileFields(lead) : null;
+      return {
+        companyId: lead
+          ? String(lead.companyId)
+          : defaultCompanyId
+            ? String(defaultCompanyId)
+            : "",
+        values: {
+          name: lead?.name ?? "",
+          role: lead?.role ?? "",
+          email: lead?.email ?? "",
+          linkedin: initialLead?.linkedin ?? "",
+          xProfile: initialLead?.xProfile ?? "",
+          channel: lead?.channel ?? defaultChannel,
+          notes: lead?.notes ?? "",
+          isAlumni: lead?.isAlumni === true,
+        },
+      };
+    },
+    [defaultChannel, defaultCompanyId, lead],
   );
-  const initialLead = lead ? backfillLeadProfileFields(lead) : null;
-  const [values, setValues] = useState<LeadFormValues>({
-    name: lead?.name ?? "",
-    role: lead?.role ?? "",
-    email: lead?.email ?? "",
-    linkedin: initialLead?.linkedin ?? "",
-    xProfile: initialLead?.xProfile ?? "",
-    channel: lead?.channel ?? defaultChannel,
-    notes: lead?.notes ?? "",
-    isAlumni: lead?.isAlumni === true,
-  });
+  const validateDraft = useCallback(
+    (value: unknown) => isSingleLeadDraft(value),
+    [],
+  );
+  const {
+    value: draft,
+    setValue: setDraft,
+    clearDraft,
+    isReady,
+    storageError,
+  } = useLeadDraftStorage(
+    SINGLE_LEAD_DRAFT_KEY,
+    initialDraft,
+    validateDraft,
+    !lead,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyError, setCompanyError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!companyId) {
+    if (!draft.companyId) {
       setCompanyError("Select or create a company");
       return;
     }
@@ -86,11 +139,15 @@ function LeadFormFields({
     setCompanyError(null);
     setIsSubmitting(true);
     try {
+      const currentRoles = await getUniqueLeadRoles();
+      const role = canonicalizeLeadRole(draft.values.role, currentRoles);
       await onSubmit({
-        companyId: Number(companyId),
-        ...values,
+        companyId: Number(draft.companyId),
+        ...draft.values,
+        role,
         status: lead?.status ?? DEFAULT_NEW_LEAD_STATUS,
       });
+      if (!lead) clearDraft();
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -99,35 +156,56 @@ function LeadFormFields({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-4">
-        <FormField label="Company" required>
-          <CompanyCombobox
-            value={companyId}
-            onChange={(nextCompanyId) => {
-              setCompanyId(nextCompanyId);
-              if (nextCompanyId) setCompanyError(null);
-            }}
-            companies={companies}
-            onCreateCompany={onCreateCompany}
-            placeholder="Search or add company..."
-          />
-          {companyError ? (
-            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-              {companyError}
+      {!isReady ? (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          Restoring saved lead draft...
+        </p>
+      ) : (
+        <>
+          {storageError ? (
+            <p
+              role="alert"
+              className="mb-3 text-sm text-amber-700 dark:text-amber-300"
+            >
+              {storageError}
             </p>
           ) : null}
-        </FormField>
-      </div>
-      <LeadFields
-        value={values}
-        onChange={setValues}
-        roleOptions={roleOptions}
-      />
-      <FormActions
-        onCancel={onClose}
-        submitLabel={lead ? "Save Changes" : "Add Lead"}
-        isSubmitting={isSubmitting}
-      />
+          <div className="mb-4">
+            <FormField label="Company" required>
+              <CompanyCombobox
+                value={draft.companyId}
+                onChange={(nextCompanyId) => {
+                  setDraft((current) => ({
+                    ...current,
+                    companyId: nextCompanyId,
+                  }));
+                  if (nextCompanyId) setCompanyError(null);
+                }}
+                companies={companies}
+                onCreateCompany={onCreateCompany}
+                placeholder="Search or add company..."
+              />
+              {companyError ? (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  {companyError}
+                </p>
+              ) : null}
+            </FormField>
+          </div>
+          <LeadFields
+            value={draft.values}
+            onChange={(values) =>
+              setDraft((current) => ({ ...current, values }))
+            }
+            roleOptions={roleOptions}
+          />
+          <FormActions
+            onCancel={onClose}
+            submitLabel={lead ? "Save Changes" : "Add Lead"}
+            isSubmitting={isSubmitting}
+          />
+        </>
+      )}
     </form>
   );
 }
@@ -147,7 +225,6 @@ export function LeadFormModal({
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
 
   const handleClose = () => {
-    setIsBulkMode(false);
     onClose();
   };
 

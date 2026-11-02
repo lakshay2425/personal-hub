@@ -27,6 +27,7 @@ export function CompanyCombobox({
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const selectedCompany = useMemo(
     () => companies.find((company) => String(company.id) === value),
@@ -63,6 +64,7 @@ export function CompanyCombobox({
   }, [isOpen]);
 
   const trimmedQuery = searchQuery.trim();
+  const normalizedQuery = trimmedQuery.replace(/\s+/g, " ").toLocaleLowerCase();
 
   const filteredCompanies = useMemo(() => {
     if (!trimmedQuery) {
@@ -79,9 +81,10 @@ export function CompanyCombobox({
     () =>
       companies.some(
         (company) =>
-          company.companyName.toLowerCase() === trimmedQuery.toLowerCase(),
+          company.companyName.trim().replace(/\s+/g, " ").toLocaleLowerCase() ===
+          normalizedQuery,
       ),
-    [companies, trimmedQuery],
+    [companies, normalizedQuery],
   );
 
   const showCreateOption = trimmedQuery.length > 0 && !hasExactMatch;
@@ -95,10 +98,15 @@ export function CompanyCombobox({
     if (!trimmedQuery || isCreating) return;
 
     setIsCreating(true);
+    setCreateError(null);
     try {
       const company = await onCreateCompany(trimmedQuery);
       onChange(String(company.id));
       closeDropdown();
+    } catch (error) {
+      setCreateError(
+        error instanceof Error ? error.message : "Could not create company.",
+      );
     } finally {
       setIsCreating(false);
     }
@@ -165,6 +173,11 @@ export function CompanyCombobox({
             </li>
           ) : null}
         </ul>
+      ) : null}
+      {createError ? (
+        <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+          {createError}
+        </p>
       ) : null}
     </div>
   );

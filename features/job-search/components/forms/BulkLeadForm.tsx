@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { DEFAULT_LEAD_CHANNEL, DEFAULT_NEW_LEAD_STATUS } from "../../constants";
 import {
+  canonicalizeLeadRole,
   DuplicateLeadError,
   findLeadDuplicates,
   getAllLeads,
+  getUniqueLeadRoles,
   type LeadDuplicate,
   type LeadInput,
 } from "../../repositories/leadsRepository";
 import type { Company } from "../../types";
+import { useLeadDraftStorage } from "../../hooks/useLeadDraftStorage";
 import { CompanyCombobox } from "./CompanyCombobox";
 import { FormActions, FormField } from "./FormFields";
 import { LeadFields, type LeadFormValues } from "./LeadFields";
@@ -31,6 +34,12 @@ interface BulkLeadRow {
   companyId: string;
   values: LeadFormValues;
   expanded: boolean;
+}
+
+interface BulkLeadDraft {
+  companyMode: "same" | "different";
+  sharedCompanyId: string;
+  rows: BulkLeadRow[];
 }
 
 interface RowErrors {
@@ -59,6 +68,53 @@ function createRow(): BulkLeadRow {
     companyId: "",
     values: emptyValues(),
     expanded: true,
+  };
+}
+
+const BULK_LEAD_DRAFT_KEY = "job-search-lead-draft:bulk:v1";
+
+function isLeadDraftRow(value: unknown): value is BulkLeadRow {
+  if (!value || typeof value !== "object") return false;
+  const row = value as Record<string, unknown>;
+  if (
+    typeof row.id !== "string" ||
+    typeof row.companyId !== "string" ||
+    typeof row.expanded !== "boolean" ||
+    !row.values ||
+    typeof row.values !== "object"
+  ) {
+    return false;
+  }
+  const values = row.values as Record<string, unknown>;
+  return (
+    typeof values.name === "string" &&
+    typeof values.role === "string" &&
+    typeof values.email === "string" &&
+    typeof values.linkedin === "string" &&
+    typeof values.xProfile === "string" &&
+    typeof values.channel === "string" &&
+    typeof values.notes === "string" &&
+    typeof values.isAlumni === "boolean"
+  );
+}
+
+function isBulkLeadDraft(value: unknown): value is BulkLeadDraft {
+  if (!value || typeof value !== "object") return false;
+  const draft = value as Record<string, unknown>;
+  return (
+    (draft.companyMode === "same" || draft.companyMode === "different") &&
+    typeof draft.sharedCompanyId === "string" &&
+    Array.isArray(draft.rows) &&
+    draft.rows.length > 0 &&
+    draft.rows.every(isLeadDraftRow)
+  );
+}
+
+function createInitialDraft(): BulkLeadDraft {
+  return {
+    companyMode: "same",
+    sharedCompanyId: "",
+    rows: [createRow(), createRow()],
   };
 }
 
@@ -91,9 +147,23 @@ export function BulkLeadForm({
   onSubmit,
   onCancel,
 }: BulkLeadFormProps) {
-  const [companyMode, setCompanyMode] = useState<"same" | "different">("same");
-  const [sharedCompanyId, setSharedCompanyId] = useState("");
-  const [rows, setRows] = useState<BulkLeadRow[]>([createRow(), createRow()]);
+  const initialDraft = useMemo(() => createInitialDraft(), []);
+  const validateDraft = useCallback(
+    (value: unknown) => isBulkLeadDraft(value),
+    [],
+  );
+  const {
+    value: draft,
+    setValue: setDraft,
+    clearDraft,
+    isReady,
+    storageError,
+  } = useLeadDraftStorage(
+    BULK_LEAD_DRAFT_KEY,
+    initialDraft,
+    validateDraft,
+  );
+  const { companyMode, sharedCompanyId, rows } = draft;
   const [rowErrors, setRowErrors] = useState<Record<string, RowErrors>>({});
   const [confirmNameDuplicates, setConfirmNameDuplicates] = useState(false);
   const [showNameWarning, setShowNameWarning] = useState(false);
@@ -101,18 +171,25 @@ export function BulkLeadForm({
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const updateRow = (id: string, update: (row: BulkLeadRow) => BulkLeadRow) => {
-    setRows((current) =>
-      current.map((row) => (row.id === id ? update(row) : row)),
-    );
+    setDraft((current) => ({
+      ...current,
+      rows: current.rows.map((row) => (row.id === id ? update(row) : row)),
+    }));
     setRowErrors((current) => ({ ...current, [id]: {} }));
     setConfirmNameDuplicates(false);
     setShowNameWarning(false);
     setSaveError(null);
   };
 
+  const setRows = (update: (rows: BulkLeadRow[]) => BulkLeadRow[]) => {
+    setDraft((current) => ({ ...current, rows: update(current.rows) }));
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaveError(null);
+
+    if (!isReady) return;
 
     const populatedRows = rows.filter((row) => hasLeadValues(row.values));
     if (populatedRows.length === 0) {
@@ -148,19 +225,33 @@ export function BulkLeadForm({
       return;
     }
 
-    const candidates: LeadInput[] = populatedRows.map((row) => ({
-      companyId: Number(
-        companyMode === "same" ? sharedCompanyId : row.companyId,
-      ),
-      ...row.values,
-      name: row.values.name.trim(),
-      role: row.values.role.trim(),
-      email: row.values.email.trim(),
-      linkedin: row.values.linkedin.trim(),
-      xProfile: row.values.xProfile.trim(),
-      notes: row.values.notes.trim(),
-      status: DEFAULT_NEW_LEAD_STATUS,
-    }));
+    const knownRoles = await getUniqueLeadRoles();
+    const candidates: LeadInput[] = populatedRows.map((row) => {
+      const role = canonicalizeLeadRole(row.values.role, knownRoles);
+      if (
+        role &&
+        !knownRoles.some(
+          (knownRole) =>
+            knownRole.trim().replace(/\s+/g, " ").toLocaleLowerCase() ===
+            role.toLocaleLowerCase(),
+        )
+      ) {
+        knownRoles.push(role);
+      }
+      return {
+        companyId: Number(
+          companyMode === "same" ? sharedCompanyId : row.companyId,
+        ),
+        ...row.values,
+        name: row.values.name.trim(),
+        role,
+        email: row.values.email.trim(),
+        linkedin: row.values.linkedin.trim(),
+        xProfile: row.values.xProfile.trim(),
+        notes: row.values.notes.trim(),
+        status: DEFAULT_NEW_LEAD_STATUS,
+      };
+    });
     const duplicates = findLeadDuplicates(candidates, await getAllLeads());
     const duplicatesByRow: Record<string, LeadDuplicate[]> = {};
     duplicates.forEach((duplicate) => {
@@ -217,6 +308,7 @@ export function BulkLeadForm({
       await onSubmit(candidates, {
         allowNameDuplicates: confirmNameDuplicates,
       });
+      clearDraft();
       onCancel();
     } catch (error) {
       if (error instanceof DuplicateLeadError) {
@@ -259,6 +351,14 @@ export function BulkLeadForm({
     }
   };
 
+  if (!isReady) {
+    return (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        Restoring saved lead drafts...
+      </p>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <fieldset className="space-y-2">
@@ -271,7 +371,7 @@ export function BulkLeadForm({
               key={mode}
               type="button"
               onClick={() => {
-                setCompanyMode(mode);
+                setDraft((current) => ({ ...current, companyMode: mode }));
                 setRowErrors({});
                 setConfirmNameDuplicates(false);
                 setShowNameWarning(false);
@@ -289,12 +389,17 @@ export function BulkLeadForm({
         </div>
       </fieldset>
 
+      {storageError ? (
+        <p role="alert" className="text-sm text-amber-700 dark:text-amber-300">
+          {storageError}
+        </p>
+      ) : null}
       {companyMode === "same" ? (
         <FormField label="Company" required>
           <CompanyCombobox
             value={sharedCompanyId}
             onChange={(value) => {
-              setSharedCompanyId(value);
+              setDraft((current) => ({ ...current, sharedCompanyId: value }));
               setRowErrors({});
               setConfirmNameDuplicates(false);
               setShowNameWarning(false);
@@ -464,7 +569,12 @@ export function BulkLeadForm({
 
       <button
         type="button"
-        onClick={() => setRows((current) => [...current, createRow()])}
+        onClick={() =>
+          setDraft((current) => ({
+            ...current,
+            rows: [...current.rows, createRow()],
+          }))
+        }
         className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
       >
         + Add another lead

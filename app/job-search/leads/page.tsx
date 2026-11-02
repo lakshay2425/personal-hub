@@ -349,8 +349,19 @@ function LeadsPageContent() {
   };
 
   const handleCreateCompany = async (companyName: string) => {
+    const normalizedName = companyName.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+    const existingCompany = companies.find(
+      (company) =>
+        company.companyName.trim().replace(/\s+/g, " ").toLocaleLowerCase() ===
+        normalizedName,
+    );
+    if (existingCompany) {
+      toast.success("Existing company selected.");
+      return existingCompany;
+    }
+
     const company = await addCompany({
-      companyName: companyName.trim(),
+      companyName: companyName.trim().replace(/\s+/g, " "),
       sector: "",
       website: "",
       notes: "",

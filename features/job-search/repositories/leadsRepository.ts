@@ -245,5 +245,26 @@ export async function searchLeads(query: string): Promise<Lead[]> {
 export async function getUniqueLeadRoles(): Promise<string[]> {
   const database = getDB();
   const leads = await database.leads.toArray();
-  return getUniqueStringValues(leads.map((lead) => lead.role));
+  const rolesByNormalizedValue = new Map<string, string>();
+  for (const role of getUniqueStringValues(leads.map((lead) => lead.role))) {
+    const trimmed = role.trim();
+    const normalized = trimmed.replace(/\s+/g, " ").toLocaleLowerCase();
+    if (normalized && !rolesByNormalizedValue.has(normalized)) {
+      rolesByNormalizedValue.set(normalized, trimmed.replace(/\s+/g, " "));
+    }
+  }
+  return [...rolesByNormalizedValue.values()].sort((a, b) =>
+    a.localeCompare(b),
+  );
+}
+
+export function canonicalizeLeadRole(role: string, knownRoles: string[]): string {
+  const normalized = role.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+  return (
+    knownRoles.find(
+      (knownRole) =>
+        knownRole.trim().replace(/\s+/g, " ").toLocaleLowerCase() ===
+        normalized,
+    ) ?? role.trim().replace(/\s+/g, " ")
+  );
 }

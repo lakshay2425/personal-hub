@@ -57,7 +57,15 @@ export function LeadFields({
       <FormField label="Role">
         <CreatableSelectInput
           value={value.role}
-          onChange={(next) => update("role", next)}
+          onChange={(next) => {
+            const normalized = next.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+            const existing = roleOptions.find(
+              (role) =>
+                role.trim().replace(/\s+/g, " ").toLocaleLowerCase() ===
+                normalized,
+            );
+            update("role", existing ?? next);
+          }}
           options={roleOptions}
           placeholder="Select role..."
           createLabel="Add new role..."
