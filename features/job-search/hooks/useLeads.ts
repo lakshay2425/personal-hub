@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   createLead,
+  createLeads,
   deleteLead,
   getAllLeads,
   updateLead,
@@ -47,6 +48,18 @@ export function useLeads() {
     [refresh],
   );
 
+  const addLeads = useCallback(
+    async (
+      data: Omit<Lead, "id" | "createdAt">[],
+      options?: { allowNameDuplicates?: boolean },
+    ) => {
+      const ids = await createLeads(data, options);
+      await refresh();
+      return ids;
+    },
+    [refresh],
+  );
+
   const editLead = useCallback(
     async (id: number, data: Partial<Omit<Lead, "id" | "createdAt">>) => {
       await updateLead(id, data);
@@ -63,5 +76,5 @@ export function useLeads() {
     [refresh],
   );
 
-  return { leads, isLoading, addLead, editLead, removeLead, refresh };
+  return { leads, isLoading, addLead, addLeads, editLead, removeLead, refresh };
 }

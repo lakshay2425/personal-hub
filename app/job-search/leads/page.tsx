@@ -53,6 +53,7 @@ import {
   countTouchpointsInWeek,
   matchesLeadTouchpointQuery,
 } from "@/features/job-search/repositories/leadTouchpointsRepository";
+import type { LeadInput } from "@/features/job-search/repositories/leadsRepository";
 import type {
   Company,
   Lead,
@@ -135,7 +136,12 @@ function TypeMultiSelect({
 
 function LeadsPageContent() {
   const { companies, addCompany } = useCompanies();
-  const { addLead, editLead, removeLead } = useLeads();
+  const {
+    addLead,
+    addLeads,
+    editLead,
+    removeLead,
+  } = useLeads();
   const {
     leadsWithTouchpoints,
     isLoading,
@@ -368,6 +374,22 @@ function LeadsPageContent() {
     }
   };
 
+  const handleBulkLeadSubmit = async (
+    data: LeadInput[],
+    options: { allowNameDuplicates: boolean },
+  ) => {
+    try {
+      await addLeads(data, options);
+      await refresh();
+      toast.success(`Added ${data.length} leads`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save leads",
+      );
+      throw error;
+    }
+  };
+
   const handleTouchpointSubmit = async (
     data: Parameters<typeof appendTouchpoint>[1],
   ) => {
@@ -387,6 +409,45 @@ function LeadsPageContent() {
     } catch {
       toast.error("Failed to save touchpoint");
       throw new Error("save failed");
+    }
+  };
+
+  const handleQuickTouchpointAction = async (
+    action:
+      | {
+          kind: "create";
+          input: Parameters<typeof appendTouchpoint>[1];
+        }
+      | {
+          kind: "update";
+          touchpointId: number;
+          responseStatus: string;
+        },
+  ) => {
+    try {
+      if (!activeLead) throw new Error("No active lead");
+
+      if (action.kind === "create") {
+        await appendTouchpoint(activeLead.id, action.input, {
+          updateLeadStatus: false,
+        });
+        toast.success("Touchpoint added");
+      } else {
+        await editTouchpoint(
+          action.touchpointId,
+          { responseStatus: action.responseStatus },
+          { updateLeadStatus: false },
+        );
+        toast.success("Touchpoint updated");
+      }
+
+      setTouchpointFormMode(null);
+      setActiveLead(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save touchpoint",
+      );
+      throw error;
     }
   };
 
@@ -603,6 +664,7 @@ function LeadsPageContent() {
           setEditingLead(null);
         }}
         onSubmit={handleLeadSubmit}
+        onSubmitBulk={handleBulkLeadSubmit}
         lead={editingLead}
         companies={companies}
         defaultChannel={DEFAULT_LEAD_CHANNEL}
@@ -624,6 +686,8 @@ function LeadsPageContent() {
         responseStatusOptions={listSettings.responseStatuses}
         touchpointTypeOptions={listSettings.touchpointTypes}
         onSubmit={handleTouchpointSubmit}
+        touchpoints={activeLead?.touchpoints ?? []}
+        onQuickAction={handleQuickTouchpointAction}
       />
 
       <CompanyInfoModal

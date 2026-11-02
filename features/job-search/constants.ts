@@ -55,6 +55,91 @@ export const LINKEDIN_RESPONSE_STATUSES = [
   ...ACCEPTANCE_RESPONSE_STATUSES,
 ];
 
+export interface QuickTouchpointAction {
+  id: string;
+  label: string;
+  type: string;
+  status: string;
+  responseStatus: string;
+  updateType?: "reply" | "acceptance";
+  eligibleTypes?: string[];
+}
+
+export const QUICK_TOUCHPOINT_ACTIONS: Partial<
+  Record<LeadChannel, QuickTouchpointAction[]>
+> = {
+  LinkedIn: [
+    {
+      id: "connection-request-sent",
+      label: "Connection request sent",
+      type: "Connection Request",
+      status: "Sent",
+      responseStatus: "Not accepted",
+    },
+    {
+      id: "connection-accepted",
+      label: "Connection accepted",
+      type: "Connection Request",
+      status: "Sent",
+      responseStatus: "Accepted",
+      updateType: "acceptance",
+      eligibleTypes: ["Connection Request"],
+    },
+    {
+      id: "linkedin-message-sent",
+      label: "Message sent",
+      type: "Message",
+      status: "Sent",
+      responseStatus: "Not responded",
+    },
+    {
+      id: "linkedin-reply-received",
+      label: "Reply received",
+      type: "Message",
+      status: "Sent",
+      responseStatus: "Replied",
+      updateType: "reply",
+      eligibleTypes: ["Message"],
+    },
+  ],
+  Email: [
+    {
+      id: "email-sent",
+      label: "Email sent",
+      type: "Message",
+      status: "Sent",
+      responseStatus: "Not responded",
+    },
+    {
+      id: "email-reply-received",
+      label: "Reply received",
+      type: "Message",
+      status: "Sent",
+      responseStatus: "Replied",
+      updateType: "reply",
+      eligibleTypes: ["Message", "First Follow-up", "Second Follow-up"],
+    },
+  ],
+  X: [
+    {
+      id: "x-message-sent",
+      label: "DM sent",
+      type: "Message",
+      status: "Sent",
+      responseStatus: "Not responded",
+    },
+    {
+      id: "x-reply-received",
+      label: "Reply received",
+      type: "Message",
+      status: "Sent",
+      responseStatus: "Replied",
+      updateType: "reply",
+      eligibleTypes: ["Message", "Follow-up"],
+    },
+  ],
+};
+
 export const DEFAULT_CONTACTED_TRIGGER_STATUSES = ["Sent"];
 
 export function separateResponseFromStatus(

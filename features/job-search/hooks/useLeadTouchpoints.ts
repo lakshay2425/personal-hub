@@ -43,8 +43,12 @@ export function useLeadTouchpoints() {
   }, []);
 
   const appendTouchpoint = useCallback(
-    async (leadId: number, input: LeadTouchpointInput) => {
-      const id = await addTouchpoint(leadId, input);
+    async (
+      leadId: number,
+      input: LeadTouchpointInput,
+      options?: { updateLeadStatus?: boolean },
+    ) => {
+      const id = await addTouchpoint(leadId, input, options);
       await refresh();
       return id;
     },
@@ -52,8 +56,12 @@ export function useLeadTouchpoints() {
   );
 
   const editTouchpoint = useCallback(
-    async (id: number, data: Partial<LeadTouchpointInput>) => {
-      await updateTouchpoint(id, data);
+    async (
+      id: number,
+      data: Partial<LeadTouchpointInput>,
+      options?: { updateLeadStatus?: boolean },
+    ) => {
+      await updateTouchpoint(id, data, options);
       await refresh();
     },
     [refresh],

@@ -103,6 +103,7 @@ export async function getTouchpointsByLeadId(
 export async function addTouchpoint(
   leadId: number,
   input: LeadTouchpointInput,
+  options: { updateLeadStatus?: boolean } = {},
 ): Promise<number> {
   const database = getDB();
   const lead = await database.leads.get(leadId);
@@ -135,7 +136,9 @@ export async function addTouchpoint(
     createdAt: now,
   });
 
-  await evaluateLeadStatus(leadId);
+  if (options.updateLeadStatus !== false) {
+    await evaluateLeadStatus(leadId);
+  }
   await logActivity("lead", leadId, "Touchpoint Added");
   return id as number;
 }
@@ -143,6 +146,7 @@ export async function addTouchpoint(
 export async function updateTouchpoint(
   id: number,
   partial: Partial<LeadTouchpointInput>,
+  options: { updateLeadStatus?: boolean } = {},
 ): Promise<void> {
   const database = getDB();
   const existing = await database.leadTouchpoints.get(id);
@@ -193,7 +197,9 @@ export async function updateTouchpoint(
         : existing.occurredAt,
   });
 
-  await evaluateLeadStatus(existing.leadId);
+  if (options.updateLeadStatus !== false) {
+    await evaluateLeadStatus(existing.leadId);
+  }
   await logActivity("lead", existing.leadId, "Touchpoint Updated");
 }
 
