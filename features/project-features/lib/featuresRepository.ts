@@ -2,6 +2,11 @@ import { getDB } from "@/features/questions/lib/db";
 
 import { logFeatureActivity } from "./activityLog";
 import { deleteVersionsByProjectId } from "./versionsRepository";
+import {
+  createProjectFeatureRecord,
+  didProjectFeatureStatusChange,
+  updateProjectFeatureRecord,
+} from "./featureUtils";
 import type {
   CreateFeatureInput,
   FeatureStatus,
@@ -28,16 +33,7 @@ export async function createFeature(
   input: CreateFeatureInput,
 ): Promise<ProjectFeature> {
   const db = getDB();
-  const now = Date.now();
-
-  const feature: ProjectFeature = {
-    projectId: input.projectId,
-    versionId: input.versionId ?? null,
-    title: input.title.trim(),
-    status: input.status ?? "Idea",
-    notes: input.notes?.trim() ?? "",
-    createdAt: now,
-  };
+  const feature = createProjectFeatureRecord(input, Date.now());
 
   const id = await db.features.add(feature);
   await logFeatureActivity(id as number, "Feature Created");
@@ -57,21 +53,11 @@ export async function updateFeature(
     throw new Error("Feature not found");
   }
 
-  const updated: ProjectFeature = {
-    ...existing,
-    ...(input.title !== undefined && { title: input.title.trim() }),
-    ...(input.status !== undefined && { status: input.status }),
-    ...(input.notes !== undefined && { notes: input.notes.trim() }),
-    ...(input.versionId !== undefined && { versionId: input.versionId }),
-  };
+  const updated = updateProjectFeatureRecord(existing, input);
 
   await db.features.put(updated);
 
-  if (
-    input.status !== undefined &&
-    previousStatus !== undefined &&
-    input.status !== previousStatus
-  ) {
+  if (didProjectFeatureStatusChange(input, previousStatus)) {
     await logFeatureActivity(id, "Feature Status Changed");
   }
 
