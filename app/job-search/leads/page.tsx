@@ -164,6 +164,7 @@ function LeadsPageContent() {
   );
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
+  const [alumniOnly, setAlumniOnly] = useState(false);
   const [groupByCompany, setGroupByCompany] = useState(false);
   const [touchpointChannelFilter, setTouchpointChannelFilter] = useState(searchParams.get("touchpointChannel") ?? "");
   const [touchpointTypeFilter, setTouchpointTypeFilter] = useState(searchParams.getAll("touchpointType"));
@@ -217,6 +218,9 @@ function LeadsPageContent() {
   const filtered = useMemo(() => {
     let result = leadsWithTouchpoints;
 
+    if (alumniOnly) {
+      result = result.filter((lead) => lead.isAlumni === true);
+    }
     if (search) {
       result = result.filter((lead) => matchesLeadTouchpointQuery(lead, search));
     }
@@ -244,6 +248,7 @@ function LeadsPageContent() {
     leadsWithTouchpoints,
     search,
     companyFilter,
+    alumniOnly,
     touchpointChannelFilter,
     touchpointTypeFilter,
     touchpointStatusFilter,
@@ -557,7 +562,7 @@ function LeadsPageContent() {
       />
 
       <div className="mb-6 space-y-3">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(200px,1fr)_auto]">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(200px,1fr)_auto_auto]">
           <input
             type="search"
             value={search}
@@ -566,6 +571,15 @@ function LeadsPageContent() {
             className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
           />
           <CompanyFilterCombobox value={companyFilter} onChange={setCompanyFilter} companies={companies} />
+          <label className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              checked={alumniOnly}
+              onChange={(event) => setAlumniOnly(event.target.checked)}
+              className="rounded border-zinc-300 dark:border-zinc-600"
+            />
+            Alumni only
+          </label>
           <label className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
             <input type="checkbox" checked={groupByCompany} onChange={(event) => setGroupByCompany(event.target.checked)} className="rounded border-zinc-300 dark:border-zinc-600" />
             Group by company

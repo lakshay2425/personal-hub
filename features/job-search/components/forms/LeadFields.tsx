@@ -7,7 +7,14 @@ import { FormField, SelectInput, TextArea, TextInput } from "./FormFields";
 
 export type LeadFormValues = Pick<
   Lead,
-  "name" | "role" | "email" | "linkedin" | "xProfile" | "channel" | "notes"
+  | "name"
+  | "role"
+  | "email"
+  | "linkedin"
+  | "xProfile"
+  | "channel"
+  | "notes"
+  | "isAlumni"
 >;
 
 interface LeadFieldsProps {
@@ -16,6 +23,7 @@ interface LeadFieldsProps {
   roleOptions: string[];
   nameError?: string;
   nameRequired?: boolean;
+  alumniLabel?: string;
 }
 
 export function LeadFields({
@@ -24,6 +32,7 @@ export function LeadFields({
   roleOptions,
   nameError,
   nameRequired = true,
+  alumniLabel = "College alumni",
 }: LeadFieldsProps) {
   const update = <K extends keyof LeadFormValues>(
     key: K,
@@ -90,6 +99,15 @@ export function LeadFields({
           required
         />
       </FormField>
+      <label className="flex items-center gap-2 self-end pb-2 text-sm text-zinc-700 dark:text-zinc-300">
+        <input
+          type="checkbox"
+          checked={value.isAlumni}
+          onChange={(event) => update("isAlumni", event.target.checked)}
+          className="rounded border-zinc-300 dark:border-zinc-600"
+        />
+        {alumniLabel}
+      </label>
       <div className="sm:col-span-2">
         <FormField label="Notes">
           <TextArea

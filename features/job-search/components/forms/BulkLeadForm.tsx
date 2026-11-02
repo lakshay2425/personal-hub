@@ -49,6 +49,7 @@ function emptyValues(): LeadFormValues {
     xProfile: "",
     channel: DEFAULT_LEAD_CHANNEL,
     notes: "",
+    isAlumni: false,
   };
 }
 
@@ -68,7 +69,8 @@ function hasLeadValues(values: LeadFormValues): boolean {
       values.email.trim() ||
       values.linkedin.trim() ||
       values.xProfile.trim() ||
-      values.notes.trim(),
+      values.notes.trim() ||
+      values.isAlumni,
   );
 }
 
@@ -410,6 +412,7 @@ export function BulkLeadForm({
                     roleOptions={roleOptions}
                     nameRequired={false}
                     nameError={errors?.name}
+                    alumniLabel="Alumni"
                   />
                   {errors?.contact ? (
                     <p className="text-xs text-red-600 dark:text-red-400">

@@ -30,7 +30,10 @@ export async function exportJobSearchData() {
     version: 7,
     exportedAt: new Date().toISOString(),
     companies,
-    leads,
+    leads: leads.map((lead) => ({
+      ...lead,
+      isAlumni: lead.isAlumni === true,
+    })),
     applications,
     leadTouchpoints,
     templates,

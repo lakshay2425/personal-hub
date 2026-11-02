@@ -5,6 +5,7 @@ import Link from "next/link";
 import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
 import type { Company, LeadWithTouchpoints, Template } from "../types";
 import { ChannelBadge } from "./ChannelBadge";
+import { AlumniBadge } from "./AlumniBadge";
 import { LeadCompanyButton } from "./LeadCompanyButton";
 import { LeadEmailButton } from "./LeadEmailButton";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
@@ -50,6 +51,7 @@ export function LeadTouchpointCard({
             <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
               {lead.name}
             </h3>
+            {lead.isAlumni === true ? <AlumniBadge /> : null}
             <ChannelBadge channel={lead.channel} />
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">

@@ -44,6 +44,7 @@ function groupLeadsWithTouchpoints(
     .map((lead) => ({
       ...lead,
       id: lead.id,
+      isAlumni: lead.isAlumni === true,
       touchpoints: (byLeadId.get(lead.id) ?? []).sort(
         (a, b) => b.occurredAt - a.occurredAt,
       ),

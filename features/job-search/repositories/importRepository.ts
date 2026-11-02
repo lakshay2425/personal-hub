@@ -182,6 +182,7 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       channel,
       status: normalizeLegacyLeadStatus(lead.status ?? DEFAULT_NEW_LEAD_STATUS),
       xProfile: lead.xProfile ?? "",
+      isAlumni: lead.isAlumni === true,
     });
   });
 

@@ -22,6 +22,10 @@ export class DuplicateLeadError extends Error {
   }
 }
 
+function withAlumniDefault(lead: Lead): Lead {
+  return { ...lead, isAlumni: lead.isAlumni === true };
+}
+
 function normalizeName(value: string): string {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
@@ -103,21 +107,24 @@ export function findLeadDuplicates(
 
 export async function getAllLeads(): Promise<Lead[]> {
   const database = getDB();
-  return database.leads.orderBy("createdAt").reverse().toArray();
+  const leads = await database.leads.orderBy("createdAt").reverse().toArray();
+  return leads.map(withAlumniDefault);
 }
 
 export async function getLeadById(id: number): Promise<Lead | undefined> {
   const database = getDB();
-  return database.leads.get(id);
+  const lead = await database.leads.get(id);
+  return lead ? withAlumniDefault(lead) : undefined;
 }
 
 export async function getLeadsByCompanyId(companyId: number): Promise<Lead[]> {
   const database = getDB();
-  return database.leads
+  const leads = await database.leads
     .where("companyId")
     .equals(companyId)
     .reverse()
     .sortBy("createdAt");
+  return leads.map(withAlumniDefault);
 }
 
 export async function createLead(
@@ -132,6 +139,7 @@ export async function createLead(
   const id = await database.leads.add({
     ...data,
     channel,
+    isAlumni: data.isAlumni === true,
     linkedin: data.linkedin ?? "",
     xProfile: data.xProfile ?? "",
     createdAt: Date.now(),
@@ -157,6 +165,7 @@ export async function createLeads(
     linkedin: lead.linkedin.trim(),
     xProfile: lead.xProfile.trim(),
     notes: lead.notes.trim(),
+    isAlumni: lead.isAlumni === true,
     status: lead.status.trim(),
   }));
   const statuses = [...new Set(normalized.map((lead) => lead.status))];
@@ -214,7 +223,8 @@ export async function deleteLead(id: number): Promise<void> {
 
 export async function getRecentLeads(limit = 5): Promise<Lead[]> {
   const database = getDB();
-  return database.leads.orderBy("createdAt").reverse().limit(limit).toArray();
+  const leads = await database.leads.orderBy("createdAt").reverse().limit(limit).toArray();
+  return leads.map(withAlumniDefault);
 }
 
 export async function countLeadsSince(since: number | null): Promise<number> {
@@ -227,7 +237,9 @@ export async function searchLeads(query: string): Promise<Lead[]> {
   const database = getDB();
   const lower = query.toLowerCase();
   const all = await database.leads.toArray();
-  return all.filter((lead: Lead) => lead.name.toLowerCase().includes(lower));
+  return all
+    .filter((lead: Lead) => lead.name.toLowerCase().includes(lower))
+    .map(withAlumniDefault);
 }
 
 export async function getUniqueLeadRoles(): Promise<string[]> {

@@ -69,6 +69,7 @@ export interface Lead {
   channel: LeadChannel;
   status: LeadStatus;
   notes: string;
+  isAlumni: boolean;
   createdAt: number;
 }
 

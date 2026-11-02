@@ -71,6 +71,7 @@ function LeadFormFields({
     xProfile: initialLead?.xProfile ?? "",
     channel: lead?.channel ?? defaultChannel,
     notes: lead?.notes ?? "",
+    isAlumni: lead?.isAlumni === true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyError, setCompanyError] = useState<string | null>(null);

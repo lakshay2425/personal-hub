@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 
 import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
 import type { Company, LeadWithTouchpoints, Template } from "../types";
+import { AlumniBadge } from "./AlumniBadge";
 import { LeadCompanyButton } from "./LeadCompanyButton";
 import { LeadEmailButton } from "./LeadEmailButton";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
@@ -50,6 +51,11 @@ export function LeadDetailModal({
     <Modal isOpen={isOpen} onClose={onClose} title={lead.name} size="lg">
       <div className="space-y-6">
         <div>
+          {lead.isAlumni === true ? (
+            <div className="mb-3">
+              <AlumniBadge />
+            </div>
+          ) : null}
           <div className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
               <span className="text-zinc-500 dark:text-zinc-400">Company</span>
