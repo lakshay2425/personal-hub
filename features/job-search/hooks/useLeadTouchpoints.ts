@@ -55,6 +55,29 @@ export function useLeadTouchpoints() {
     [refresh],
   );
 
+  const appendTouchpoints = useCallback(
+    async (
+      leadIds: number[],
+      input: Omit<LeadTouchpointInput, "occurredAt"> & {
+        occurredAt?: number;
+      },
+      options?: { updateLeadStatus?: boolean },
+    ) => {
+      const sharedInput: LeadTouchpointInput = {
+        ...input,
+        occurredAt: input.occurredAt ?? Date.now(),
+      };
+      try {
+        for (const leadId of leadIds) {
+          await addTouchpoint(leadId, sharedInput, options);
+        }
+      } finally {
+        await refresh();
+      }
+    },
+    [refresh],
+  );
+
   const editTouchpoint = useCallback(
     async (
       id: number,
@@ -63,6 +86,23 @@ export function useLeadTouchpoints() {
     ) => {
       await updateTouchpoint(id, data, options);
       await refresh();
+    },
+    [refresh],
+  );
+
+  const editTouchpoints = useCallback(
+    async (
+      touchpointIds: number[],
+      data: Partial<LeadTouchpointInput>,
+      options?: { updateLeadStatus?: boolean },
+    ) => {
+      try {
+        for (const id of touchpointIds) {
+          await updateTouchpoint(id, data, options);
+        }
+      } finally {
+        await refresh();
+      }
     },
     [refresh],
   );
@@ -84,7 +124,9 @@ export function useLeadTouchpoints() {
     isLoading,
     refresh,
     appendTouchpoint,
+    appendTouchpoints,
     editTouchpoint,
+    editTouchpoints,
     removeTouchpoint,
     loadTouchpointsForLead,
   };

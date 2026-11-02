@@ -30,6 +30,7 @@ import {
   EMAIL_RESPONSE_STATUSES,
   LEAD_CHANNELS,
   LINKEDIN_TOUCHPOINT_TYPES,
+  QUICK_TOUCHPOINT_ACTIONS,
   LINKEDIN_RESPONSE_STATUSES,
 } from "@/features/job-search/constants";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
@@ -57,9 +58,11 @@ import type { LeadInput } from "@/features/job-search/repositories/leadsReposito
 import type {
   Company,
   Lead,
+  LeadChannel,
   LeadTouchpoint,
   LeadWithTouchpoints,
 } from "@/features/job-search/types";
+import type { QuickTouchpointAction } from "@/features/job-search/constants";
 
 type DeleteTarget =
   | { type: "lead"; lead: LeadWithTouchpoints }
@@ -147,7 +150,9 @@ function LeadsPageContent() {
     isLoading,
     refresh,
     appendTouchpoint,
+    appendTouchpoints,
     editTouchpoint,
+    editTouchpoints,
     removeTouchpoint,
   } = useLeadTouchpoints();
   const { templates } = useTemplates();
@@ -171,6 +176,11 @@ function LeadsPageContent() {
   const [touchpointStatusFilter, setTouchpointStatusFilter] = useState(searchParams.get("touchpointStatus") ?? "");
   const [touchpointResponseFilter, setTouchpointResponseFilter] = useState(searchParams.get("touchpointResponse") ?? "");
   const [weekFilter, setWeekFilter] = useState<string | null>(null);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<number>>(
+    () => new Set(),
+  );
+  const [isBulkActionRunning, setIsBulkActionRunning] = useState(false);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [detailLead, setDetailLead] = useState<LeadWithTouchpoints | null>(
@@ -262,6 +272,73 @@ function LeadsPageContent() {
     return groupLeadsByCompany(filtered, companyById);
   }, [filtered, groupByCompany, companyById]);
 
+  const selectedLeads = useMemo(
+    () => leadsWithTouchpoints.filter((lead) => selectedLeadIds.has(lead.id)),
+    [leadsWithTouchpoints, selectedLeadIds],
+  );
+  const selectedChannel: LeadChannel | null =
+    selectedLeads.length > 0 &&
+    selectedLeads.every((lead) => lead.channel === selectedLeads[0].channel)
+      ? selectedLeads[0].channel
+      : null;
+  const selectedActions = useMemo(
+    () =>
+      selectedChannel
+        ? QUICK_TOUCHPOINT_ACTIONS[selectedChannel] ?? []
+        : [],
+    [selectedChannel],
+  );
+  const bulkUpdateEligibility = useMemo(() => {
+    const eligibility = new Map<
+      string,
+      { touchpointIds: number[]; error?: string }
+    >();
+
+    for (const action of selectedActions) {
+      if (!action.updateType) continue;
+
+      const touchpointIds: number[] = [];
+      let error: string | undefined;
+      for (const lead of selectedLeads) {
+        const eligible = lead.touchpoints.filter(
+          (touchpoint) =>
+            touchpoint.channel === lead.channel &&
+            touchpoint.status === "Sent" &&
+            action.eligibleTypes?.includes(touchpoint.type) &&
+            (action.updateType === "acceptance"
+              ? ["Not accepted", "Not responded"].includes(
+                  touchpoint.responseStatus,
+                )
+              : touchpoint.responseStatus === "Not responded"),
+        );
+        if (eligible.length === 0) {
+          error =
+            action.updateType === "acceptance"
+              ? "Every selected lead needs an unanswered connection request."
+              : "Every selected lead needs an unanswered message or follow-up.";
+          break;
+        }
+
+        const latestOccurredAt = Math.max(
+          ...eligible.map((touchpoint) => touchpoint.occurredAt),
+        );
+        const latest = eligible.filter(
+          (touchpoint) => touchpoint.occurredAt === latestOccurredAt,
+        );
+        if (latest.length !== 1 || latest[0].id === undefined) {
+          error =
+            "Each selected lead must have one clear latest touchpoint to update.";
+          break;
+        }
+        touchpointIds.push(latest[0].id);
+      }
+
+      eligibility.set(action.id, { touchpointIds, error });
+    }
+
+    return eligibility;
+  }, [selectedActions, selectedLeads]);
+
   const openLeadDetail = (lead: LeadWithTouchpoints) => {
     setDetailLead(lead);
   };
@@ -291,34 +368,86 @@ function LeadsPageContent() {
 
   const renderAllLeadsList = (leads: LeadWithTouchpoints[]) => (
     <div className="space-y-2">
-      {leads.map((lead) => (
-        <LeadListRow
-          key={lead.id}
-          lead={lead}
-          company={companyById.get(lead.companyId)}
-          onClick={() => openLeadDetail(lead)}
-        />
-      ))}
+      {leads.map((lead) => {
+        const isSelected = selectedLeadIds.has(lead.id);
+        const channelMismatch =
+          selectedLeads.length > 0 &&
+          selectedLeads[0].channel !== lead.channel;
+        return (
+          <div key={lead.id} className="flex items-center gap-3">
+            {isSelectionMode ? (
+              <input
+                type="checkbox"
+                aria-label={`Select ${lead.name}`}
+                checked={isSelected}
+                disabled={channelMismatch}
+                onChange={(event) =>
+                  setSelectedLeadIds((current) => {
+                    const next = new Set(current);
+                    if (event.target.checked) next.add(lead.id);
+                    else next.delete(lead.id);
+                    return next;
+                  })
+                }
+                className="ml-1 h-4 w-4 shrink-0 rounded border-zinc-300 dark:border-zinc-600"
+              />
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <LeadListRow
+                lead={lead}
+                company={companyById.get(lead.companyId)}
+                onClick={() => openLeadDetail(lead)}
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
   const renderTouchpointCards = (leads: LeadWithTouchpoints[]) => (
     <div className="space-y-4">
-      {leads.map((lead) => (
-        <LeadTouchpointCard
-          key={lead.id}
-          lead={lead}
-          company={companyById.get(lead.companyId)}
-          templateMap={templateMap}
-          visibleTouchpoints={
-            weekFilter
-              ? filterTouchpointsByWeek(lead.touchpoints, weekFilter)
-              : undefined
-          }
-          onViewCompany={setViewingCompany}
-          {...getLeadActions(lead)}
-        />
-      ))}
+      {leads.map((lead) => {
+        const isSelected = selectedLeadIds.has(lead.id);
+        const channelMismatch =
+          selectedLeads.length > 0 &&
+          selectedLeads[0].channel !== lead.channel;
+        return (
+          <div key={lead.id} className="flex items-start gap-3">
+            {isSelectionMode ? (
+              <input
+                type="checkbox"
+                aria-label={`Select ${lead.name}`}
+                checked={isSelected}
+                disabled={channelMismatch}
+                onChange={(event) =>
+                  setSelectedLeadIds((current) => {
+                    const next = new Set(current);
+                    if (event.target.checked) next.add(lead.id);
+                    else next.delete(lead.id);
+                    return next;
+                  })
+                }
+                className="ml-1 mt-5 h-4 w-4 shrink-0 rounded border-zinc-300 dark:border-zinc-600"
+              />
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <LeadTouchpointCard
+                lead={lead}
+                company={companyById.get(lead.companyId)}
+                templateMap={templateMap}
+                visibleTouchpoints={
+                  weekFilter
+                    ? filterTouchpointsByWeek(lead.touchpoints, weekFilter)
+                    : undefined
+                }
+                onViewCompany={setViewingCompany}
+                {...getLeadActions(lead)}
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -467,6 +596,56 @@ function LeadsPageContent() {
     }
   };
 
+  const handleBulkQuickTouchpointAction = async (
+    action: QuickTouchpointAction,
+  ) => {
+    if (
+      isBulkActionRunning ||
+      !selectedChannel ||
+      selectedLeads.length === 0
+    ) return;
+
+    setIsBulkActionRunning(true);
+    try {
+      if (action.updateType) {
+        const eligibility = bulkUpdateEligibility.get(action.id);
+        if (!eligibility || eligibility.error) return;
+        await editTouchpoints(
+          eligibility.touchpointIds,
+          { responseStatus: action.responseStatus },
+          { updateLeadStatus: false },
+        );
+      } else {
+        await appendTouchpoints(
+          selectedLeads.map((lead) => lead.id),
+          {
+            channel: selectedChannel,
+            type: action.type,
+            status: action.status,
+            responseStatus: action.responseStatus,
+            templateId: null,
+            context: "",
+          },
+          { updateLeadStatus: false },
+        );
+      }
+
+      toast.success(
+        `${action.label} applied to ${selectedLeads.length} leads`,
+      );
+      setSelectedLeadIds(new Set());
+      setIsSelectionMode(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? `Could not apply the action to all selected leads. Some may already have been updated: ${error.message}`
+          : "Could not apply the action to all selected leads. Some may already have been updated.",
+      );
+    } finally {
+      setIsBulkActionRunning(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
 
@@ -515,16 +694,28 @@ function LeadsPageContent() {
         title="Leads"
         description="Track contacts and outreach touchpoints at target companies"
         action={
-          <button
-            type="button"
-            onClick={() => {
-              setEditingLead(null);
-              setIsLeadFormOpen(true);
-            }}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            Add Lead
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (isSelectionMode) setSelectedLeadIds(new Set());
+                setIsSelectionMode((enabled) => !enabled);
+              }}
+              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              {isSelectionMode ? "Cancel selection" : "Select leads"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingLead(null);
+                setIsLeadFormOpen(true);
+              }}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              Add Lead
+            </button>
+          </div>
         }
       />
 
@@ -637,6 +828,67 @@ function LeadsPageContent() {
           </div>
         ) : null}
       </div>
+
+      {isSelectionMode ? (
+        <section className="mb-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+              {selectedLeads.length} lead
+              {selectedLeads.length === 1 ? "" : "s"} selected
+            </p>
+            {selectedLeads.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setSelectedLeadIds(new Set())}
+                className="text-sm font-medium text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              >
+                Clear selection
+              </button>
+            ) : null}
+          </div>
+          {selectedLeads.length === 0 ? (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              Select leads from the list to apply a shared touchpoint action.
+            </p>
+          ) : !selectedChannel ? (
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              Select leads using the same channel to apply a shared touchpoint.
+            </p>
+          ) : (
+            <>
+              <p className="mb-3 text-sm text-zinc-500 dark:text-zinc-400">
+                Quick actions for {selectedChannel}
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {selectedActions.map((action) => {
+                  const eligibility = bulkUpdateEligibility.get(action.id);
+                  const disabled =
+                    isBulkActionRunning ||
+                    Boolean(action.updateType && eligibility?.error);
+                  return (
+                    <div key={action.id}>
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => void handleBulkQuickTouchpointAction(action)}
+                        title={eligibility?.error}
+                        className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-left text-sm font-medium text-zinc-800 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                      >
+                        {isBulkActionRunning ? "Applying..." : action.label}
+                      </button>
+                      {action.updateType && eligibility?.error ? (
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                          {eligibility.error}
+                        </p>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </section>
+      ) : null}
 
       {filtered.length === 0 ? (
         <EmptyState
