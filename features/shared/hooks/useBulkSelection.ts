@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { replaceSelection, toggleSelection } from "../lib/selectionUtils";
 
 export function useBulkSelection<T extends string | number>() {
   const [selectedIds, setSelectedIds] = useState<Set<T>>(() => new Set());
@@ -11,19 +12,11 @@ export function useBulkSelection<T extends string | number>() {
   );
 
   const toggle = useCallback((id: T) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    setSelectedIds((prev) => toggleSelection(prev, id));
   }, []);
 
   const selectAll = useCallback((ids: T[]) => {
-    setSelectedIds(new Set(ids));
+    setSelectedIds(replaceSelection(ids));
   }, []);
 
   const clear = useCallback(() => {

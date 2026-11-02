@@ -1,11 +1,11 @@
-import { addDays, parseISO } from "date-fns";
+import { addDays, format, parseISO } from "date-fns";
 
 import { getAllLogEntries } from "@/features/logger/lib/loggerRepository";
 import type { LogEntry } from "@/features/logger/types";
 import { getAllTasks } from "@/features/planner/lib/tasksRepository";
 import type { Task, TaskKind } from "@/features/planner/types";
 import { getPriorities } from "@/features/settings/lib/prioritiesRepository";
-import { UNASSIGNED } from "@/features/settings/types";
+import { UNASSIGNED, type PrioritiesSettings } from "@/features/settings/types";
 
 export interface KindWeekData {
   kind: Extract<TaskKind, "sprint" | "recursive">;
@@ -30,7 +30,7 @@ export interface DashboardWeekData {
 
 function getWeekEnd(weekStart: string): string {
   const monday = parseISO(weekStart);
-  return addDays(monday, 6).toISOString().slice(0, 10);
+  return format(addDays(monday, 6), "yyyy-MM-dd");
 }
 
 function isDateInWeek(dateStr: string, weekStart: string, weekEnd: string): boolean {
@@ -49,16 +49,13 @@ function isRoot(task: Task): boolean {
   return (task.parentId ?? null) === null;
 }
 
-export async function getDashboardWeekData(
+export function buildDashboardWeekData(
   weekStart: string,
-): Promise<DashboardWeekData> {
+  tasks: Task[],
+  logEntries: LogEntry[],
+  priorities: PrioritiesSettings,
+): DashboardWeekData {
   const weekEnd = getWeekEnd(weekStart);
-  const [tasks, logEntries, priorities] = await Promise.all([
-    getAllTasks(),
-    getAllLogEntries(),
-    getPriorities(),
-  ]);
-
   const completedThisWeek = tasks.filter(
     (task) =>
       task.status === "Done" &&
@@ -89,11 +86,9 @@ export async function getDashboardWeekData(
   const weekLogs = logEntries.filter((entry) =>
     isDateInWeek(entry.date, weekStart, weekEnd),
   );
-
   const categoryNames = priorities.slots
     .filter((slot) => slot !== null)
-    .map((slot) => slot!.name);
-
+    .map((slot) => slot.name);
   const categories: CategoryWeekData[] = categoryNames.map((category) => ({
     category,
     logEntries: weekLogs.filter(
@@ -112,4 +107,15 @@ export async function getDashboardWeekData(
     ),
     categories,
   };
+}
+
+export async function getDashboardWeekData(
+  weekStart: string,
+): Promise<DashboardWeekData> {
+  const [tasks, logEntries, priorities] = await Promise.all([
+    getAllTasks(),
+    getAllLogEntries(),
+    getPriorities(),
+  ]);
+  return buildDashboardWeekData(weekStart, tasks, logEntries, priorities);
 }

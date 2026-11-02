@@ -33,6 +33,7 @@ import {
   QUICK_TOUCHPOINT_ACTIONS,
   LINKEDIN_RESPONSE_STATUSES,
 } from "@/features/job-search/constants";
+import type { QuickTouchpointAction } from "@/features/job-search/constants";
 import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeadListSettings } from "@/features/job-search/hooks/useLeadListSettings";
 import { useLeadTouchpoints } from "@/features/job-search/hooks/useLeadTouchpoints";
@@ -49,6 +50,12 @@ import {
   leadCreatedInWeek,
   type LeadsViewMode,
 } from "@/features/job-search/lib/leadListUtils";
+import {
+  applyBulkTouchpointAction,
+  canSelectLeadForBulkTouchpoint,
+  getBulkTouchpointEligibility,
+  getCommonLeadChannel,
+} from "@/features/job-search/lib/bulkTouchpoints";
 import { buildTemplateMap } from "@/features/job-search/lib/templateUtils";
 import {
   countTouchpointsInWeek,
@@ -62,7 +69,6 @@ import type {
   LeadTouchpoint,
   LeadWithTouchpoints,
 } from "@/features/job-search/types";
-import type { QuickTouchpointAction } from "@/features/job-search/constants";
 
 type DeleteTarget =
   | { type: "lead"; lead: LeadWithTouchpoints }
@@ -277,15 +283,15 @@ function LeadsPageContent() {
     [leadsWithTouchpoints, selectedLeadIds],
   );
   const selectedChannel: LeadChannel | null =
-    selectedLeads.length > 0 &&
-    selectedLeads.every((lead) => lead.channel === selectedLeads[0].channel)
-      ? selectedLeads[0].channel
-      : null;
+    getCommonLeadChannel(selectedLeads);
   const selectedActions = useMemo(
-    () =>
-      selectedChannel
-        ? QUICK_TOUCHPOINT_ACTIONS[selectedChannel] ?? []
-        : [],
+    () => {
+      if (!selectedChannel) return [];
+      return (
+        QUICK_TOUCHPOINT_ACTIONS[selectedChannel] ??
+        []
+      );
+    },
     [selectedChannel],
   );
   const bulkUpdateEligibility = useMemo(() => {
@@ -296,44 +302,10 @@ function LeadsPageContent() {
 
     for (const action of selectedActions) {
       if (!action.updateType) continue;
-
-      const touchpointIds: number[] = [];
-      let error: string | undefined;
-      for (const lead of selectedLeads) {
-        const eligible = lead.touchpoints.filter(
-          (touchpoint) =>
-            touchpoint.channel === lead.channel &&
-            touchpoint.status === "Sent" &&
-            action.eligibleTypes?.includes(touchpoint.type) &&
-            (action.updateType === "acceptance"
-              ? ["Not accepted", "Not responded"].includes(
-                  touchpoint.responseStatus,
-                )
-              : touchpoint.responseStatus === "Not responded"),
-        );
-        if (eligible.length === 0) {
-          error =
-            action.updateType === "acceptance"
-              ? "Every selected lead needs an unanswered connection request."
-              : "Every selected lead needs an unanswered message or follow-up.";
-          break;
-        }
-
-        const latestOccurredAt = Math.max(
-          ...eligible.map((touchpoint) => touchpoint.occurredAt),
-        );
-        const latest = eligible.filter(
-          (touchpoint) => touchpoint.occurredAt === latestOccurredAt,
-        );
-        if (latest.length !== 1 || latest[0].id === undefined) {
-          error =
-            "Each selected lead must have one clear latest touchpoint to update.";
-          break;
-        }
-        touchpointIds.push(latest[0].id);
-      }
-
-      eligibility.set(action.id, { touchpointIds, error });
+      eligibility.set(
+        action.id,
+        getBulkTouchpointEligibility(action, selectedLeads),
+      );
     }
 
     return eligibility;
@@ -370,9 +342,10 @@ function LeadsPageContent() {
     <div className="space-y-2">
       {leads.map((lead) => {
         const isSelected = selectedLeadIds.has(lead.id);
-        const channelMismatch =
-          selectedLeads.length > 0 &&
-          selectedLeads[0].channel !== lead.channel;
+        const channelMismatch = !canSelectLeadForBulkTouchpoint(
+          selectedLeads,
+          lead,
+        );
         return (
           <div key={lead.id} className="flex items-center gap-3">
             {isSelectionMode ? (
@@ -409,9 +382,10 @@ function LeadsPageContent() {
     <div className="space-y-4">
       {leads.map((lead) => {
         const isSelected = selectedLeadIds.has(lead.id);
-        const channelMismatch =
-          selectedLeads.length > 0 &&
-          selectedLeads[0].channel !== lead.channel;
+        const channelMismatch = !canSelectLeadForBulkTouchpoint(
+          selectedLeads,
+          lead,
+        );
         return (
           <div key={lead.id} className="flex items-start gap-3">
             {isSelectionMode ? (
@@ -607,28 +581,11 @@ function LeadsPageContent() {
 
     setIsBulkActionRunning(true);
     try {
-      if (action.updateType) {
-        const eligibility = bulkUpdateEligibility.get(action.id);
-        if (!eligibility || eligibility.error) return;
-        await editTouchpoints(
-          eligibility.touchpointIds,
-          { responseStatus: action.responseStatus },
-          { updateLeadStatus: false },
-        );
-      } else {
-        await appendTouchpoints(
-          selectedLeads.map((lead) => lead.id),
-          {
-            channel: selectedChannel,
-            type: action.type,
-            status: action.status,
-            responseStatus: action.responseStatus,
-            templateId: null,
-            context: "",
-          },
-          { updateLeadStatus: false },
-        );
-      }
+      await applyBulkTouchpointAction(
+        action,
+        selectedLeads,
+        { appendTouchpoints, editTouchpoints },
+      );
 
       toast.success(
         `${action.label} applied to ${selectedLeads.length} leads`,

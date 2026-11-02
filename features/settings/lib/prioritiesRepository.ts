@@ -3,28 +3,17 @@ import { getDB } from "@/features/questions/lib/db";
 
 import {
   DEFAULT_PRIORITY_SLOTS,
-  PRIORITY_SLOT_COUNT,
   UNASSIGNED,
   type PrioritiesSettings,
   type PriorityArea,
 } from "../types";
+import {
+  getActivePriorities as getActivePrioritiesFromSlots,
+  getPriorityColor as getPriorityColorFromSlots,
+  validatePrioritySlots,
+} from "./priorityUtils";
 
 const PRIORITIES_KEY = "priorities";
-
-function validateSlots(slots: (PriorityArea | null)[]): void {
-  if (slots.length !== PRIORITY_SLOT_COUNT) {
-    throw new Error(`Expected ${PRIORITY_SLOT_COUNT} priority slots`);
-  }
-
-  const names = slots
-    .filter((slot): slot is PriorityArea => slot !== null && slot.name.trim() !== "")
-    .map((slot) => slot.name.trim().toLowerCase());
-
-  const uniqueNames = new Set(names);
-  if (uniqueNames.size !== names.length) {
-    throw new Error("Priority names must be unique");
-  }
-}
 
 export async function getPriorities(): Promise<PrioritiesSettings> {
   const db = getDB();
@@ -53,7 +42,7 @@ export async function savePriorities(
     return { name: slot.name.trim(), color: slot.color };
   });
 
-  validateSlots(normalized);
+  validatePrioritySlots(normalized);
 
   const settings: PrioritiesSettings = {
     key: PRIORITIES_KEY,
@@ -127,20 +116,13 @@ export async function deletePriority(name: string): Promise<void> {
 
 export function getActivePriorities(
   settings: PrioritiesSettings,
-): PriorityArea[] {
-  return settings.slots.filter(
-    (slot): slot is PriorityArea => slot !== null && slot.name.trim() !== "",
-  );
+): ReturnType<typeof getActivePrioritiesFromSlots> {
+  return getActivePrioritiesFromSlots(settings.slots);
 }
 
 export function getPriorityColor(
   settings: PrioritiesSettings,
   category: string,
 ): string | null {
-  if (category === UNASSIGNED) {
-    return null;
-  }
-
-  const match = settings.slots.find((slot) => slot?.name === category);
-  return match?.color ?? null;
+  return getPriorityColorFromSlots(settings.slots, category, UNASSIGNED);
 }

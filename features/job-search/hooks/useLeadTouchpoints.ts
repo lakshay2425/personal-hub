@@ -9,6 +9,7 @@ import {
   getTouchpointsByLeadId,
   updateTouchpoint,
 } from "../repositories/leadTouchpointsRepository";
+import { runBulkTouchpointWrites } from "../lib/bulkTouchpoints";
 import type { LeadTouchpointInput } from "../repositories/leadTouchpointsRepository";
 import type { LeadWithTouchpoints } from "../types";
 
@@ -67,13 +68,11 @@ export function useLeadTouchpoints() {
         ...input,
         occurredAt: input.occurredAt ?? Date.now(),
       };
-      try {
-        for (const leadId of leadIds) {
-          await addTouchpoint(leadId, sharedInput, options);
-        }
-      } finally {
-        await refresh();
-      }
+      await runBulkTouchpointWrites(
+        leadIds,
+        (leadId) => addTouchpoint(leadId, sharedInput, options),
+        refresh,
+      );
     },
     [refresh],
   );
@@ -96,13 +95,11 @@ export function useLeadTouchpoints() {
       data: Partial<LeadTouchpointInput>,
       options?: { updateLeadStatus?: boolean },
     ) => {
-      try {
-        for (const id of touchpointIds) {
-          await updateTouchpoint(id, data, options);
-        }
-      } finally {
-        await refresh();
-      }
+      await runBulkTouchpointWrites(
+        touchpointIds,
+        (id) => updateTouchpoint(id, data, options),
+        refresh,
+      );
     },
     [refresh],
   );
