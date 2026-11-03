@@ -1,8 +1,8 @@
 import { createSectionMetadata } from "@/lib/og/metadata";
 
 export const metadata = createSectionMetadata(
-  "leads",
-  "/job-search/cold-emails",
+  "legacyColdEmails",
+  "/job-search/leads",
 );
 
 export default function ColdEmailsLayout({

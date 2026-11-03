@@ -1,6 +1,9 @@
 import { createSectionMetadata } from "@/lib/og/metadata";
 
-export const metadata = createSectionMetadata("leads", "/job-search/outreach");
+export const metadata = createSectionMetadata(
+  "outreach",
+  "/job-search/leads",
+);
 
 export default function OutreachLayout({
   children,

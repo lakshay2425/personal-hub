@@ -3,8 +3,8 @@ import { createSectionMetadata } from "@/lib/og/metadata";
 import { PeopleShell } from "@/features/people/components/PeopleShell";
 
 export const metadata = createSectionMetadata(
-  "peopleDiscover",
-  "/people/discover",
+  "people",
+  "/people",
 );
 
 export default function PeopleLayout({

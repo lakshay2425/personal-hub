@@ -1,6 +1,9 @@
 import { createSectionMetadata } from "@/lib/og/metadata";
 
-export const metadata = createSectionMetadata("projects", "/projects/settings");
+export const metadata = createSectionMetadata(
+  "projectSettings",
+  "/projects/settings",
+);
 
 export default function ProjectsSettingsLayout({
   children,

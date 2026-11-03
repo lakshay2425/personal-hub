@@ -1,4 +1,12 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Offline",
+  description:
+    "Personal Hub is offline. Reconnect or open a page that was cached while online.",
+  robots: { index: false, follow: true },
+};
 
 export default function OfflinePage() {
   return (
