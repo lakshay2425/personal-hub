@@ -1,13 +1,11 @@
 "use client";
 
-import Link from "next/link";
-
-import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
 import type { Company, LeadWithTouchpoints, Template } from "../types";
 import { ChannelBadge } from "./ChannelBadge";
 import { AlumniBadge } from "./AlumniBadge";
 import { LeadCompanyButton } from "./LeadCompanyButton";
 import { LeadEmailButton } from "./LeadEmailButton";
+import { LeadSocialLinks } from "./LeadSocialLinks";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
 import { mobileActionClass } from "./MobileListCard";
 
@@ -40,7 +38,6 @@ export function LeadTouchpointCard({
   onEditTouchpoint,
   onDeleteTouchpoint,
 }: LeadTouchpointCardProps) {
-  const profiles = backfillLeadProfileFields(lead);
   const touchpoints = visibleTouchpoints ?? lead.touchpoints;
 
   return (
@@ -59,27 +56,8 @@ export function LeadTouchpointCard({
             {lead.role ? <span>{lead.role}</span> : null}
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-            <LeadEmailButton email={lead.email} />
-            {profiles.linkedin ? (
-              <Link
-                href={profiles.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-600 hover:underline dark:text-zinc-400"
-              >
-                LinkedIn
-              </Link>
-            ) : null}
-            {profiles.xProfile ? (
-              <Link
-                href={profiles.xProfile}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-600 hover:underline dark:text-zinc-400"
-              >
-                X
-              </Link>
-            ) : null}
+            {lead.email.trim() ? <LeadEmailButton email={lead.email} /> : null}
+            <LeadSocialLinks lead={lead} />
           </div>
         </div>
 

@@ -1,5 +1,41 @@
 import type { Lead } from "../types";
 
+export interface LeadSocialProfiles {
+  linkedin: string | null;
+  xProfile: string | null;
+}
+
+export function getLeadSocialProfiles(lead: Lead): LeadSocialProfiles {
+  const profiles = backfillLeadProfileFields(lead);
+  return {
+    linkedin: normalizeSocialProfile(profiles.linkedin, ["linkedin.com"]),
+    xProfile: normalizeSocialProfile(profiles.xProfile, ["x.com", "twitter.com"]),
+  };
+}
+
+function normalizeSocialProfile(
+  raw: string,
+  domains: string[],
+): string | null {
+  if (!raw.trim()) return null;
+
+  try {
+    const url = new URL(normalizeProfileUrl(raw));
+    if (
+      (url.protocol !== "http:" && url.protocol !== "https:") ||
+      !domains.some(
+        (domain) =>
+          url.hostname === domain || url.hostname.endsWith(`.${domain}`),
+      )
+    ) {
+      return null;
+    }
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
 export function getLinkedInProfileUrls(leads: Lead[]): string[] {
   const urls = leads.flatMap((lead) => {
     const raw = lead.linkedin?.trim() ?? "";

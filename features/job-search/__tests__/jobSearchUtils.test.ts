@@ -8,6 +8,7 @@ import {
 } from "../lib/productOutreachUtils";
 import {
   backfillLeadProfileFields,
+  getLeadSocialProfiles,
   getLinkedInProfileUrls,
   getLeadProfileUrl,
   normalizeProfileUrl,
@@ -68,6 +69,34 @@ describe("Job Search profile URL helpers", () => {
     const backfilled = backfillLeadProfileFields(xLead);
     assert.equal(backfilled.xProfile, "x.com/legacy");
     assert.equal(getLeadProfileUrl(backfilled), "https://x.com/legacy");
+  });
+
+  it("returns available LinkedIn and X profile URLs regardless of outreach channel", () => {
+    const item = lead(1, 1, "Email");
+    item.linkedin = "linkedin.com/in/alex";
+    item.xProfile = "https://x.com/alex";
+
+    assert.deepEqual(getLeadSocialProfiles(item), {
+      linkedin: "https://linkedin.com/in/alex",
+      xProfile: "https://x.com/alex",
+    });
+  });
+
+  it("backfills legacy X profile data and rejects non-social URLs", () => {
+    const legacy = lead(1, 1, "X");
+    legacy.linkedin = "x.com/alex";
+    assert.deepEqual(getLeadSocialProfiles(legacy), {
+      linkedin: null,
+      xProfile: "https://x.com/alex",
+    });
+
+    const invalid = lead(2, 1, "LinkedIn");
+    invalid.linkedin = "https://example.com/alex";
+    invalid.xProfile = "javascript:alert(1)";
+    assert.deepEqual(getLeadSocialProfiles(invalid), {
+      linkedin: null,
+      xProfile: null,
+    });
   });
 
   it("collects unique LinkedIn URLs and excludes empty or non-LinkedIn values", () => {

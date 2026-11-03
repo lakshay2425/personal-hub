@@ -1,14 +1,13 @@
 "use client";
 
-import Link from "next/link";
-
 import { Modal } from "@/components/ui/Modal";
 
-import { backfillLeadProfileFields } from "../lib/leadProfileUtils";
+import { getLeadSocialProfiles } from "../lib/leadProfileUtils";
 import type { Company, LeadWithTouchpoints, Template } from "../types";
 import { AlumniBadge } from "./AlumniBadge";
 import { LeadCompanyButton } from "./LeadCompanyButton";
 import { LeadEmailButton } from "./LeadEmailButton";
+import { LeadSocialLinks } from "./LeadSocialLinks";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
 import { mobileActionClass } from "./MobileListCard";
 
@@ -44,8 +43,7 @@ export function LeadDetailModal({
   onDeleteTouchpoint,
 }: LeadDetailModalProps) {
   if (!lead) return null;
-
-  const profiles = backfillLeadProfileFields(lead);
+  const profiles = getLeadSocialProfiles(lead);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={lead.name} size="lg">
@@ -71,42 +69,22 @@ export function LeadDetailModal({
                 </p>
               </div>
             ) : null}
-            <div>
-              <span className="text-zinc-500 dark:text-zinc-400">Email</span>
-              <div className="mt-0.5">
-                <LeadEmailButton email={lead.email} />
-              </div>
-            </div>
-            {profiles.linkedin ? (
+            {lead.email.trim() ? (
               <div>
-                <span className="text-zinc-500 dark:text-zinc-400">
-                  LinkedIn
-                </span>
-                <p className="mt-0.5">
-                  <Link
-                    href={profiles.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-zinc-900 hover:underline dark:text-zinc-50"
-                  >
-                    Profile
-                  </Link>
-                </p>
+                <span className="text-zinc-500 dark:text-zinc-400">Email</span>
+                <div className="mt-0.5">
+                  <LeadEmailButton email={lead.email} />
+                </div>
               </div>
             ) : null}
-            {profiles.xProfile ? (
+            {profiles.linkedin || profiles.xProfile ? (
               <div>
-                <span className="text-zinc-500 dark:text-zinc-400">X</span>
-                <p className="mt-0.5">
-                  <Link
-                    href={profiles.xProfile}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-zinc-900 hover:underline dark:text-zinc-50"
-                  >
-                    Profile
-                  </Link>
-                </p>
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  Social profiles
+                </span>
+                <div className="mt-1">
+                  <LeadSocialLinks lead={lead} />
+                </div>
               </div>
             ) : null}
           </div>
