@@ -1,5 +1,35 @@
 import type { Lead } from "../types";
 
+export function getLinkedInProfileUrls(leads: Lead[]): string[] {
+  const urls = leads.flatMap((lead) => {
+    const raw = lead.linkedin?.trim() ?? "";
+    if (!raw) return [];
+
+    const normalized = normalizeProfileUrl(raw);
+    try {
+      const url = new URL(normalized);
+      if (
+        url.protocol !== "http:" &&
+        url.protocol !== "https:"
+      ) {
+        return [];
+      }
+      if (
+        url.hostname !== "linkedin.com" &&
+        !url.hostname.endsWith(".linkedin.com")
+      ) {
+        return [];
+      }
+      url.hostname = url.hostname.replace(/^www\./, "");
+      url.pathname = url.pathname.replace(/\/+$/, "") || "/";
+      return [url.href];
+    } catch {
+      return [];
+    }
+  });
+  return [...new Set(urls)];
+}
+
 export function normalizeProfileUrl(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) return "";

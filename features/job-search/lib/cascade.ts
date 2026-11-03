@@ -70,6 +70,29 @@ export async function deleteLeadWithLogs(leadId: number): Promise<void> {
   );
 }
 
+export async function deleteLeadsWithLogs(leadIds: number[]): Promise<void> {
+  const uniqueLeadIds = [...new Set(leadIds)];
+  if (uniqueLeadIds.length === 0) return;
+
+  const database = getDB();
+  await database.transaction(
+    "rw",
+    [database.leads, database.leadTouchpoints, database.activityLogs],
+    async () => {
+      await database.leadTouchpoints
+        .where("leadId")
+        .anyOf(uniqueLeadIds)
+        .delete();
+      await deleteActivityLogsForEntities("lead", uniqueLeadIds);
+      await database.leads.bulkDelete(uniqueLeadIds);
+
+      for (const leadId of uniqueLeadIds) {
+        await logActivity("lead", leadId, "Lead Deleted");
+      }
+    },
+  );
+}
+
 export async function deleteApplicationWithLogs(
   applicationId: number,
 ): Promise<void> {

@@ -12,6 +12,7 @@ import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LeadDetailModal } from "@/features/job-search/components/LeadDetailModal";
 import { LeadListRow } from "@/features/job-search/components/LeadListRow";
 import { LeadTouchpointCard } from "@/features/job-search/components/LeadTouchpointCard";
+import { CompanyOverflowMenu } from "@/features/job-search/components/CompanyOverflowMenu";
 import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormModal";
 import {
   LeadTouchpointFormModal,
@@ -51,6 +52,7 @@ import {
   leadCreatedInWeek,
   type LeadsViewMode,
 } from "@/features/job-search/lib/leadListUtils";
+import { getLinkedInProfileUrls } from "@/features/job-search/lib/leadProfileUtils";
 import {
   applyBulkTouchpointAction,
   canSelectLeadGroup,
@@ -75,6 +77,7 @@ import type {
 
 type DeleteTarget =
   | { type: "lead"; lead: LeadWithTouchpoints }
+  | { type: "companyLeads"; companyName: string; leadIds: number[] }
   | { type: "touchpoint"; touchpoint: LeadTouchpoint; lead: LeadWithTouchpoints };
 
 const VIEW_OPTIONS: { value: LeadsViewMode; label: string }[] = [
@@ -153,6 +156,7 @@ function LeadsPageContent() {
     addLeads,
     editLead,
     removeLead,
+    removeLeads,
   } = useLeads();
   const {
     leadsWithTouchpoints,
@@ -435,6 +439,11 @@ function LeadsPageContent() {
         <div className="space-y-6">
           {groupedLeads.map((group) => {
             const groupLeadIds = group.leads.map((lead) => lead.id);
+            const companyLeads = leadsWithTouchpoints.filter(
+              (lead) => lead.companyId === group.companyId,
+            );
+            const companyLinkedInProfileUrls =
+              getLinkedInProfileUrls(companyLeads);
             const selectedCount = groupLeadIds.filter((id) =>
               selectedLeadIds.has(id),
             ).length;
@@ -488,6 +497,31 @@ function LeadsPageContent() {
                       ({group.leads.length})
                     </span>
                   </h3>
+                  {companyLeads.length > 0 ? (
+                    <CompanyOverflowMenu
+                      label={`${group.companyName} lead options`}
+                      onDeleteLeads={() =>
+                        setDeleteTarget({
+                          type: "companyLeads",
+                          companyName: group.companyName,
+                          leadIds: companyLeads.map((lead) => lead.id),
+                        })
+                      }
+                      onOpenLinkedInProfiles={
+                        companyLinkedInProfileUrls.length > 0
+                          ? () => {
+                              for (const url of companyLinkedInProfileUrls) {
+                                window.open(url, "_blank", "noopener,noreferrer");
+                              }
+                              toast.success(
+                                `Requested ${companyLinkedInProfileUrls.length} LinkedIn profile tab${companyLinkedInProfileUrls.length === 1 ? "" : "s"}. Your browser may block some pop-ups.`,
+                              );
+                            }
+                          : undefined
+                      }
+                      openLinkedInProfilesLabel={`Open LinkedIn profiles (${companyLinkedInProfileUrls.length})`}
+                    />
+                  ) : null}
                 </div>
                 {viewMode === "allLeads"
                   ? renderAllLeadsList(group.leads)
@@ -666,6 +700,17 @@ function LeadsPageContent() {
         await refresh();
         setDetailLead(null);
         toast.success("Lead deleted");
+      } else if (deleteTarget.type === "companyLeads") {
+        await removeLeads(deleteTarget.leadIds);
+        await refresh();
+        setSelectedLeadIds((current) => {
+          const next = new Set(current);
+          for (const id of deleteTarget.leadIds) next.delete(id);
+          return next;
+        });
+        toast.success(
+          `Deleted ${deleteTarget.leadIds.length} leads for ${deleteTarget.companyName}`,
+        );
       } else {
         await removeTouchpoint(deleteTarget.touchpoint.id!);
         toast.success("Touchpoint deleted");
@@ -995,10 +1040,17 @@ function LeadsPageContent() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         isLoading={isDeleting}
+        title={
+          deleteTarget?.type === "companyLeads"
+            ? "Delete all company leads"
+            : "Confirm delete"
+        }
         message={
           deleteTarget?.type === "lead"
             ? "Are you sure you want to delete this lead and all touchpoints?"
-            : "Are you sure you want to delete this touchpoint?"
+            : deleteTarget?.type === "companyLeads"
+              ? `Delete all ${deleteTarget.leadIds.length} leads for ${deleteTarget.companyName}, including their touchpoints and activity logs? This cannot be undone.`
+              : "Are you sure you want to delete this touchpoint?"
         }
       />
     </div>

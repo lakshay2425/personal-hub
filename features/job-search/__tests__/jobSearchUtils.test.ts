@@ -8,6 +8,7 @@ import {
 } from "../lib/productOutreachUtils";
 import {
   backfillLeadProfileFields,
+  getLinkedInProfileUrls,
   getLeadProfileUrl,
   normalizeProfileUrl,
 } from "../lib/leadProfileUtils";
@@ -67,6 +68,22 @@ describe("Job Search profile URL helpers", () => {
     const backfilled = backfillLeadProfileFields(xLead);
     assert.equal(backfilled.xProfile, "x.com/legacy");
     assert.equal(getLeadProfileUrl(backfilled), "https://x.com/legacy");
+  });
+
+  it("collects unique LinkedIn URLs and excludes empty or non-LinkedIn values", () => {
+    const first = lead(1, 1, "LinkedIn");
+    first.linkedin = " linkedin.com/in/alex/ ";
+    const duplicate = lead(2, 1, "Email");
+    duplicate.linkedin = "https://www.linkedin.com/in/alex/";
+    const invalid = lead(3, 1);
+    invalid.linkedin = "https://example.com/not-linkedin";
+
+    assert.deepEqual(getLinkedInProfileUrls([
+      first,
+      duplicate,
+      invalid,
+      lead(4, 1),
+    ]), ["https://linkedin.com/in/alex"]);
   });
 });
 

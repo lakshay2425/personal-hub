@@ -6,6 +6,7 @@ import {
   createLead,
   createLeads,
   deleteLead,
+  deleteLeads,
   getAllLeads,
   updateLead,
 } from "../repositories/leadsRepository";
@@ -76,5 +77,22 @@ export function useLeads() {
     [refresh],
   );
 
-  return { leads, isLoading, addLead, addLeads, editLead, removeLead, refresh };
+  const removeLeads = useCallback(
+    async (ids: number[]) => {
+      await deleteLeads(ids);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  return {
+    leads,
+    isLoading,
+    addLead,
+    addLeads,
+    editLead,
+    removeLead,
+    removeLeads,
+    refresh,
+  };
 }

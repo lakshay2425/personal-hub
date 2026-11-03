@@ -76,6 +76,8 @@ Current suites: `bulkTouchpoints.test.ts` and `jobSearchUtils.test.ts`.
 
 - Normalizes social profile URLs, handles legacy X data, and ignores
   non-social channels.
+- Collects unique valid LinkedIn profile URLs while excluding blank and
+  non-LinkedIn profile values.
 - Formats product-outreach handles and constructs Instagram, LinkedIn, X, and
   Email links, including blank handles.
 - Chooses contact titles from explicit labels, first interactions, or the

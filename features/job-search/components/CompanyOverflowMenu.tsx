@@ -5,9 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 interface CompanyOverflowMenuProps {
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   onCopyLink?: () => void;
+  onDeleteLeads?: () => void;
+  onOpenLinkedInProfiles?: () => void;
+  openLinkedInProfilesLabel?: string;
   label?: string;
 }
 
@@ -20,6 +23,9 @@ export function CompanyOverflowMenu({
   onEdit,
   onDelete,
   onCopyLink,
+  onDeleteLeads,
+  onOpenLinkedInProfiles,
+  openLinkedInProfilesLabel = "Open LinkedIn profiles",
   label = "Company options",
 }: CompanyOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -113,28 +119,58 @@ export function CompanyOverflowMenu({
             Copy website link
           </button>
         ) : null}
-        <button
-          type="button"
-          role="menuitem"
-          onClick={() => {
-            onEdit();
-            closeMenu();
-          }}
-          className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          role="menuitem"
-          onClick={() => {
-            onDelete();
-            closeMenu();
-          }}
-          className="w-full px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-        >
-          Delete
-        </button>
+        {onOpenLinkedInProfiles ? (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onOpenLinkedInProfiles();
+              closeMenu();
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            {openLinkedInProfilesLabel}
+          </button>
+        ) : null}
+        {onDeleteLeads ? (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onDeleteLeads();
+              closeMenu();
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+          >
+            Delete all leads
+          </button>
+        ) : null}
+        {onEdit ? (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onEdit();
+              closeMenu();
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Edit
+          </button>
+        ) : null}
+        {onDelete ? (
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onDelete();
+              closeMenu();
+            }}
+            className="w-full px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+          >
+            Delete
+          </button>
+        ) : null}
       </div>
     ) : null;
 

@@ -1,7 +1,7 @@
 import { DEFAULT_LEAD_CHANNEL } from "../constants";
 import { getDB } from "../db";
 import { logActivity } from "../lib/activityLog";
-import { deleteLeadWithLogs } from "../lib/cascade";
+import { deleteLeadWithLogs, deleteLeadsWithLogs } from "../lib/cascade";
 import { getUniqueStringValues } from "../lib/uniqueValues";
 import { ensureListOption } from "./listSettingsRepository";
 import type { Lead } from "../types";
@@ -219,6 +219,10 @@ export async function updateLead(
 
 export async function deleteLead(id: number): Promise<void> {
   await deleteLeadWithLogs(id);
+}
+
+export async function deleteLeads(ids: number[]): Promise<void> {
+  await deleteLeadsWithLogs(ids);
 }
 
 export async function getRecentLeads(limit = 5): Promise<Lead[]> {
