@@ -17,13 +17,15 @@ const routes = [
   "/job-search",
   "/job-search/companies",
   "/job-search/leads",
-  "/product-outreach",
-  "/people/discover",
-  "/people/network",
-  "/people/settings",
+  "/job-search/outreach",
   "/job-search/applications",
   "/job-search/templates",
   "/job-search/settings",
+  "/product-outreach",
+  "/people",
+  "/people/discover",
+  "/people/network",
+  "/people/settings",
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
