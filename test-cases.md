@@ -56,6 +56,7 @@ script uses a recursive glob, so the feature remains runnable independently.
 ### Job Search — `features/job-search/__tests__/`
 
 Current suites: `bulkTouchpoints.test.ts` and `jobSearchUtils.test.ts`.
+`weeklyLeadActivity.test.ts` covers daily activity counts across a selected week.
 
 #### Bulk touchpoints
 
@@ -82,6 +83,17 @@ Current suites: `bulkTouchpoints.test.ts` and `jobSearchUtils.test.ts`.
 - Splits supported template placeholders and rejects unknown tokens.
 - Groups leads by company, handles missing company records, and filters
   touchpoints by week.
+
+#### Weekly activity
+
+- Displays all seven days from Monday through Sunday, including days with no
+  activity.
+- Counts leads by their local creation date and excludes records outside the
+  selected week.
+- Counts only touchpoints with `Sent` status using the touchpoint occurrence
+  date.
+- Switches the metric between lead counts and sent-touchpoint counts when the
+  selected view changes.
 
 ### Logger — `features/logger/__tests__/logger.test.ts`
 

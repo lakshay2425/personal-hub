@@ -21,6 +21,7 @@ import { LoadingState } from "@/features/job-search/components/LoadingState";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { StatsCard } from "@/features/job-search/components/StatsCard";
 import { WeekFilter } from "@/features/job-search/components/WeekFilter";
+import { WeeklyLeadActivity } from "@/features/job-search/components/WeeklyLeadActivity";
 import {
   ACCEPTANCE_RESPONSE_STATUSES,
   DEFAULT_LEAD_CHANNEL,
@@ -184,6 +185,7 @@ function LeadsPageContent() {
   const [touchpointStatusFilter, setTouchpointStatusFilter] = useState(searchParams.get("touchpointStatus") ?? "");
   const [touchpointResponseFilter, setTouchpointResponseFilter] = useState(searchParams.get("touchpointResponse") ?? "");
   const [weekFilter, setWeekFilter] = useState<string | null>(null);
+  const [activityWeekStart, setActivityWeekStart] = useState<string | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<number>>(
     () => new Set(),
@@ -743,6 +745,13 @@ function LeadsPageContent() {
           <StatsCard label="Email" value={outreachThisWeek.email} />
         </div>
       </section>
+
+      <WeeklyLeadActivity
+        leads={leadsWithTouchpoints}
+        weekStart={activityWeekStart ?? currentWeekStart}
+        viewMode={viewMode}
+        onWeekChange={setActivityWeekStart}
+      />
 
       <div className="mb-4 flex flex-wrap gap-2">
         {VIEW_OPTIONS.map((option) => (
