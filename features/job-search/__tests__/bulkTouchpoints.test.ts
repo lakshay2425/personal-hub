@@ -4,10 +4,12 @@ import { describe, it } from "node:test";
 import { QUICK_TOUCHPOINT_ACTIONS } from "../constants";
 import {
   applyBulkTouchpointAction,
+  canSelectLeadGroup,
   canSelectLeadForBulkTouchpoint,
   getBulkTouchpointEligibility,
   getCommonLeadChannel,
   runBulkTouchpointWrites,
+  setLeadGroupSelection,
   type BulkTouchpointWriters,
 } from "../lib/bulkTouchpoints";
 import type {
@@ -114,6 +116,45 @@ describe("bulk touchpoint lead selection", () => {
       canSelectLeadForBulkTouchpoint([makeLead(1)], makeLead(2, "LinkedIn")),
       true,
     );
+  });
+
+  it("allows selecting all company leads when their channel matches the selection", () => {
+    assert.equal(
+      canSelectLeadGroup(
+        [makeLead(1, "LinkedIn")],
+        [makeLead(2, "LinkedIn"), makeLead(3, "LinkedIn")],
+      ),
+      true,
+    );
+    assert.equal(
+      canSelectLeadGroup([], [makeLead(4, "Email"), makeLead(5, "Email")]),
+      true,
+    );
+  });
+
+  it("blocks company select-all for mixed-channel groups or a different selection channel", () => {
+    assert.equal(
+      canSelectLeadGroup([], [makeLead(1, "LinkedIn"), makeLead(2, "X")]),
+      false,
+    );
+    assert.equal(
+      canSelectLeadGroup(
+        [makeLead(3, "Email")],
+        [makeLead(4, "LinkedIn"), makeLead(5, "LinkedIn")],
+      ),
+      false,
+    );
+    assert.equal(canSelectLeadGroup([], []), false);
+  });
+
+  it("selects and deselects every ID in a company group without mutating prior selection", () => {
+    const original = new Set([1, 8]);
+    const selected = setLeadGroupSelection(original, [2, 3], true);
+    const deselected = setLeadGroupSelection(selected, [2, 3], false);
+
+    assert.deepEqual([...original], [1, 8]);
+    assert.deepEqual([...selected], [1, 8, 2, 3]);
+    assert.deepEqual([...deselected], [1, 8]);
   });
 
   it("rejects applying an action to an empty or mixed-channel selection", async () => {

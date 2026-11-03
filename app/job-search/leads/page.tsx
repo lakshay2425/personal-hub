@@ -52,9 +52,11 @@ import {
 } from "@/features/job-search/lib/leadListUtils";
 import {
   applyBulkTouchpointAction,
+  canSelectLeadGroup,
   canSelectLeadForBulkTouchpoint,
   getBulkTouchpointEligibility,
   getCommonLeadChannel,
+  setLeadGroupSelection,
 } from "@/features/job-search/lib/bulkTouchpoints";
 import { buildTemplateMap } from "@/features/job-search/lib/templateUtils";
 import {
@@ -429,19 +431,68 @@ function LeadsPageContent() {
     if (groupedLeads) {
       return (
         <div className="space-y-6">
-          {groupedLeads.map((group) => (
-            <section key={group.companyId}>
-              <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                {group.companyName}
-                <span className="ml-2 font-normal text-zinc-500 dark:text-zinc-400">
-                  ({group.leads.length})
-                </span>
-              </h3>
-              {viewMode === "allLeads"
-                ? renderAllLeadsList(group.leads)
-                : renderTouchpointCards(group.leads)}
-            </section>
-          ))}
+          {groupedLeads.map((group) => {
+            const groupLeadIds = group.leads.map((lead) => lead.id);
+            const selectedCount = groupLeadIds.filter((id) =>
+              selectedLeadIds.has(id),
+            ).length;
+            const isGroupSelected =
+              groupLeadIds.length > 0 &&
+              selectedCount === groupLeadIds.length;
+            const isGroupPartiallySelected =
+              selectedCount > 0 && !isGroupSelected;
+            const canSelectGroup = canSelectLeadGroup(
+              selectedLeads,
+              group.leads,
+            );
+
+            return (
+              <section key={group.companyId}>
+                <div className="mb-3 flex items-center gap-2">
+                  {isSelectionMode ? (
+                    <input
+                      type="checkbox"
+                      aria-label={`Select all ${group.companyName} leads`}
+                      aria-checked={
+                        isGroupPartiallySelected ? "mixed" : isGroupSelected
+                      }
+                      checked={isGroupSelected}
+                      disabled={!isGroupSelected && !canSelectGroup}
+                      ref={(element) => {
+                        if (element) {
+                          element.indeterminate = isGroupPartiallySelected;
+                        }
+                      }}
+                      title={
+                        canSelectGroup
+                          ? `Select all ${group.leads.length} ${group.companyName} leads`
+                          : "All leads in a company must use the same channel, matching the current selection."
+                      }
+                      onChange={(event) =>
+                        setSelectedLeadIds((current) =>
+                          setLeadGroupSelection(
+                            current,
+                            groupLeadIds,
+                            event.target.checked,
+                          ),
+                        )
+                      }
+                      className="h-4 w-4 shrink-0 rounded border-zinc-300 dark:border-zinc-600"
+                    />
+                  ) : null}
+                  <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    {group.companyName}
+                    <span className="ml-2 font-normal text-zinc-500 dark:text-zinc-400">
+                      ({group.leads.length})
+                    </span>
+                  </h3>
+                </div>
+                {viewMode === "allLeads"
+                  ? renderAllLeadsList(group.leads)
+                  : renderTouchpointCards(group.leads)}
+              </section>
+            );
+          })}
         </div>
       );
     }

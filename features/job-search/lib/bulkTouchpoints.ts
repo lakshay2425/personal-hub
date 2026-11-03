@@ -159,3 +159,27 @@ export function canSelectLeadForBulkTouchpoint(
     selectedLeads.every((lead) => lead.channel === candidate.channel)
   );
 }
+
+export function canSelectLeadGroup(
+  selectedLeads: LeadWithTouchpoints[],
+  groupLeads: LeadWithTouchpoints[],
+): boolean {
+  const groupChannel = getCommonLeadChannel(groupLeads);
+  return (
+    groupChannel !== null &&
+    selectedLeads.every((lead) => lead.channel === groupChannel)
+  );
+}
+
+export function setLeadGroupSelection(
+  selectedIds: ReadonlySet<number>,
+  groupLeadIds: number[],
+  shouldSelect: boolean,
+): Set<number> {
+  const next = new Set(selectedIds);
+  for (const id of groupLeadIds) {
+    if (shouldSelect) next.add(id);
+    else next.delete(id);
+  }
+  return next;
+}

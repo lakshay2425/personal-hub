@@ -60,6 +60,8 @@ Current suites: `bulkTouchpoints.test.ts` and `jobSearchUtils.test.ts`.
 #### Bulk touchpoints
 
 - Empty, common-channel, mixed-channel, and incompatible lead selections.
+- Company-level selection selects/deselects all visible leads in a group,
+  indicates partial selection, and blocks mixed-channel or incompatible groups.
 - Channel-specific create mappings for LinkedIn, Email, and X.
 - Eligible latest replies, connection acceptance, Email follow-ups, and X
   follow-ups.
