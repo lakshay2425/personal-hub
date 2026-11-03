@@ -6,12 +6,17 @@ import { SITE_GITHUB_URL, SITE_NAME } from "@/lib/site";
 
 export const metadata = createSectionMetadata("home", "/");
 
-const NAV_LINKS = [
+const PRIMARY_NAV_LINKS = [
   { href: "/projects", label: "Projects" },
-  { href: "/content-ideas", label: "Content Ideas" },
+  { href: "/job-search", label: "Job Search" },
+  { href: "/product-outreach", label: "Product Outreach" },
+] as const;
+
+const MORE_NAV_LINKS = [
+  { href: "/content-ideas", label: "Content Creation" },
   { href: "/planner", label: "Planner" },
   { href: "/planner/logger", label: "Logger" },
-  { href: "/job-search", label: "Job Search" },
+  { href: "/people/discover", label: "People" },
 ] as const;
 
 const buttonPrimaryClassName =
@@ -46,10 +51,10 @@ const FEATURES = [
   },
   {
     href: "/content-ideas",
-    title: "Content Ideas",
+    title: "Content Creation",
     description:
-      "Capture standalone content ideas with status tracking, published links, and a content calendar.",
-    cta: "Open Content Ideas",
+      "Capture ideas, plan publishing dates, and keep track of what you have published.",
+    cta: "Open Content Creation",
     icon: (
       <svg
         className="h-6 w-6"
@@ -71,7 +76,7 @@ const FEATURES = [
     href: "/planner",
     title: "Planner",
     description:
-      "Capture tasks in an inbox, class them as sprints or recursive practices, reorder by drag, and log completions automatically.",
+      "Plan your week, break work into subtasks, and track progress as you go.",
     cta: "Open Planner",
     icon: (
       <svg
@@ -94,7 +99,7 @@ const FEATURES = [
     href: "/planner/logger",
     title: "Logger",
     description:
-      "Log what you did as separate entries — multiple times per day, all timestamped.",
+      "Keep a timestamped daily record of what you worked on.",
     cta: "Open Logger",
     icon: (
       <svg
@@ -115,10 +120,10 @@ const FEATURES = [
   },
   {
     href: "/job-search",
-    title: "Job Search Tracker",
+    title: "Job Search & Outreach",
     description:
-      "Track companies, leads, and outreach. Copy emails, view company info, open LinkedIn/X profiles, and link templates to each touchpoint.",
-    cta: "Open Tracker",
+      "Organize companies and leads, log outreach, and manage touchpoints and follow-ups.",
+    cta: "Open Job Search",
     icon: (
       <svg
         className="h-6 w-6"
@@ -132,6 +137,52 @@ const FEATURES = [
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M20.25 14.15v4.1A2.25 2.25 0 0118 20.5H6a2.25 2.25 0 01-2.25-2.25v-4.1m16.5 0a2.25 2.25 0 00.659-1.591V9.75A2.25 2.25 0 0018.75 7.5H5.25A2.25 2.25 0 003 9.75v2.809c0 .597.237 1.17.659 1.591m16.5 0a2.25 2.25 0 01-.659.482 24.3 24.3 0 01-8.34 1.487 24.3 24.3 0 01-8.16-1.407 2.25 2.25 0 01-.5-.562m16.5 0V9.75m-16.5 4.4V9.75m0 0V6a2.25 2.25 0 012.25-2.25h9A2.25 2.25 0 0116.5 6v3.75m-9 0V6h9v3.75"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/product-outreach",
+    title: "Product Outreach",
+    description:
+      "Track conversations and interactions with people across social platforms and email.",
+    cta: "Open Product Outreach",
+    icon: (
+      <svg
+        className="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M7.5 8.25h9A3.75 3.75 0 0120.25 12v4.5a3.75 3.75 0 01-3.75 3.75h-9A3.75 3.75 0 013.75 16.5V12A3.75 3.75 0 017.5 8.25zm0 0V6A2.25 2.25 0 019.75 3.75h4.5A2.25 2.25 0 0116.5 6v2.25M8.25 13.5h.008v.008H8.25V13.5zm3.746 0h.008v.008h-.008V13.5zm3.746 0h.008v.008h-.008V13.5zM8.25 16.5h.008v.008H8.25V16.5zm3.746 0h.008v.008h-.008V16.5z"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/people/discover",
+    title: "People & Network",
+    description:
+      "Save people you discover, track relationships, and grow your professional network.",
+    cta: "Explore People",
+    icon: (
+      <svg
+        className="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.5 18.75h4.125a.75.75 0 00.75-.75v-.375a4.125 4.125 0 00-7.313-2.625M16.5 18.75H7.5m9 0v-.375c0-.984-.265-1.906-.727-2.695M7.5 18.75H3.375a.75.75 0 01-.75-.75v-.375a4.125 4.125 0 017.313-2.625M7.5 18.75v-.375c0-.984.265-1.906.727-2.695m0 0a5.25 5.25 0 018.546 0M15 7.5a3 3 0 11-6 0 3 3 0 016 0zm5.25 2.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-12 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
         />
       </svg>
     ),
@@ -240,9 +291,9 @@ export default function Home() {
 
           <nav
             aria-label="Main"
-            className="hidden items-center gap-1 sm:flex"
+            className="hidden items-center gap-1 lg:flex"
           >
-            {NAV_LINKS.map((link) => (
+            {PRIMARY_NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -259,9 +310,39 @@ export default function Home() {
             >
               GitHub
             </a>
+            <details className="group relative">
+              <summary className="flex cursor-pointer list-none items-center justify-center rounded-lg border border-zinc-200 p-2 text-zinc-700 marker:content-none transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                <span className="sr-only">More tools</span>
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </summary>
+              <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                {MORE_NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
           </nav>
 
-          <details className="group relative sm:hidden">
+          <details className="group relative lg:hidden">
             <summary className="flex cursor-pointer list-none items-center justify-center rounded-lg border border-zinc-200 p-2 text-zinc-700 marker:content-none dark:border-zinc-700 dark:text-zinc-300">
               <span className="sr-only">Open menu</span>
               <svg
@@ -295,9 +376,9 @@ export default function Home() {
             </summary>
             <nav
               aria-label="Mobile"
-              className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+              className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
             >
-              {NAV_LINKS.map((link) => (
+              {[...PRIMARY_NAV_LINKS, ...MORE_NAV_LINKS].map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -365,6 +446,15 @@ export default function Home() {
       {/* Feature cards */}
       <section id="features" className="scroll-mt-16 px-4 py-8 sm:py-10">
         <div className="mx-auto w-full max-w-5xl">
+          <div className="mb-6 text-center">
+            <h2 className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl dark:text-zinc-50">
+              Explore the tools
+            </h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              A focused set of services for your projects, creativity, and
+              career.
+            </p>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((feature) => (
               <Link
@@ -444,6 +534,54 @@ export default function Home() {
                 Open Logger
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* GitHub star invitation */}
+      <section className="px-4 pb-10 sm:pb-12">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 text-center sm:flex-row sm:p-6 sm:text-left dark:border-zinc-800 dark:bg-zinc-900">
+          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-300">
+            Found Personal Hub useful? Give the project a star on GitHub.
+          </p>
+          <a
+            href={SITE_GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonSecondaryClassName}
+          >
+            Star on GitHub
+          </a>
+        </div>
+      </section>
+
+      {/* Contribution callout */}
+      <section className="px-4 pb-12 sm:pb-16">
+        <div className="mx-auto w-full max-w-5xl rounded-2xl bg-zinc-900 px-5 py-9 text-center sm:rounded-3xl sm:px-12 sm:py-11 dark:bg-zinc-100">
+          <h2 className="text-xl font-semibold tracking-tight text-balance text-white sm:text-2xl lg:text-3xl dark:text-zinc-900">
+            Want to contribute?
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-pretty text-zinc-300 sm:text-base dark:text-zinc-600">
+            Bug reports, documentation improvements, and feature contributions
+            are welcome. Read the contribution guide to get started.
+          </p>
+          <div className="mx-auto mt-6 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
+            <a
+              href={`${SITE_GITHUB_URL}/blob/master/CONTRIBUTING.md`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-200 sm:w-auto dark:bg-zinc-900 dark:text-zinc-50 dark:hover:bg-zinc-700"
+            >
+              Read CONTRIBUTING.md
+            </a>
+            <a
+              href={`${SITE_GITHUB_URL}/issues`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center rounded-lg border border-zinc-600 px-5 py-2.5 text-sm font-medium text-zinc-100 transition-colors hover:bg-zinc-800 sm:w-auto dark:border-zinc-400 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              Report an issue
+            </a>
           </div>
         </div>
       </section>
