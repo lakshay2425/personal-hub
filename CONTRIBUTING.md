@@ -29,9 +29,14 @@ Open [http://localhost:3000](http://localhost:3000).
 | Script | Description |
 |--------|-------------|
 | `pnpm dev` | Development server |
-| `pnpm lint` | ESLint (also runs on pre-commit) |
+| `pnpm lint` | ESLint (runs on pre-commit) |
+| `pnpm test` | Run all feature test suites (runs on pre-commit) |
+| `pnpm run test:<feature>` | Run one feature's suite, e.g. `pnpm run test:job-search` |
 | `pnpm build` | Production build (also runs on pre-push) |
 | `pnpm start` | Serve a production build |
+
+See [test-cases.md](test-cases.md) for all feature commands and the current
+documented test coverage.
 
 Service workers are disabled in development. To test PWA / offline behavior:
 
@@ -50,7 +55,7 @@ features/
   planner/           # Weekly task planner — sub-tasks, reorder, overflow menu (shared question-hub-db)
   project-features/  # Per-project features + versions (shared question-hub-db)
   logger/            # Daily log entries (Dexie)
-  job-search/        # Job search tracker — companies, leads, templates, template FK links (Dexie v5)
+  job-search/        # Job search tracker — companies, leads, touchpoints, templates (Dexie v11)
 lib/                 # Site-wide constants
 public/              # Static assets and PWA icons
 ```
@@ -72,6 +77,7 @@ Feature code stays under `features/<name>/` (components, hooks, repositories, sc
 3. Make your changes. Run locally:
    ```bash
    pnpm lint
+   pnpm test
    pnpm build
    ```
 4. Open a PR against `master` with:
@@ -80,7 +86,8 @@ Feature code stays under `features/<name>/` (components, hooks, repositories, sc
    - Screenshots for UI changes when helpful
 5. CI must pass (lint + build on Node 24). Address review feedback if requested.
 
-Husky hooks run `pnpm lint` on commit and `pnpm build` on push. Fix failures locally before pushing again.
+Husky runs `pnpm lint` and `pnpm test` before each commit, then `pnpm build`
+before each push. Fix failures locally before continuing.
 
 ## Issue reports
 

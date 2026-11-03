@@ -300,7 +300,7 @@ Import is full overwrite of `logEntries`.
 ## `job-search-tracker-db`
 
 **Source:** `features/job-search/db.ts`  
-**Current version:** 6
+**Current version:** 11
 
 ### Migration history (`job-search-tracker-db`)
 
@@ -312,6 +312,11 @@ Import is full overwrite of `logEntries`.
 | 4 | Add `templateId` and `followUpTemplateId` on `leads` and `coldEmails`; backfill with `null` |
 | 5 | Add `xProfile` on leads; backfill from existing `linkedin` for X-channel leads (keeps `linkedin` unchanged) |
 | 6 | Add `productOutreachContacts` and `productOutreachInteractions` tables (no data migration; existing rows preserved) |
+| 7 | Convert legacy cold-email records linked to leads into `leadTouchpoints`; add `leadTouchpoints` and `listSettings`; remove migrated lead template assignments |
+| 8 | Remove legacy lead follow-up date and template fields |
+| 9 | Separate touchpoint response values from touchpoint status and backfill response defaults |
+| 10 | Remove the obsolete lead `type` field |
+| 11 | Add `weeklyTargetSettings` |
 
 ### `companies`
 
@@ -337,32 +342,82 @@ Import is full overwrite of `logEntries`.
 | `companyId` | `number` | FK → `companies.id` |
 | `name` | `string` | |
 | `role` | `string` | |
-| `type` | `string` | |
 | `email` | `string` | |
 | `linkedin` | `string` | LinkedIn profile URL |
 | `xProfile` | `string` | X profile URL |
 | `channel` | `"Email" \| "LinkedIn" \| "X" \| "Other"` | Required; defaults to `"LinkedIn"` for new leads |
-| `status` | `"New" \| "Contacted" \| "Replied" \| "Inactive"` | |
-| `firstFollowUpDate` | `string \| null` | Date string for Email leads; `null` otherwise |
-| `secondFollowUpDate` | `string \| null` | Date string for Email leads; `null` otherwise |
-| `templateId` | `number \| null` | FK → `templates.id` (LinkedIn/X outreach message) |
-| `followUpTemplateId` | `number \| null` | FK → `templates.id` (Follow-up type) |
+| `status` | `string` | Configurable lead status; defaults include New and Contacted |
 | `notes` | `string` | |
+| `isAlumni` | `boolean` | Whether the lead is a college alumnus; defaults to `false` for existing/imported records when missing |
 | `createdAt` | `number` | Unix ms |
 
-**Indexes:** `id`, `companyId`, `name`, `role`, `type`, `channel`, `status`, `firstFollowUpDate`, `secondFollowUpDate`, `templateId`, `followUpTemplateId`, `createdAt`
+**Indexes:** `id`, `companyId`, `name`, `role`, `channel`, `status`, `createdAt`. `isAlumni` is filtered in memory and is not indexed.
 
 | Page | Route | Channels shown | In-list actions |
 |------|-------|----------------|-----------------|
-| Leads | `/job-search/leads` | Email, Other | Click email → copy to clipboard; click company → company info modal |
-| Job Outreach | `/job-search/outreach` | LinkedIn, X | Overflow menu: Link (profile URL), Edit, Delete |
+| Leads | `/job-search/leads` | All lead channels | Alumni filter, weekly activity, social profile links, copy email, company menu actions |
+| Job Outreach | `/job-search/outreach` | LinkedIn, X | Alumni filter, weekly activity, social profile links, channel quick actions, bulk touchpoint actions |
 | Product Outreach | `/product-outreach` | Instagram, LinkedIn, X, Email | Grouped contact cards with interaction timeline; Link, Copy context, Edit, Delete per interaction |
 
-**Leads page** also shows follow-up template (Email channel) and follow-up dates (Email only).
+Lead creation supports single and bulk entry. Bulk entry can assign one company to all rows or select a company per row; the company, channel, contact fields, notes, and alumni flag are stored per lead. Form drafts are retained in local storage until a successful save. A name match within the selected company is flagged for confirmation; matching email or LinkedIn/X profile values are reported as duplicates.
 
-**Outreach page** stores separate `linkedin` and `xProfile` fields; Link opens the URL for the lead's channel (`xProfile` with legacy fallback to `linkedin`).
+Profile action icons are shown for valid profile URLs regardless of outreach channel. Email buttons copy the address to the clipboard. Legacy X-channel records with their X URL in `linkedin` are backfilled to `xProfile` for display.
 
-Follow-up **date** columns appear on the Leads page for Email-channel leads only. Outreach leads omit follow-up dates but support follow-up **template** links.
+Quick touchpoint actions are channel-specific:
+
+| Channel | Action | Result |
+|---------|--------|--------|
+| LinkedIn | Connection request sent | Creates a Sent Connection Request with Not accepted response |
+| LinkedIn | Connection accepted | Updates the eligible existing connection request to Accepted |
+| LinkedIn | Message sent | Creates a Sent Message with Not responded response |
+| LinkedIn | Reply received | Updates the eligible existing message to Replied |
+| Email | Email sent | Creates a Sent Message with Not responded response |
+| Email | Reply received | Updates the eligible existing message or follow-up to Replied |
+| X | DM sent | Creates a Sent Message with Not responded response |
+| X | Reply received | Updates the eligible existing message or follow-up to Replied |
+
+Created touchpoints use today's date and leave the context/template empty. The
+full touchpoint form remains available through Customize, including for
+follow-ups. Multi-select actions apply common sent/reply/acceptance actions to
+eligible leads sharing a channel; company-level selection is available in
+grouped views. Weekly activity shows leads added per day in All leads view and
+sent touchpoints per day in touchpoint view, Monday through Sunday.
+
+Company lead actions include deleting all leads for a company and opening the company's available LinkedIn profile URLs in new tabs.
+
+---
+
+### `leadTouchpoints`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `number` | Auto-increment primary key |
+| `leadId` | `number` | FK → `leads.id` |
+| `channel` | `"Email" \| "LinkedIn" \| "X" \| "Other"` | Channel for the touchpoint |
+| `type` | `string` | Such as Initial, Follow-up, Connection Request, Message, or Reply |
+| `status` | `string` | Such as Draft or Sent |
+| `responseStatus` | `string` | Such as Not responded, Replied, Accepted, or Not accepted |
+| `templateId` | `number \| null` | Optional FK → `templates.id` |
+| `context` | `string` | Notes/context for the touchpoint |
+| `occurredAt` | `number` | Unix ms for the touchpoint date |
+| `createdAt` | `number` | Unix ms |
+
+**Indexes:** `id`, `leadId`, `channel`, `status`, `type`, `occurredAt`, `createdAt`
+
+---
+
+### `listSettings`
+
+One record (`id: 1`) stores configurable lead statuses, touchpoint statuses,
+response statuses, touchpoint types, and the status values that count as
+contacted.
+
+---
+
+### `weeklyTargetSettings`
+
+One record (`id: 1`) stores optional combined and per-category weekly targets
+for applications, emails, LinkedIn messages, and LinkedIn connection requests.
 
 ---
 
@@ -413,27 +468,13 @@ Follow-up **date** columns appear on the Leads page for Email-channel leads only
 
 ---
 
-### `coldEmails`
+### Legacy cold email records
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `id` | `number` | Auto-increment primary key |
-| `companyId` | `number` | FK → `companies.id` |
-| `leadId` | `number` | FK → `leads.id` |
-| `role` | `string` | |
-| `sentDate` | `string` | Date string |
-| `status` | `"Draft" \| "Sent" \| "Replied" \| "Rejected" \| "Positive Response" \| "Closed"` | |
-| `firstFollowUpDate` | `string` | Date string |
-| `secondFollowUpDate` | `string` | Date string |
-| `templateName` | `string` | Legacy free-text; synced from selected template title when set |
-| `templateId` | `number \| null` | FK → `templates.id` (Cold Email type) |
-| `followUpTemplateId` | `number \| null` | FK → `templates.id` (Follow-up type) |
-| `notes` | `string` | |
-| `createdAt` | `number` | Unix ms |
-
-**Indexes:** `id`, `companyId`, `leadId`, `role`, `status`, `sentDate`, `firstFollowUpDate`, `secondFollowUpDate`, `templateId`, `followUpTemplateId`, `createdAt`
-
-**UI:** `/job-search/cold-emails` — outreach template (Cold Email type) and follow-up template (Follow-up type) selectable per record.
+`coldEmails` is no longer a current IndexedDB table. During the v7 database
+migration, records associated with leads were converted to Email touchpoints.
+The `/job-search/cold-emails` route redirects to the Email touchpoint view.
+Older JSON backups may still contain `coldEmails`; import converts them to
+touchpoints when the backup does not already contain touchpoints.
 
 ---
 
@@ -456,11 +497,9 @@ Follow-up **date** columns appear on the Leads page for Email-channel leads only
 
 **Template linking (FK references):**
 
-| Entity | `templateId` | `followUpTemplateId` |
-|--------|--------------|----------------------|
-| `coldEmails` | Cold Email type template | Follow-up type template |
-| `leads` (LinkedIn / X) | LinkedIn Message or X DM (by channel) | Follow-up type template |
-| `leads` (Email) | — (use cold emails for initial outreach) | Follow-up type template |
+| Entity | `templateId` |
+|--------|--------------|
+| `leadTouchpoints` | Optional template associated with the touchpoint |
 
 Deleting a template does not cascade-delete linked records; orphaned IDs display as empty in the UI.
 
@@ -484,29 +523,34 @@ Deleting a template does not cascade-delete linked records; orphaned IDs display
 
 ```json
 {
-  "version": 5,
+  "version": 7,
   "exportedAt": "ISO-8601 string",
   "companies": [],
   "leads": [],
   "applications": [],
-  "coldEmails": [],
+  "leadTouchpoints": [],
   "templates": [],
   "activityLogs": [],
   "productOutreachContacts": [],
-  "productOutreachInteractions": []
+  "productOutreachInteractions": [],
+  "listSettings": [],
+  "weeklyTargetSettings": []
 }
 ```
 
-Import is full overwrite of all eight tables.
+New exports include `isAlumni` on every lead. Import is a full overwrite of all
+current Job Search tables, performed in a Dexie transaction.
 
 **Backward compatibility:**
 
 | Backup `version` | Notes |
 |------------------|-------|
-| 1–2 | No `templates` array → imports with empty templates; no template FK fields → `null` |
-| 3 | Has templates; template FK fields on leads/coldEmails default to `null` if missing |
-| 4 | Full schema including `templateId` and `followUpTemplateId` |
-| 5 | Export adds `productOutreachContacts` and `productOutreachInteractions`; v4 backups import with empty arrays for both |
+| 1–2 | Legacy records are normalized; optional newer arrays/settings receive defaults |
+| 3–6 | Missing newer tables and settings are initialized empty or with defaults; legacy `coldEmails` are migrated to touchpoints when no touchpoints are present |
+| 7 | Current export shape, including touchpoints, product outreach data, list settings, and weekly target settings |
+
+Across versions, missing `isAlumni` imports as `false`; old X-channel leads
+with their profile URL only in `linkedin` are backfilled to `xProfile`.
 
 ---
 
@@ -516,7 +560,8 @@ Import is full overwrite of all eight tables.
 
 Most `createdAt` / `updatedAt` / `timestamp` fields are **Unix milliseconds** (`Date.now()`).
 
-Job Search date fields (`appliedDate`, `sentDate`, follow-up dates) and Logger `date` are **ISO date strings** (`YYYY-MM-DD`).
+Job Search `applications.appliedDate` and Logger `date` are **ISO date strings**
+(`YYYY-MM-DD`). Lead touchpoint `occurredAt` is a Unix-millisecond timestamp.
 
 ### Primary keys
 

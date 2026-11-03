@@ -79,8 +79,8 @@ Current suites: `bulkTouchpoints.test.ts` and `jobSearchUtils.test.ts`.
 - Shows social profile URLs based on populated fields regardless of outreach
   channel, backfills legacy X data, and rejects URLs outside the supported
   social domains.
-- Provides a copy-to-clipboard email action and external profile links in the
-  all-leads, touchpoint, and lead-detail views.
+- Checks the profile URLs used by the UI; rendered social links and
+  copy-to-clipboard browser interactions are not directly tested here.
 - Collects unique valid LinkedIn profile URLs while excluding blank and
   non-LinkedIn profile values.
 - Formats product-outreach handles and constructs Instagram, LinkedIn, X, and

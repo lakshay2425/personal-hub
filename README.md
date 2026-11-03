@@ -18,7 +18,7 @@ Installable as a Progressive Web App (PWA) and usable offline after the app shel
 | **Content Ideas** | Capture ideas standalone or per-project; sub-ideas (up to 3 levels), status (Draft / Ready / Published), publish links, list/table/card views. Drag-and-drop, reparent, activity log. **Content Calendar** to schedule publish dates (month/week views). Included in Projects export. |
 | **Planner** | Monday-based weekly task planner with Today / Backlog / Upcoming tabs. Sub-tasks (up to 3 levels), drag-and-drop reorder, edit/delete via overflow menu, read-only notes viewer, priority badges, and backlog with "Move to This Week". Parent tasks show sub-task progress; completing a leaf or sub-task auto-creates a Logger entry. JSON export/import from Planner settings; tasks are also included in Projects JSON export. |
 | **Logger** | Timestamped daily entries — log multiple times per day. Dashboard view to filter and review entries by date. Future dates blocked on add/edit. JSON export/import. |
-| **Job Search Tracker** | Companies, leads, outreach (LinkedIn/X), applications, cold emails, and **outreach templates**. **Leads** page: copy email to clipboard, view company info modal. **Outreach** page: overflow menu (Link to profile, Edit, Delete) with separate LinkedIn and X profile URLs. Reusable templates with copy-to-clipboard and placeholders. Link templates to cold emails, outreach leads, and email follow-ups. Global search, voice-to-text, company detail pages. JSON export/import (v5). |
+| **Job Search Tracker** | Companies, leads, outreach (LinkedIn/X), applications, cold emails, and **outreach templates**. Add leads individually or in batches for one or multiple companies; drafts persist in local storage until saved. Lead records include an optional college-alumni flag, LinkedIn/X profiles, email, notes, and channel. Filter by alumni, select leads individually or by company for common touchpoint actions, and review weekly lead/touchpoint activity. Quick touchpoints are channel-specific; recording a reply or accepted LinkedIn connection updates the existing touchpoint. Profile icons open validated LinkedIn/X URLs, and email actions copy to clipboard. Company actions include deleting its leads and opening available LinkedIn profiles. JSON export/import (v7). |
 
 Shared across tools: light/dark theme (system default, persisted in localStorage), toast notifications, and responsive sidebar layout.
 
@@ -39,10 +39,10 @@ All feature data lives in **IndexedDB** (via [Dexie](https://dexie.org)). Three 
 | `/job-search` | Dashboard — stats, recent activity, follow-ups |
 | `/job-search/companies` | Company list |
 | `/job-search/companies/[id]` | Company detail |
-| `/job-search/leads` | Email and other leads — copy email, company info modal, follow-up dates and templates (Email channel) |
-| `/job-search/outreach` | LinkedIn and X outreach — profile link in overflow menu, outreach and follow-up template links |
+| `/job-search/leads` | Leads across channels — bulk add, alumni filter, weekly activity, social profile links, copy email, and company actions |
+| `/job-search/outreach` | LinkedIn and X outreach — channel-specific quick touchpoints, bulk lead actions, weekly activity, social profile links, and templates |
 | `/job-search/applications` | Applications |
-| `/job-search/cold-emails` | Cold emails — outreach and follow-up template links |
+| `/job-search/cold-emails` | Legacy redirect to Email touchpoints on the Leads page |
 | `/job-search/templates` | Outreach message library (cold email, LinkedIn, X DM, follow-up) |
 
 Legacy redirect: `/questions` → `/projects`.
@@ -59,7 +59,7 @@ Legacy redirect: `/questions` → `/projects`.
 | **Forms / validation** | [react-hook-form](https://react-hook-form.com) + [Zod](https://zod.dev) |
 | **PWA / offline** | [Serwist](https://serwist.pages.dev) (`@serwist/turbopack`) |
 | **Notifications** | [react-hot-toast](https://react-hot-toast.com) |
-| **Git hooks** | [Husky](https://typicode.github.io/husky/) — lint on commit, build on push |
+| **Git hooks** | [Husky](https://typicode.github.io/husky/) — lint and all feature tests on commit, build on push |
 | **CI** | GitHub Actions — lint + build on PRs / pushes to `master` |
 | **Containerization** | Multi-stage Dockerfile with Next.js `output: "standalone"` |
 
@@ -85,6 +85,8 @@ Open [http://localhost:3000](http://localhost:3000).
 | `pnpm build` | Production build |
 | `pnpm start` | Start production server |
 | `pnpm lint` | Run ESLint |
+| `pnpm test` | Run all feature test suites |
+| `pnpm run test:<feature>` | Run one feature suite, e.g. `pnpm run test:job-search` or `pnpm run test:questions` |
 
 ## Project structure
 
@@ -110,7 +112,7 @@ features/
 ├── planner/               # Weekly task planner — sub-tasks, reorder (shared question-hub-db)
 ├── project-features/      # Per-project features + versions (shared question-hub-db)
 ├── logger/                # Log entries (Dexie)
-└── job-search/            # Companies, leads, applications, cold emails, templates (Dexie v5)
+└── job-search/            # Companies, leads, touchpoints, applications, templates (Dexie v11)
 lib/
 ├── site.ts                # Site name, description, keywords, URLs
 └── export/                # Shared JSON download / validation helpers
@@ -129,6 +131,8 @@ scripts/generate-icons.mjs # PWA icon generation
 - There is no background sync and no centralized database for user content.
 - The only server routes are app infrastructure (e.g. health check for Docker).
 - For IndexedDB schemas, field types, and export formats, see [DATA.md](DATA.md).
+For the test suite, feature-specific commands, and documented coverage, see
+[test-cases.md](test-cases.md).
 
 ## PWA overview
 
