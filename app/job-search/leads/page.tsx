@@ -344,6 +344,12 @@ function LeadsPageContent() {
     },
     onDeleteTouchpoint: (touchpoint: LeadTouchpoint) =>
       setDeleteTarget({ type: "touchpoint", touchpoint, lead }),
+    onQuickTouchpointAction: async (
+      touchpoint: LeadTouchpoint,
+      responseStatus: string,
+    ) => {
+      await editTouchpoint(touchpoint.id!, { responseStatus });
+    },
   });
 
   const renderAllLeadsList = (leads: LeadWithTouchpoints[]) => (
@@ -993,6 +999,7 @@ function LeadsPageContent() {
           onAddTouchpoint: () => {},
           onEditTouchpoint: () => {},
           onDeleteTouchpoint: () => {},
+          onQuickTouchpointAction: async () => {},
         })}
       />
 

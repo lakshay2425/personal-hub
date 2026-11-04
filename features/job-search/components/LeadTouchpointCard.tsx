@@ -24,6 +24,10 @@ interface LeadTouchpointCardProps {
   onDeleteTouchpoint: (
     touchpoint: LeadWithTouchpoints["touchpoints"][number],
   ) => void;
+  onQuickTouchpointAction: (
+    touchpoint: LeadWithTouchpoints["touchpoints"][number],
+    responseStatus: string,
+  ) => Promise<void>;
 }
 
 export function LeadTouchpointCard({
@@ -37,6 +41,7 @@ export function LeadTouchpointCard({
   onAddTouchpoint,
   onEditTouchpoint,
   onDeleteTouchpoint,
+  onQuickTouchpointAction,
 }: LeadTouchpointCardProps) {
   const touchpoints = visibleTouchpoints ?? lead.touchpoints;
 
@@ -101,6 +106,7 @@ export function LeadTouchpointCard({
               templateMap={templateMap}
               onEdit={() => onEditTouchpoint(touchpoint)}
               onDelete={() => onDeleteTouchpoint(touchpoint)}
+              onQuickAction={onQuickTouchpointAction}
             />
           ))}
         </div>

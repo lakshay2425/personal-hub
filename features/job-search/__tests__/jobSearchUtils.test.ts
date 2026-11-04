@@ -13,6 +13,7 @@ import {
   getLeadProfileUrl,
   normalizeProfileUrl,
 } from "../lib/leadProfileUtils";
+import { getTouchpointInlineActions } from "../lib/touchpointInlineActions";
 import {
   isTemplatePlaceholder,
   splitBodyWithPlaceholders,
@@ -208,5 +209,117 @@ describe("lead list helpers", () => {
     assert.equal(filterTouchpointsByWeek(item.touchpoints, null).length, 2);
     assert.equal(filterTouchpointsByWeek(item.touchpoints, "2026-06-01").length, 1);
     assert.equal(leadHasAnyTouchpoint(lead(2, 1)), false);
+  });
+});
+
+describe("touchpoint inline actions", () => {
+  it("shows accept only for pending LinkedIn connection requests", () => {
+    const connectionRequest = {
+      id: 1,
+      leadId: 1,
+      channel: "LinkedIn" as const,
+      type: "Connection Request",
+      status: "Sent",
+      responseStatus: "Not accepted",
+      templateId: null,
+      context: "",
+      occurredAt: Date.now(),
+      createdAt: Date.now(),
+    };
+
+    assert.deepEqual(getTouchpointInlineActions(connectionRequest), [
+      { id: "accept", label: "Accept", responseStatus: "Accepted" },
+    ]);
+  });
+
+  it("shows replied for sent messages and follow-ups that are not yet replied", () => {
+    const cases = [
+      {
+        type: "Message",
+        channel: "Email" as const,
+      },
+      {
+        type: "Follow-up",
+        channel: "LinkedIn" as const,
+      },
+      {
+        type: "First Follow-up",
+        channel: "Email" as const,
+      },
+      {
+        type: "Second Follow-up",
+        channel: "Email" as const,
+      },
+    ];
+
+    for (const item of cases) {
+      assert.deepEqual(
+        getTouchpointInlineActions({
+          id: 1,
+          leadId: 1,
+          channel: item.channel,
+          type: item.type,
+          status: "Sent",
+          responseStatus: "Not responded",
+          templateId: null,
+          context: "",
+          occurredAt: Date.now(),
+          createdAt: Date.now(),
+        }),
+        [
+          { id: "replied", label: "Replied", responseStatus: "Replied" },
+        ],
+      );
+    }
+  });
+
+  it("hides inline actions when the touchpoint is already accepted or replied, or is not sent", () => {
+    assert.deepEqual(
+      getTouchpointInlineActions({
+        id: 1,
+        leadId: 1,
+        channel: "LinkedIn",
+        type: "Connection Request",
+        status: "Sent",
+        responseStatus: "Accepted",
+        templateId: null,
+        context: "",
+        occurredAt: Date.now(),
+        createdAt: Date.now(),
+      }),
+      [],
+    );
+
+    assert.deepEqual(
+      getTouchpointInlineActions({
+        id: 2,
+        leadId: 1,
+        channel: "Email",
+        type: "Message",
+        status: "Sent",
+        responseStatus: "Replied",
+        templateId: null,
+        context: "",
+        occurredAt: Date.now(),
+        createdAt: Date.now(),
+      }),
+      [],
+    );
+
+    assert.deepEqual(
+      getTouchpointInlineActions({
+        id: 3,
+        leadId: 1,
+        channel: "LinkedIn",
+        type: "Message",
+        status: "Draft",
+        responseStatus: "Not responded",
+        templateId: null,
+        context: "",
+        occurredAt: Date.now(),
+        createdAt: Date.now(),
+      }),
+      [],
+    );
   });
 });

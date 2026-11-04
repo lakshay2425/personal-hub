@@ -27,6 +27,10 @@ interface LeadDetailModalProps {
   onDeleteTouchpoint: (
     touchpoint: LeadWithTouchpoints["touchpoints"][number],
   ) => void;
+  onQuickTouchpointAction: (
+    touchpoint: LeadWithTouchpoints["touchpoints"][number],
+    responseStatus: string,
+  ) => Promise<void>;
 }
 
 export function LeadDetailModal({
@@ -41,6 +45,7 @@ export function LeadDetailModal({
   onAddTouchpoint,
   onEditTouchpoint,
   onDeleteTouchpoint,
+  onQuickTouchpointAction,
 }: LeadDetailModalProps) {
   if (!lead) return null;
   const profiles = getLeadSocialProfiles(lead);
@@ -142,6 +147,7 @@ export function LeadDetailModal({
                   templateMap={templateMap}
                   onEdit={() => onEditTouchpoint(touchpoint)}
                   onDelete={() => onDeleteTouchpoint(touchpoint)}
+                  onQuickAction={onQuickTouchpointAction}
                 />
               ))}
             </div>
