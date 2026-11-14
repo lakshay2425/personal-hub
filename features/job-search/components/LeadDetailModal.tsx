@@ -10,6 +10,7 @@ import { LeadEmailButton } from "./LeadEmailButton";
 import { LeadSocialLinks } from "./LeadSocialLinks";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
 import { mobileActionClass } from "./MobileListCard";
+import type { TouchpointQuickUpdate } from "../lib/touchpointInlineActions";
 
 interface LeadDetailModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ interface LeadDetailModalProps {
   ) => void;
   onQuickTouchpointAction: (
     touchpoint: LeadWithTouchpoints["touchpoints"][number],
-    responseStatus: string,
+    update: TouchpointQuickUpdate,
   ) => Promise<void>;
 }
 

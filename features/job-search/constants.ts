@@ -36,6 +36,7 @@ export const DEFAULT_TOUCHPOINT_TYPES = [
 export const LINKEDIN_TOUCHPOINT_TYPES = [
   "Connection Request",
   "Follow-up",
+  "Message Draft",
   "Message",
   "Reply",
 ];

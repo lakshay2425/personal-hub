@@ -228,8 +228,30 @@ describe("touchpoint inline actions", () => {
     };
 
     assert.deepEqual(getTouchpointInlineActions(connectionRequest), [
-      { id: "accept", label: "Accept", responseStatus: "Accepted" },
+      {
+        id: "accept",
+        label: "Accept",
+        update: { responseStatus: "Accepted" },
+      },
     ]);
+  });
+
+  it("shows Sent for a LinkedIn message draft and changes only its status", () => {
+    assert.deepEqual(
+      getTouchpointInlineActions({
+        id: 1,
+        leadId: 1,
+        channel: "LinkedIn",
+        type: "Message Draft",
+        status: "Draft",
+        responseStatus: "Not responded",
+        templateId: null,
+        context: "Hello",
+        occurredAt: Date.now(),
+        createdAt: Date.now(),
+      }),
+      [{ id: "sent", label: "Sent", update: { status: "Sent" } }],
+    );
   });
 
   it("shows replied for sent messages and follow-ups that are not yet replied", () => {
@@ -240,6 +262,10 @@ describe("touchpoint inline actions", () => {
       },
       {
         type: "Follow-up",
+        channel: "LinkedIn" as const,
+      },
+      {
+        type: "Message Draft",
         channel: "LinkedIn" as const,
       },
       {
@@ -267,7 +293,11 @@ describe("touchpoint inline actions", () => {
           createdAt: Date.now(),
         }),
         [
-          { id: "replied", label: "Replied", responseStatus: "Replied" },
+          {
+            id: "replied",
+            label: "Replied",
+            update: { responseStatus: "Replied" },
+          },
         ],
       );
     }

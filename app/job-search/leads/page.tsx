@@ -61,6 +61,7 @@ import {
   getCommonLeadChannel,
   setLeadGroupSelection,
 } from "@/features/job-search/lib/bulkTouchpoints";
+import type { TouchpointQuickUpdate } from "@/features/job-search/lib/touchpointInlineActions";
 import { buildTemplateMap } from "@/features/job-search/lib/templateUtils";
 import {
   countTouchpointsInWeek,
@@ -346,9 +347,9 @@ function LeadsPageContent() {
       setDeleteTarget({ type: "touchpoint", touchpoint, lead }),
     onQuickTouchpointAction: async (
       touchpoint: LeadTouchpoint,
-      responseStatus: string,
+      update: TouchpointQuickUpdate,
     ) => {
-      await editTouchpoint(touchpoint.id!, { responseStatus });
+      await editTouchpoint(touchpoint.id!, update);
     },
   });
 

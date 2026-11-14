@@ -8,6 +8,7 @@ import { LeadEmailButton } from "./LeadEmailButton";
 import { LeadSocialLinks } from "./LeadSocialLinks";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
 import { mobileActionClass } from "./MobileListCard";
+import type { TouchpointQuickUpdate } from "../lib/touchpointInlineActions";
 
 interface LeadTouchpointCardProps {
   lead: LeadWithTouchpoints;
@@ -26,7 +27,7 @@ interface LeadTouchpointCardProps {
   ) => void;
   onQuickTouchpointAction: (
     touchpoint: LeadWithTouchpoints["touchpoints"][number],
-    responseStatus: string,
+    update: TouchpointQuickUpdate,
   ) => Promise<void>;
 }
 

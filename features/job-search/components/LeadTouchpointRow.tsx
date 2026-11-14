@@ -6,7 +6,10 @@ import toast from "react-hot-toast";
 import { ChannelBadge } from "./ChannelBadge";
 import { DEFAULT_RESPONSE_STATUS } from "../constants";
 import { formatDate } from "../lib/dateUtils";
-import { getTouchpointInlineActions } from "../lib/touchpointInlineActions";
+import {
+  getTouchpointInlineActions,
+  type TouchpointQuickUpdate,
+} from "../lib/touchpointInlineActions";
 import type { LeadTouchpoint, Template } from "../types";
 import { StatusBadge } from "./StatusBadge";
 import { CompanyOverflowMenu } from "./CompanyOverflowMenu";
@@ -16,7 +19,10 @@ interface LeadTouchpointRowProps {
   templateMap: Map<number, Template>;
   onEdit: () => void;
   onDelete: () => void;
-  onQuickAction: (touchpoint: LeadTouchpoint, responseStatus: string) => Promise<void>;
+  onQuickAction: (
+    touchpoint: LeadTouchpoint,
+    update: TouchpointQuickUpdate,
+  ) => Promise<void>;
 }
 
 export function LeadTouchpointRow({
@@ -33,16 +39,21 @@ export function LeadTouchpointRow({
   const inlineActions = getTouchpointInlineActions(touchpoint);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
-  const handleQuickAction = async (actionId: string, responseStatus: string) => {
+  const handleQuickAction = async (
+    actionId: string,
+    update: TouchpointQuickUpdate,
+  ) => {
     if (pendingActionId) return;
 
     setPendingActionId(actionId);
     try {
-      await onQuickAction(touchpoint, responseStatus);
+      await onQuickAction(touchpoint, update);
       toast.success(
-        responseStatus === "Accepted"
+        update.responseStatus === "Accepted"
           ? "Connection request accepted"
-          : "Touchpoint marked as replied",
+          : update.status === "Sent"
+            ? "Message marked as sent"
+            : "Touchpoint marked as replied",
       );
     } catch {
       toast.error("Failed to update touchpoint");
@@ -88,7 +99,7 @@ export function LeadTouchpointRow({
             key={action.id}
             type="button"
             disabled={Boolean(pendingActionId)}
-            onClick={() => void handleQuickAction(action.id, action.responseStatus)}
+            onClick={() => void handleQuickAction(action.id, action.update)}
             className="rounded-full border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             {pendingActionId === action.id ? "Saving..." : action.label}

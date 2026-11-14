@@ -290,9 +290,42 @@ function QuickTouchpointActions({
   const [ambiguousActionId, setAmbiguousActionId] = useState<string | null>(
     null,
   );
+  const [isDraftingMessage, setIsDraftingMessage] = useState(false);
+  const [draftMessage, setDraftMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const actions = QUICK_TOUCHPOINT_ACTIONS[channel] ?? [];
+  const saveMessageDraft = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!draftMessage.trim() || pendingActionId) return;
+
+    setError(null);
+    setPendingActionId("message-draft");
+    try {
+      await onQuickAction({
+        kind: "create",
+        input: {
+          channel: "LinkedIn",
+          type: "Message Draft",
+          status: DEFAULT_TOUCHPOINT_STATUS,
+          responseStatus: DEFAULT_RESPONSE_STATUS,
+          templateId: null,
+          context: draftMessage,
+          occurredAt: Date.now(),
+        },
+      });
+      setDraftMessage("");
+      setIsDraftingMessage(false);
+    } catch (actionError) {
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : "Could not save this message draft.",
+      );
+    } finally {
+      setPendingActionId(null);
+    }
+  };
 
   const applyAction = async (
     actionId: string,
@@ -364,22 +397,74 @@ function QuickTouchpointActions({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        Quick actions for {channel}
-      </p>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {actions.map((action) => (
-          <button
-            key={action.id}
-            type="button"
-            disabled={pendingActionId !== null}
-            onClick={() => void applyAction(action.id)}
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-left text-sm font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-          >
-            {pendingActionId === action.id ? "Saving..." : action.label}
-          </button>
-        ))}
-      </div>
+      {isDraftingMessage ? (
+        <form onSubmit={saveMessageDraft} className="space-y-4">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Save a message to use after your connection request is accepted.
+          </p>
+          <FormField label="Message Draft" required>
+            <TextArea
+              value={draftMessage}
+              onChange={setDraftMessage}
+              placeholder="Write the message you plan to send..."
+              rows={6}
+            />
+          </FormField>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDraftingMessage(false);
+                setDraftMessage("");
+                setError(null);
+              }}
+              disabled={pendingActionId !== null}
+              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Back to quick actions
+            </button>
+            <button
+              type="submit"
+              disabled={!draftMessage.trim() || pendingActionId !== null}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              {pendingActionId === "message-draft" ? "Saving..." : "Save Draft"}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Quick actions for {channel}
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {actions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                disabled={pendingActionId !== null}
+                onClick={() => void applyAction(action.id)}
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-left text-sm font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                {pendingActionId === action.id ? "Saving..." : action.label}
+              </button>
+            ))}
+            {channel === "LinkedIn" ? (
+              <button
+                type="button"
+                disabled={pendingActionId !== null}
+                onClick={() => {
+                  setError(null);
+                  setIsDraftingMessage(true);
+                }}
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-left text-sm font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                Message Draft
+              </button>
+            ) : null}
+          </div>
+        </>
+      )}
       {ambiguousTouchpoints.length > 0 ? (
         <div className="space-y-2 rounded-lg border border-amber-300 p-3 dark:border-amber-700">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
