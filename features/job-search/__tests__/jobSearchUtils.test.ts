@@ -23,6 +23,15 @@ import {
   groupLeadsByCompany,
   leadHasAnyTouchpoint,
 } from "../lib/leadListUtils";
+import {
+  DEFAULT_SNOOZE_PRESETS,
+  formatSnoozeDate,
+  getDefaultSnoozePreset,
+  getSnoozeDate,
+  isLeadSnoozed,
+  normalizeSnoozePresets,
+} from "../lib/snoozeUtils";
+import { validateJobSearchBackup } from "../repositories/importRepository";
 import type {
   Company,
   LeadWithTouchpoints,
@@ -209,6 +218,82 @@ describe("lead list helpers", () => {
     assert.equal(filterTouchpointsByWeek(item.touchpoints, null).length, 2);
     assert.equal(filterTouchpointsByWeek(item.touchpoints, "2026-06-01").length, 1);
     assert.equal(leadHasAnyTouchpoint(lead(2, 1)), false);
+  });
+});
+
+describe("lead snooze helpers", () => {
+  it("treats missing, expired, and today snooze dates as not snoozed", () => {
+    assert.equal(isLeadSnoozed({}, "2026-06-10"), false);
+    assert.equal(
+      isLeadSnoozed({ snoozedUntil: "2026-06-09" }, "2026-06-10"),
+      false,
+    );
+    assert.equal(
+      isLeadSnoozed({ snoozedUntil: "2026-06-10" }, "2026-06-10"),
+      false,
+    );
+    assert.equal(
+      isLeadSnoozed({ snoozedUntil: "2026-06-11" }, "2026-06-10"),
+      true,
+    );
+    assert.equal(
+      isLeadSnoozed({ snoozedUntil: "2026-02-31" }, "2026-06-10"),
+      false,
+    );
+  });
+
+  it("calculates preset dates as local calendar days", () => {
+    assert.equal(getSnoozeDate(7, "2026-06-10"), "2026-06-17");
+    assert.equal(getSnoozeDate(30, "2026-06-10"), "2026-07-10");
+    assert.throws(() => getSnoozeDate(0, "2026-06-10"));
+    assert.equal(formatSnoozeDate("2026-06-11"), "11 Jun");
+  });
+
+  it("normalizes presets and keeps exactly one usable default", () => {
+    assert.deepEqual(normalizeSnoozePresets(null), DEFAULT_SNOOZE_PRESETS);
+    assert.deepEqual(
+      normalizeSnoozePresets([
+        { label: "Later", days: 5, isDefault: false },
+        { label: "Soon", days: 2, isDefault: true },
+      ]),
+      [
+        { label: "Later", days: 5, isDefault: false },
+        { label: "Soon", days: 2, isDefault: true },
+      ],
+    );
+    assert.deepEqual(
+      normalizeSnoozePresets([
+        { label: "Later", days: 5, isDefault: false },
+        { label: "Soon", days: 2, isDefault: false },
+      ]).map(({ isDefault }) => isDefault),
+      [true, false],
+    );
+    assert.equal(
+      getDefaultSnoozePreset(normalizeSnoozePresets([])).label,
+      "1 week",
+    );
+  });
+
+  it("accepts older backups without snooze fields", () => {
+    const backup = validateJobSearchBackup({
+      version: 7,
+      companies: [],
+      leads: [
+        lead(1, 1),
+        {
+          ...lead(2, 1),
+          snoozedUntil: "2026-06-20",
+          snoozeReason: "Waiting for role to open",
+        },
+      ],
+      applications: [],
+      activityLogs: [],
+    });
+
+    assert.equal(backup.leads[0].snoozedUntil, undefined);
+    assert.equal(backup.leads[0].snoozeReason, undefined);
+    assert.equal(backup.leads[1].snoozedUntil, "2026-06-20");
+    assert.equal(backup.leads[1].snoozeReason, "Waiting for role to open");
   });
 });
 

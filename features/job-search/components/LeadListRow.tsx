@@ -1,18 +1,34 @@
 "use client";
 
-import type { Company, LeadWithTouchpoints } from "../types";
+import { isLeadSnoozed } from "../lib/snoozeUtils";
+import type { Company, LeadWithTouchpoints, SnoozePreset } from "../types";
 import { AlumniBadge } from "./AlumniBadge";
 import { LeadEmailButton } from "./LeadEmailButton";
+import { LeadSnoozeMenu } from "./LeadSnoozeMenu";
 import { LeadSocialLinks } from "./LeadSocialLinks";
+import { SnoozedBadge } from "./SnoozedBadge";
 
 interface LeadListRowProps {
   lead: LeadWithTouchpoints;
   company?: Company;
+  defaultSnoozePreset: SnoozePreset;
   onClick: () => void;
+  onSnooze: () => void;
+  onSnoozeDefault: () => void;
+  onUnsnooze: () => void;
 }
 
-export function LeadListRow({ lead, company, onClick }: LeadListRowProps) {
+export function LeadListRow({
+  lead,
+  company,
+  defaultSnoozePreset,
+  onClick,
+  onSnooze,
+  onSnoozeDefault,
+  onUnsnooze,
+}: LeadListRowProps) {
   const touchpointCount = lead.touchpoints.length;
+  const isSnoozed = isLeadSnoozed(lead);
 
   return (
     <div className="flex w-full flex-col gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/30 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/50 sm:flex-row sm:items-center sm:justify-between">
@@ -26,6 +42,9 @@ export function LeadListRow({ lead, company, onClick }: LeadListRowProps) {
             <span className="font-medium text-zinc-900 dark:text-zinc-50">
               {lead.name}
             </span>
+            {isSnoozed && lead.snoozedUntil ? (
+              <SnoozedBadge until={lead.snoozedUntil} />
+            ) : null}
             {lead.isAlumni === true ? <AlumniBadge /> : null}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
@@ -42,6 +61,14 @@ export function LeadListRow({ lead, company, onClick }: LeadListRowProps) {
       <div className="flex shrink-0 items-center gap-3">
         {lead.email.trim() ? <LeadEmailButton email={lead.email} /> : null}
         <LeadSocialLinks lead={lead} />
+        <LeadSnoozeMenu
+          leadName={lead.name}
+          isSnoozed={isSnoozed}
+          defaultPreset={defaultSnoozePreset}
+          onSnooze={onSnooze}
+          onSnoozeDefault={onSnoozeDefault}
+          onUnsnooze={onUnsnooze}
+        />
       </div>
     </div>
   );

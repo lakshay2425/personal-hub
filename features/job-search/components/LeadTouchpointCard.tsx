@@ -1,21 +1,33 @@
 "use client";
 
-import type { Company, LeadWithTouchpoints, Template } from "../types";
+import { isLeadSnoozed } from "../lib/snoozeUtils";
+import type {
+  Company,
+  LeadWithTouchpoints,
+  SnoozePreset,
+  Template,
+} from "../types";
 import { ChannelBadge } from "./ChannelBadge";
 import { AlumniBadge } from "./AlumniBadge";
 import { LeadCompanyButton } from "./LeadCompanyButton";
 import { LeadEmailButton } from "./LeadEmailButton";
+import { LeadSnoozeMenu } from "./LeadSnoozeMenu";
 import { LeadSocialLinks } from "./LeadSocialLinks";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
 import { mobileActionClass } from "./MobileListCard";
+import { SnoozedBadge } from "./SnoozedBadge";
 import type { TouchpointQuickUpdate } from "../lib/touchpointInlineActions";
 
 interface LeadTouchpointCardProps {
   lead: LeadWithTouchpoints;
   company?: Company;
   templateMap: Map<number, Template>;
+  defaultSnoozePreset: SnoozePreset;
   visibleTouchpoints?: LeadWithTouchpoints["touchpoints"];
   onViewCompany: (company: Company) => void;
+  onSnooze: () => void;
+  onSnoozeDefault: () => void;
+  onUnsnooze: () => void;
   onEditLead: () => void;
   onDeleteLead: () => void;
   onAddTouchpoint: () => void;
@@ -35,8 +47,12 @@ export function LeadTouchpointCard({
   lead,
   company,
   templateMap,
+  defaultSnoozePreset,
   visibleTouchpoints,
   onViewCompany,
+  onSnooze,
+  onSnoozeDefault,
+  onUnsnooze,
   onEditLead,
   onDeleteLead,
   onAddTouchpoint,
@@ -45,6 +61,7 @@ export function LeadTouchpointCard({
   onQuickTouchpointAction,
 }: LeadTouchpointCardProps) {
   const touchpoints = visibleTouchpoints ?? lead.touchpoints;
+  const isSnoozed = isLeadSnoozed(lead);
 
   return (
     <article className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
@@ -54,6 +71,9 @@ export function LeadTouchpointCard({
             <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
               {lead.name}
             </h3>
+            {isSnoozed && lead.snoozedUntil ? (
+              <SnoozedBadge until={lead.snoozedUntil} />
+            ) : null}
             {lead.isAlumni === true ? <AlumniBadge /> : null}
             <ChannelBadge channel={lead.channel} />
           </div>
@@ -89,6 +109,14 @@ export function LeadTouchpointCard({
           >
             Delete lead
           </button>
+          <LeadSnoozeMenu
+            leadName={lead.name}
+            isSnoozed={isSnoozed}
+            defaultPreset={defaultSnoozePreset}
+            onSnooze={onSnooze}
+            onSnoozeDefault={onSnoozeDefault}
+            onUnsnooze={onUnsnooze}
+          />
         </div>
       </div>
 

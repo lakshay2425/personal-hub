@@ -70,7 +70,15 @@ export interface Lead {
   status: LeadStatus;
   notes: string;
   isAlumni: boolean;
+  snoozedUntil?: string;
+  snoozeReason?: string;
   createdAt: number;
+}
+
+export interface SnoozePreset {
+  label: string;
+  days: number;
+  isDefault: boolean;
 }
 
 export interface LeadTouchpoint {

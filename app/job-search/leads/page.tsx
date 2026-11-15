@@ -11,6 +11,7 @@ import { CompanyInfoModal } from "@/features/job-search/components/CompanyInfoMo
 import { EmptyState } from "@/features/job-search/components/EmptyState";
 import { LeadDetailModal } from "@/features/job-search/components/LeadDetailModal";
 import { LeadListRow } from "@/features/job-search/components/LeadListRow";
+import { LeadSnoozeModal } from "@/features/job-search/components/LeadSnoozeModal";
 import { LeadTouchpointCard } from "@/features/job-search/components/LeadTouchpointCard";
 import { CompanyOverflowMenu } from "@/features/job-search/components/CompanyOverflowMenu";
 import { LeadFormModal } from "@/features/job-search/components/forms/LeadFormModal";
@@ -40,10 +41,12 @@ import { useCompanies } from "@/features/job-search/hooks/useCompanies";
 import { useLeadListSettings } from "@/features/job-search/hooks/useLeadListSettings";
 import { useLeadTouchpoints } from "@/features/job-search/hooks/useLeadTouchpoints";
 import { useLeads } from "@/features/job-search/hooks/useLeads";
+import { useSnoozePresets } from "@/features/job-search/hooks/useSnoozePresets";
 import { useTemplates } from "@/features/job-search/hooks/useTemplates";
 import {
   formatWeekRange,
   getCurrentWeekStart,
+  getTodayDateString,
   isTimestampInWeek,
 } from "@/features/job-search/lib/dateUtils";
 import {
@@ -52,6 +55,12 @@ import {
   leadCreatedInWeek,
   type LeadsViewMode,
 } from "@/features/job-search/lib/leadListUtils";
+import {
+  getDefaultSnoozePreset,
+  getSnoozeDate,
+  formatSnoozeDate,
+  isLeadSnoozed,
+} from "@/features/job-search/lib/snoozeUtils";
 import { getLinkedInProfileUrls } from "@/features/job-search/lib/leadProfileUtils";
 import {
   applyBulkTouchpointAction,
@@ -170,8 +179,10 @@ function LeadsPageContent() {
     removeTouchpoint,
   } = useLeadTouchpoints();
   const { templates } = useTemplates();
+  const { presets: snoozePresets } = useSnoozePresets();
   const { settings: listSettings } = useLeadListSettings();
   const searchParams = useSearchParams();
+  const defaultSnoozePreset = getDefaultSnoozePreset(snoozePresets);
 
   const templateMap = useMemo(
     () => buildTemplateMap(templates),
@@ -184,6 +195,7 @@ function LeadsPageContent() {
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [alumniOnly, setAlumniOnly] = useState(false);
+  const [excludeSnoozedLeads, setExcludeSnoozedLeads] = useState(true);
   const [groupByCompany, setGroupByCompany] = useState(false);
   const [touchpointChannelFilter, setTouchpointChannelFilter] = useState(searchParams.get("touchpointChannel") ?? "");
   const [touchpointTypeFilter, setTouchpointTypeFilter] = useState(searchParams.getAll("touchpointType"));
@@ -191,6 +203,7 @@ function LeadsPageContent() {
   const [touchpointResponseFilter, setTouchpointResponseFilter] = useState(searchParams.get("touchpointResponse") ?? "");
   const [weekFilter, setWeekFilter] = useState<string | null>(null);
   const [activityWeekStart, setActivityWeekStart] = useState<string | null>(null);
+  const [, forceDateRefresh] = useState(0);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<number>>(
     () => new Set(),
@@ -199,6 +212,9 @@ function LeadsPageContent() {
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [detailLead, setDetailLead] = useState<LeadWithTouchpoints | null>(
+    null,
+  );
+  const [snoozingLead, setSnoozingLead] = useState<LeadWithTouchpoints | null>(
     null,
   );
   const [touchpointFormMode, setTouchpointFormMode] =
@@ -211,6 +227,17 @@ function LeadsPageContent() {
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const today = getTodayDateString();
+
+  useEffect(() => {
+    const refreshDate = () => forceDateRefresh((current) => current + 1);
+    window.addEventListener("focus", refreshDate);
+    document.addEventListener("visibilitychange", refreshDate);
+    return () => {
+      window.removeEventListener("focus", refreshDate);
+      document.removeEventListener("visibilitychange", refreshDate);
+    };
+  }, []);
 
   const companyById = useMemo(
     () => new Map(companies.map((company) => [company.id!, company])),
@@ -240,9 +267,57 @@ function LeadsPageContent() {
     [leadsWithTouchpoints, currentWeekStart],
   );
 
+  const handleSnooze = async (
+    lead: LeadWithTouchpoints,
+    until: string,
+    reason: string,
+  ) => {
+    try {
+      await editLead(lead.id, {
+        snoozedUntil: until,
+        snoozeReason: reason || undefined,
+      });
+      await refresh();
+      setSnoozingLead(null);
+      toast.success(`Lead snoozed until ${formatSnoozeDate(until)}`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? `Failed to snooze lead: ${error.message}` : "Failed to snooze lead",
+      );
+    }
+  };
+
+  const handleUnsnooze = async (lead: LeadWithTouchpoints) => {
+    try {
+      await editLead(lead.id, {
+        snoozedUntil: undefined,
+        snoozeReason: undefined,
+      });
+      await refresh();
+      setSnoozingLead((current) =>
+        current?.id === lead.id ? null : current,
+      );
+      toast.success("Lead unsnoozed");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? `Failed to unsnooze lead: ${error.message}` : "Failed to unsnooze lead",
+      );
+    }
+  };
+
+  const handleDefaultSnooze = (lead: LeadWithTouchpoints) =>
+    handleSnooze(
+      lead,
+      getSnoozeDate(defaultSnoozePreset.days),
+      "",
+    );
+
   const filtered = useMemo(() => {
     let result = leadsWithTouchpoints;
 
+    if (excludeSnoozedLeads) {
+      result = result.filter((lead) => !isLeadSnoozed(lead, today));
+    }
     if (alumniOnly) {
       result = result.filter((lead) => lead.isAlumni === true);
     }
@@ -280,6 +355,8 @@ function LeadsPageContent() {
     touchpointResponseFilter,
     weekFilter,
     viewMode,
+    excludeSnoozedLeads,
+    today,
   ]);
 
   const groupedLeads = useMemo(() => {
@@ -325,6 +402,12 @@ function LeadsPageContent() {
   };
 
   const getLeadActions = (lead: LeadWithTouchpoints) => ({
+    onSnooze: () => {
+      setDetailLead(null);
+      setSnoozingLead(lead);
+    },
+    onSnoozeDefault: () => void handleDefaultSnooze(lead),
+    onUnsnooze: () => void handleUnsnooze(lead),
     onEditLead: () => {
       setDetailLead(null);
       setEditingLead(lead);
@@ -384,6 +467,10 @@ function LeadsPageContent() {
               <LeadListRow
                 lead={lead}
                 company={companyById.get(lead.companyId)}
+                defaultSnoozePreset={defaultSnoozePreset}
+                onSnooze={() => setSnoozingLead(lead)}
+                onSnoozeDefault={() => void handleDefaultSnooze(lead)}
+                onUnsnooze={() => void handleUnsnooze(lead)}
                 onClick={() => openLeadDetail(lead)}
               />
             </div>
@@ -425,6 +512,7 @@ function LeadsPageContent() {
                 lead={lead}
                 company={companyById.get(lead.companyId)}
                 templateMap={templateMap}
+                defaultSnoozePreset={defaultSnoozePreset}
                 visibleTouchpoints={
                   weekFilter
                     ? filterTouchpointsByWeek(lead.touchpoints, weekFilter)
@@ -833,7 +921,7 @@ function LeadsPageContent() {
       />
 
       <div className="mb-6 space-y-3">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(200px,1fr)_auto_auto]">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(200px,1fr)_auto_auto_auto]">
           <input
             type="search"
             value={search}
@@ -850,6 +938,17 @@ function LeadsPageContent() {
               className="rounded border-zinc-300 dark:border-zinc-600"
             />
             Alumni only
+          </label>
+          <label className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              checked={excludeSnoozedLeads}
+              onChange={(event) =>
+                setExcludeSnoozedLeads(event.target.checked)
+              }
+              className="rounded border-zinc-300 dark:border-zinc-600"
+            />
+            Exclude snoozed leads
           </label>
           <label className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
             <input type="checkbox" checked={groupByCompany} onChange={(event) => setGroupByCompany(event.target.checked)} className="rounded border-zinc-300 dark:border-zinc-600" />
@@ -996,6 +1095,9 @@ function LeadsPageContent() {
         onViewCompany={setViewingCompany}
         {...(detailLeadData ? getLeadActions(detailLeadData) : {
           onEditLead: () => {},
+          onSnooze: () => {},
+          onSnoozeDefault: () => {},
+          onUnsnooze: () => {},
           onDeleteLead: () => {},
           onAddTouchpoint: () => {},
           onEditTouchpoint: () => {},
@@ -1003,6 +1105,17 @@ function LeadsPageContent() {
           onQuickTouchpointAction: async () => {},
         })}
       />
+      {snoozingLead ? (
+        <LeadSnoozeModal
+          key={snoozingLead.id}
+          lead={snoozingLead}
+          presets={snoozePresets}
+          onClose={() => setSnoozingLead(null)}
+          onApply={(until, reason) =>
+            handleSnooze(snoozingLead, until, reason)
+          }
+        />
+      ) : null}
 
       <LeadFormModal
         isOpen={isLeadFormOpen}

@@ -3,10 +3,12 @@
 import { Modal } from "@/components/ui/Modal";
 
 import { getLeadSocialProfiles } from "../lib/leadProfileUtils";
+import { isLeadSnoozed } from "../lib/snoozeUtils";
 import type { Company, LeadWithTouchpoints, Template } from "../types";
 import { AlumniBadge } from "./AlumniBadge";
 import { LeadCompanyButton } from "./LeadCompanyButton";
 import { LeadEmailButton } from "./LeadEmailButton";
+import { SnoozedBadge } from "./SnoozedBadge";
 import { LeadSocialLinks } from "./LeadSocialLinks";
 import { LeadTouchpointRow } from "./LeadTouchpointRow";
 import { mobileActionClass } from "./MobileListCard";
@@ -20,6 +22,8 @@ interface LeadDetailModalProps {
   templateMap: Map<number, Template>;
   onViewCompany: (company: Company) => void;
   onEditLead: () => void;
+  onSnooze: () => void;
+  onUnsnooze: () => void;
   onDeleteLead: () => void;
   onAddTouchpoint: () => void;
   onEditTouchpoint: (
@@ -42,6 +46,8 @@ export function LeadDetailModal({
   templateMap,
   onViewCompany,
   onEditLead,
+  onSnooze,
+  onUnsnooze,
   onDeleteLead,
   onAddTouchpoint,
   onEditTouchpoint,
@@ -50,6 +56,7 @@ export function LeadDetailModal({
 }: LeadDetailModalProps) {
   if (!lead) return null;
   const profiles = getLeadSocialProfiles(lead);
+  const isSnoozed = isLeadSnoozed(lead);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={lead.name} size="lg">
@@ -58,6 +65,16 @@ export function LeadDetailModal({
           {lead.isAlumni === true ? (
             <div className="mb-3">
               <AlumniBadge />
+            </div>
+          ) : null}
+          {isSnoozed && lead.snoozedUntil ? (
+            <div className="mb-3">
+              <SnoozedBadge until={lead.snoozedUntil} />
+              {lead.snoozeReason?.trim() ? (
+                <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-300">
+                  {lead.snoozeReason}
+                </p>
+              ) : null}
             </div>
           ) : null}
           <div className="grid gap-3 text-sm sm:grid-cols-2">
@@ -115,6 +132,23 @@ export function LeadDetailModal({
           >
             Edit lead
           </button>
+          {isSnoozed ? (
+            <button
+              type="button"
+              onClick={onUnsnooze}
+              className={mobileActionClass.edit}
+            >
+              Unsnooze
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onSnooze}
+              className={mobileActionClass.edit}
+            >
+              Snooze
+            </button>
+          )}
           <button
             type="button"
             onClick={onAddTouchpoint}
