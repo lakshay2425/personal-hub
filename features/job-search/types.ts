@@ -185,9 +185,13 @@ export type TimeFilter =
 
 export interface DashboardStats {
   linkedinConnectionNotAccepted: number;
+  linkedinConnectionNotAcceptedNotSnoozed: number;
+  linkedinConnectionNotAcceptedSnoozed: number;
   linkedinMessagesNoReply: number;
   linkedinMessagesReplied: number;
   linkedinConnectionAccepted: number;
+  linkedinConnectionAcceptedNotSnoozed: number;
+  linkedinConnectionAcceptedSnoozed: number;
   emailNoReply: number;
   emailReplied: number;
   applicationsApplied: number;

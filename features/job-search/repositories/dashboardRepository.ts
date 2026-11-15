@@ -1,7 +1,8 @@
 import { differenceInCalendarDays, startOfDay } from "date-fns";
 
 import { getDB } from "../db";
-import { getTimeFilterStart } from "../lib/dateUtils";
+import { getTimeFilterStart, getTodayDateString } from "../lib/dateUtils";
+import { isLeadSnoozed } from "../lib/snoozeUtils";
 import type { DashboardFollowUpItem, DashboardStaleOutreachItem, DashboardStats, Lead, LeadTouchpoint, TimeFilter } from "../types";
 
 const LINKEDIN_MESSAGES = ["Message", "Follow-up"];
@@ -39,11 +40,38 @@ function isReplied(touchpoint?: LeadTouchpoint) {
   );
 }
 
+export function countMatchingLeadsBySnoozeStatus(
+  leads: Lead[],
+  touchpoints: LeadTouchpoint[],
+  predicate: (touchpoint: LeadTouchpoint) => boolean,
+  today = getTodayDateString(),
+): { notSnoozed: number; snoozed: number } {
+  const leadsById = new Map(
+    leads
+      .filter((lead): lead is Lead & { id: number } => lead.id !== undefined)
+      .map((lead) => [lead.id, lead]),
+  );
+  const matchingLeadIds = new Set(
+    touchpoints.filter(predicate).map((touchpoint) => touchpoint.leadId),
+  );
+  let notSnoozed = 0;
+  let snoozed = 0;
+
+  for (const leadId of matchingLeadIds) {
+    if (isLeadSnoozed(leadsById.get(leadId) ?? {}, today)) snoozed += 1;
+    else notSnoozed += 1;
+  }
+
+  return { notSnoozed, snoozed };
+}
+
 export async function getDashboardStats(filter: TimeFilter): Promise<DashboardStats> {
   const since = getTimeFilterStart(filter);
   const database = getDB();
-  const [touchpoints, applications] = await Promise.all([
-    database.leadTouchpoints.toArray(), database.applications.toArray(),
+  const [touchpoints, applications, leads] = await Promise.all([
+    database.leadTouchpoints.toArray(),
+    database.applications.toArray(),
+    database.leads.toArray(),
   ]);
   const inRange = (timestamp: number) => since === null || timestamp >= since;
   const countMatchingLeads = (predicate: (touchpoint: LeadTouchpoint) => boolean) => {
@@ -52,12 +80,40 @@ export async function getDashboardStats(filter: TimeFilter): Promise<DashboardSt
     );
     return matchingLeadIds.size;
   };
+  const connectionRequestsNotAccepted = countMatchingLeadsBySnoozeStatus(
+    leads,
+    touchpoints,
+    (touchpoint) =>
+      matchesOutreach(
+        touchpoint,
+        "LinkedIn",
+        ["Connection Request"],
+        "Not accepted",
+        since,
+      ),
+  );
+  const connectionRequestsAccepted = countMatchingLeadsBySnoozeStatus(
+    leads,
+    touchpoints,
+    (touchpoint) =>
+      matchesOutreach(
+        touchpoint,
+        "LinkedIn",
+        ["Connection Request"],
+        "Accepted",
+        since,
+      ),
+  );
 
   return {
     linkedinConnectionNotAccepted: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", ["Connection Request"], "Not accepted", since)),
+    linkedinConnectionNotAcceptedNotSnoozed: connectionRequestsNotAccepted.notSnoozed,
+    linkedinConnectionNotAcceptedSnoozed: connectionRequestsNotAccepted.snoozed,
     linkedinMessagesNoReply: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", LINKEDIN_MESSAGES, "Not responded", since)),
     linkedinMessagesReplied: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", LINKEDIN_MESSAGES, "Replied", since)),
     linkedinConnectionAccepted: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", ["Connection Request"], "Accepted", since)),
+    linkedinConnectionAcceptedNotSnoozed: connectionRequestsAccepted.notSnoozed,
+    linkedinConnectionAcceptedSnoozed: connectionRequestsAccepted.snoozed,
     emailNoReply: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "Email", EMAIL_NO_REPLY_TYPES, "Not responded", since)),
     emailReplied: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "Email", EMAIL_REPLIED_TYPES, "Replied", since)),
     applicationsApplied: applications.filter((a) => a.status === "Applied" && inRange(a.createdAt)).length,

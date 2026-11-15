@@ -15,7 +15,12 @@ import { formatWeekRange } from "@/features/job-search/lib/dateUtils";
 const sectionClass = "mb-10";
 const gridClass = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
 
-function outreachHref(channel: string, types: string[], responseStatus: string) {
+function outreachHref(
+  channel: string,
+  types: string[],
+  responseStatus: string,
+  snoozeFilter?: "active" | "snoozed",
+) {
   const query = new URLSearchParams({
     view: "byTouchpoint",
     touchpointChannel: channel,
@@ -23,6 +28,7 @@ function outreachHref(channel: string, types: string[], responseStatus: string) 
     touchpointResponse: responseStatus,
   });
   for (const type of types) query.append("touchpointType", type);
+  if (snoozeFilter) query.set("snoozeFilter", snoozeFilter);
   const route = channel === "Email" ? "/job-search/cold-emails" : "/job-search/leads";
   return `${route}?${query.toString()}`;
 }
@@ -72,10 +78,22 @@ export default function DashboardPage() {
 
     <DashboardSection title="LinkedIn Outreach Stats" className={sectionClass}>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatsCard label="Connection Requests — Not Accepted" value={stats.linkedinConnectionNotAccepted} href={outreachHref("LinkedIn", ["Connection Request"], "Not accepted")} />
+        <ConnectionRequestStatsCard
+          label="Connection Requests — Not Accepted"
+          notSnoozed={stats.linkedinConnectionNotAcceptedNotSnoozed}
+          snoozed={stats.linkedinConnectionNotAcceptedSnoozed}
+          notSnoozedHref={outreachHref("LinkedIn", ["Connection Request"], "Not accepted", "active")}
+          snoozedHref={outreachHref("LinkedIn", ["Connection Request"], "Not accepted", "snoozed")}
+        />
         <StatsCard label="Messages Sent — No Reply" value={stats.linkedinMessagesNoReply} href={outreachHref("LinkedIn", ["Follow-up", "Message"], "Not responded")} />
         <StatsCard label="Messages Sent — Replied" value={stats.linkedinMessagesReplied} href={outreachHref("LinkedIn", ["Message", "Follow-up"], "Replied")} />
-        <StatsCard label="Connection Requests — Accepted" value={stats.linkedinConnectionAccepted} href={outreachHref("LinkedIn", ["Connection Request"], "Accepted")} />
+        <ConnectionRequestStatsCard
+          label="Connection Requests — Accepted"
+          notSnoozed={stats.linkedinConnectionAcceptedNotSnoozed}
+          snoozed={stats.linkedinConnectionAcceptedSnoozed}
+          notSnoozedHref={outreachHref("LinkedIn", ["Connection Request"], "Accepted", "active")}
+          snoozedHref={outreachHref("LinkedIn", ["Connection Request"], "Accepted", "snoozed")}
+        />
       </div>
     </DashboardSection>
 
@@ -110,4 +128,52 @@ function DashboardSection({ title, className = "", children }: { title: string; 
 
 function DashboardList({ items }: { items: Array<{ id: number; name: string; companyName: string; detail: string; href: string }> }) {
   return <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">{items.map((item) => <li key={`${item.id}-${item.detail}`}><Link href={item.href} className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"><span className="min-w-0"><span className="block break-words font-medium text-zinc-900 dark:text-zinc-50">{item.name}</span><span className="block break-words text-sm text-zinc-500">{item.companyName} · {item.detail}</span></span><span className="text-zinc-400">→</span></Link></li>)}</ul>;
+}
+
+function ConnectionRequestStatsCard({
+  label,
+  notSnoozed,
+  snoozed,
+  notSnoozedHref,
+  snoozedHref,
+}: {
+  label: string;
+  notSnoozed: number;
+  snoozed: number;
+  notSnoozedHref: string;
+  snoozedHref: string;
+}) {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+      <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+        {label}
+      </h3>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Link
+          href={notSnoozedHref}
+          aria-label={`${notSnoozed} not snoozed leads for ${label}`}
+          className="rounded-lg border border-zinc-200 p-3 transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
+        >
+          <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+            Not snoozed leads
+          </span>
+          <span className="mt-1 block text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {notSnoozed}
+          </span>
+        </Link>
+        <Link
+          href={snoozedHref}
+          aria-label={`${snoozed} snoozed leads for ${label}`}
+          className="rounded-lg border border-zinc-200 p-3 transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
+        >
+          <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+            Snoozed leads
+          </span>
+          <span className="mt-1 block text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {snoozed}
+          </span>
+        </Link>
+      </div>
+    </div>
+  );
 }

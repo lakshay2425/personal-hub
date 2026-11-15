@@ -1,0 +1,74 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
+import { countMatchingLeadsBySnoozeStatus } from "../repositories/dashboardRepository";
+import type { Lead, LeadTouchpoint } from "../types";
+
+function lead(id: number, snoozedUntil?: string): Lead {
+  return {
+    id,
+    companyId: 1,
+    name: `Lead ${id}`,
+    role: "",
+    email: "",
+    linkedin: "",
+    xProfile: "",
+    channel: "LinkedIn",
+    status: "Contacted",
+    notes: "",
+    isAlumni: false,
+    snoozedUntil,
+    createdAt: 0,
+  };
+}
+
+function touchpoint(
+  leadId: number,
+  responseStatus: string,
+  status = "Sent",
+): LeadTouchpoint {
+  return {
+    leadId,
+    channel: "LinkedIn",
+    type: "Connection Request",
+    status,
+    responseStatus,
+    templateId: null,
+    context: "",
+    occurredAt: 1,
+    createdAt: 1,
+  };
+}
+
+describe("dashboard connection-request snooze counts", () => {
+  it("counts unique matching leads as active or snoozed at read time", () => {
+    const leads = [
+      lead(1),
+      lead(2, "2026-06-11"),
+      lead(3, "2026-06-09"),
+      lead(4, "2026-06-10"),
+    ];
+    const touchpoints = [
+      touchpoint(1, "Not accepted"),
+      touchpoint(1, "Not accepted"),
+      touchpoint(2, "Not accepted"),
+      touchpoint(3, "Not accepted"),
+      touchpoint(4, "Not accepted"),
+      touchpoint(2, "Accepted"),
+      touchpoint(5, "Not accepted", "Draft"),
+    ];
+
+    const counts = countMatchingLeadsBySnoozeStatus(
+      leads,
+      touchpoints,
+      (item) =>
+        item.channel === "LinkedIn" &&
+        item.type === "Connection Request" &&
+        item.status === "Sent" &&
+        item.responseStatus === "Not accepted",
+      "2026-06-10",
+    );
+
+    assert.deepEqual(counts, { notSnoozed: 3, snoozed: 1 });
+  });
+});

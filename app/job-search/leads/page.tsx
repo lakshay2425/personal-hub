@@ -182,6 +182,7 @@ function LeadsPageContent() {
   const { presets: snoozePresets } = useSnoozePresets();
   const { settings: listSettings } = useLeadListSettings();
   const searchParams = useSearchParams();
+  const snoozeFilter = searchParams.get("snoozeFilter");
   const defaultSnoozePreset = getDefaultSnoozePreset(snoozePresets);
 
   const templateMap = useMemo(
@@ -195,7 +196,12 @@ function LeadsPageContent() {
   const [search, setSearch] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [alumniOnly, setAlumniOnly] = useState(false);
-  const [excludeSnoozedLeads, setExcludeSnoozedLeads] = useState(true);
+  const [excludeSnoozedLeads, setExcludeSnoozedLeads] = useState(
+    snoozeFilter !== "snoozed" && snoozeFilter !== "all",
+  );
+  const [snoozedLeadsOnly, setSnoozedLeadsOnly] = useState(
+    snoozeFilter === "snoozed",
+  );
   const [groupByCompany, setGroupByCompany] = useState(false);
   const [collapsedCompanyIds, setCollapsedCompanyIds] = useState<Set<number>>(
     () => new Set(),
@@ -318,7 +324,9 @@ function LeadsPageContent() {
   const filtered = useMemo(() => {
     let result = leadsWithTouchpoints;
 
-    if (excludeSnoozedLeads) {
+    if (snoozedLeadsOnly) {
+      result = result.filter((lead) => isLeadSnoozed(lead, today));
+    } else if (excludeSnoozedLeads) {
       result = result.filter((lead) => !isLeadSnoozed(lead, today));
     }
     if (alumniOnly) {
@@ -359,6 +367,7 @@ function LeadsPageContent() {
     weekFilter,
     viewMode,
     excludeSnoozedLeads,
+    snoozedLeadsOnly,
     today,
   ]);
 
@@ -948,7 +957,7 @@ function LeadsPageContent() {
       />
 
       <div className="mb-6 space-y-3">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(200px,1fr)_auto_auto_auto]">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(200px,1fr)_auto_auto_auto_auto]">
           <input
             type="search"
             value={search}
@@ -970,12 +979,25 @@ function LeadsPageContent() {
             <input
               type="checkbox"
               checked={excludeSnoozedLeads}
-              onChange={(event) =>
-                setExcludeSnoozedLeads(event.target.checked)
-              }
+              onChange={(event) => {
+                setExcludeSnoozedLeads(event.target.checked);
+                if (event.target.checked) setSnoozedLeadsOnly(false);
+              }}
               className="rounded border-zinc-300 dark:border-zinc-600"
             />
             Exclude snoozed leads
+          </label>
+          <label className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              checked={snoozedLeadsOnly}
+              onChange={(event) => {
+                setSnoozedLeadsOnly(event.target.checked);
+                setExcludeSnoozedLeads(!event.target.checked);
+              }}
+              className="rounded border-zinc-300 dark:border-zinc-600"
+            />
+            Snoozed leads only
           </label>
           <label className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
             <input type="checkbox" checked={groupByCompany} onChange={(event) => setGroupByCompany(event.target.checked)} className="rounded border-zinc-300 dark:border-zinc-600" />
