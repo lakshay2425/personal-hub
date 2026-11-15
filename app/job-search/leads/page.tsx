@@ -197,6 +197,9 @@ function LeadsPageContent() {
   const [alumniOnly, setAlumniOnly] = useState(false);
   const [excludeSnoozedLeads, setExcludeSnoozedLeads] = useState(true);
   const [groupByCompany, setGroupByCompany] = useState(false);
+  const [collapsedCompanyIds, setCollapsedCompanyIds] = useState<Set<number>>(
+    () => new Set(),
+  );
   const [touchpointChannelFilter, setTouchpointChannelFilter] = useState(searchParams.get("touchpointChannel") ?? "");
   const [touchpointTypeFilter, setTouchpointTypeFilter] = useState(searchParams.getAll("touchpointType"));
   const [touchpointStatusFilter, setTouchpointStatusFilter] = useState(searchParams.get("touchpointStatus") ?? "");
@@ -547,6 +550,8 @@ function LeadsPageContent() {
               selectedCount === groupLeadIds.length;
             const isGroupPartiallySelected =
               selectedCount > 0 && !isGroupSelected;
+            const isCollapsed = collapsedCompanyIds.has(group.companyId);
+            const companyLeadsId = `company-leads-${group.companyId}`;
             const canSelectGroup = canSelectLeadGroup(
               selectedLeads,
               group.leads,
@@ -586,11 +591,31 @@ function LeadsPageContent() {
                       className="h-4 w-4 shrink-0 rounded border-zinc-300 dark:border-zinc-600"
                     />
                   ) : null}
-                  <h3 className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                    {group.companyName}
-                    <span className="ml-2 font-normal text-zinc-500 dark:text-zinc-400">
-                      ({group.leads.length})
-                    </span>
+                  <h3 className="min-w-0">
+                    <button
+                      type="button"
+                      aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${group.companyName} leads`}
+                      aria-expanded={!isCollapsed}
+                      aria-controls={companyLeadsId}
+                      onClick={() =>
+                        setCollapsedCompanyIds((current) => {
+                          const next = new Set(current);
+                          if (isCollapsed) next.delete(group.companyId);
+                          else next.add(group.companyId);
+                          return next;
+                        })
+                      }
+                      className="flex items-center gap-2 text-left text-sm font-semibold text-zinc-700 dark:text-zinc-300"
+                    >
+                      <ChevronDown
+                        className={`h-4 w-4 shrink-0 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+                        aria-hidden="true"
+                      />
+                      <span className="truncate">{group.companyName}</span>
+                      <span className="shrink-0 font-normal text-zinc-500 dark:text-zinc-400">
+                        ({group.leads.length})
+                      </span>
+                    </button>
                   </h3>
                   {companyLeads.length > 0 ? (
                     <CompanyOverflowMenu
@@ -618,9 +643,11 @@ function LeadsPageContent() {
                     />
                   ) : null}
                 </div>
-                {viewMode === "allLeads"
-                  ? renderAllLeadsList(group.leads)
-                  : renderTouchpointCards(group.leads)}
+                <div id={companyLeadsId} hidden={isCollapsed}>
+                  {viewMode === "allLeads"
+                    ? renderAllLeadsList(group.leads)
+                    : renderTouchpointCards(group.leads)}
+                </div>
               </section>
             );
           })}
