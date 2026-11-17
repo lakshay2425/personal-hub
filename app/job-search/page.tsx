@@ -13,20 +13,20 @@ import { getWeeklyGoalProgress, type WeeklyGoalProgress } from "@/features/job-s
 import { formatWeekRange } from "@/features/job-search/lib/dateUtils";
 
 const sectionClass = "mb-10";
-const gridClass = "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
 
 function outreachHref(
   channel: string,
   types: string[],
   responseStatus: string,
   snoozeFilter?: "active" | "snoozed",
+  status = "Sent",
 ) {
   const query = new URLSearchParams({
     view: "byTouchpoint",
     touchpointChannel: channel,
-    touchpointStatus: "Sent",
-    touchpointResponse: responseStatus,
+    touchpointStatus: status,
   });
+  if (responseStatus) query.set("touchpointResponse", responseStatus);
   for (const type of types) query.append("touchpointType", type);
   if (snoozeFilter) query.set("snoozeFilter", snoozeFilter);
   const route = channel === "Email" ? "/job-search/cold-emails" : "/job-search/leads";
@@ -53,6 +53,15 @@ export default function DashboardPage() {
     <PageHeader title="Dashboard" description="Actionable outreach and application activity" />
     <div className="mb-8"><TimeFilterPills value={filter} onChange={setFilter} /></div>
 
+    <DashboardSection title="Touchpoint Activity" className={sectionClass}>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatsCard label="Total Touchpoints" value={stats.totalTouchpoints} />
+        <StatsCard label="LinkedIn Touchpoints" value={stats.linkedinTouchpoints} href={outreachHref("LinkedIn", [], "", undefined, "")} />
+        <StatsCard label="X Touchpoints" value={stats.xTouchpoints} />
+        <StatsCard label="Email Touchpoints" value={stats.emailTouchpoints} href={outreachHref("Email", [], "", undefined, "")} />
+      </div>
+    </DashboardSection>
+
     {weeklyGoals.length > 0 ? <DashboardSection title={`Weekly targets · ${formatWeekRange(weekStart)}`} className={sectionClass}>
       <div className="grid gap-4 sm:grid-cols-2">
         {weeklyGoals.map((goal) => {
@@ -77,7 +86,7 @@ export default function DashboardPage() {
     </DashboardSection>}
 
     <DashboardSection title="LinkedIn Outreach Stats" className={sectionClass}>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <ConnectionRequestStatsCard
           label="Connection Requests — Not Accepted"
           notSnoozed={stats.linkedinConnectionNotAcceptedNotSnoozed}
@@ -85,6 +94,7 @@ export default function DashboardPage() {
           notSnoozedHref={outreachHref("LinkedIn", ["Connection Request"], "Not accepted", "active")}
           snoozedHref={outreachHref("LinkedIn", ["Connection Request"], "Not accepted", "snoozed")}
         />
+        <StatsCard label="Message Drafts Saved" value={stats.linkedinMessageDrafts} href={outreachHref("LinkedIn", ["Message Draft"], "", undefined, "Draft")} />
         <StatsCard label="Messages Sent — No Reply" value={stats.linkedinMessagesNoReply} href={outreachHref("LinkedIn", ["Follow-up", "Message"], "Not responded")} />
         <StatsCard label="Messages Sent — Replied" value={stats.linkedinMessagesReplied} href={outreachHref("LinkedIn", ["Message", "Follow-up"], "Replied")} />
         <ConnectionRequestStatsCard
@@ -98,16 +108,18 @@ export default function DashboardPage() {
     </DashboardSection>
 
     <DashboardSection title="Email Outreach Stats" className={sectionClass}>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatsCard label="Emails Sent — No Reply" value={stats.emailNoReply} href={outreachHref("Email", ["Message", "Follow-up", "First Follow-up", "Second Follow-up"], "Not responded")} />
         <StatsCard label="Emails Sent — Replied" value={stats.emailReplied} href={outreachHref("Email", ["Message", "First Follow-up", "Second Follow-up"], "Replied")} />
+        <StatsCard label="Email Drafts Saved" value={stats.emailDrafts} href={outreachHref("Email", [], "", undefined, "Draft")} />
       </div>
     </DashboardSection>
 
     <DashboardSection title="Applications Stats" className={sectionClass}>
-      <div className={gridClass}>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatsCard label="Applied — No Update" value={stats.applicationsApplied} href="/job-search/applications?status=Applied" />
         <StatsCard label="Interview Stage" value={stats.interviews} href="/job-search/applications?status=Interview" />
+        <StatsCard label="Rejected" value={stats.applicationsRejected} href="/job-search/applications?status=Rejected" />
         <StatsCard label="Offers" value={stats.offers} href="/job-search/applications?status=Offer" />
       </div>
     </DashboardSection>

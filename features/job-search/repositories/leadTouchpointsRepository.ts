@@ -129,6 +129,7 @@ export async function addTouchpoint(
     leadId,
     channel,
     type,
+    purpose: input.purpose?.trim() ?? "",
     status,
     responseStatus,
     templateId: input.templateId ?? null,
@@ -182,6 +183,10 @@ export async function updateTouchpoint(
         ? normalizeChannel(partial.channel)
         : existing.channel,
     type,
+    purpose:
+      partial.purpose !== undefined
+        ? partial.purpose.trim()
+        : existing.purpose ?? "",
     status,
     responseStatus,
     templateId:
@@ -228,6 +233,7 @@ export function matchesLeadTouchpointQuery(
   return lead.touchpoints.some(
     (touchpoint) =>
       touchpoint.context.toLowerCase().includes(lower) ||
+      (touchpoint.purpose ?? "").toLowerCase().includes(lower) ||
       touchpoint.channel.toLowerCase().includes(lower) ||
       touchpoint.type.toLowerCase().includes(lower) ||
       touchpoint.status.toLowerCase().includes(lower) ||

@@ -91,6 +91,7 @@ function createQuickTouchpointInput(
     status: action.status,
     responseStatus: action.responseStatus,
     templateId: null,
+    purpose: "",
     context: "",
     occurredAt: Date.now(),
   };
@@ -111,6 +112,7 @@ function LeadTouchpointFormFields({
     touchpoint?.channel ?? defaultChannel,
   );
   const [type, setType] = useState(touchpoint?.type ?? "");
+  const [purpose, setPurpose] = useState(touchpoint?.purpose ?? "");
   const [status, setStatus] = useState(
     touchpoint?.status ?? DEFAULT_TOUCHPOINT_STATUS,
   );
@@ -170,6 +172,7 @@ function LeadTouchpointFormFields({
       await onSubmit({
         channel,
         type: type.trim() || "Other",
+        purpose: purpose.trim(),
         status: status.trim() || DEFAULT_TOUCHPOINT_STATUS,
         responseStatus: responseStatus.trim() || DEFAULT_RESPONSE_STATUS,
         templateId: templateId ? Number(templateId) : null,
@@ -204,6 +207,13 @@ function LeadTouchpointFormFields({
             placeholder="Select type..."
             createLabel="Add new type..."
             newValuePlaceholder="Initial, Follow-up..."
+          />
+        </FormField>
+        <FormField label="Purpose">
+          <TextInput
+            value={purpose}
+            onChange={setPurpose}
+            placeholder="First message, first follow-up..."
           />
         </FormField>
         <FormField label="Status" required>
@@ -292,12 +302,13 @@ function QuickTouchpointActions({
   );
   const [isDraftingMessage, setIsDraftingMessage] = useState(false);
   const [draftMessage, setDraftMessage] = useState("");
+  const [draftPurpose, setDraftPurpose] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const actions = QUICK_TOUCHPOINT_ACTIONS[channel] ?? [];
   const saveMessageDraft = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!draftMessage.trim() || pendingActionId) return;
+    if (!draftMessage.trim() || !draftPurpose.trim() || pendingActionId) return;
 
     setError(null);
     setPendingActionId("message-draft");
@@ -310,11 +321,13 @@ function QuickTouchpointActions({
           status: DEFAULT_TOUCHPOINT_STATUS,
           responseStatus: DEFAULT_RESPONSE_STATUS,
           templateId: null,
+          purpose: draftPurpose,
           context: draftMessage,
           occurredAt: Date.now(),
         },
       });
       setDraftMessage("");
+      setDraftPurpose("");
       setIsDraftingMessage(false);
     } catch (actionError) {
       setError(
@@ -410,12 +423,20 @@ function QuickTouchpointActions({
               rows={6}
             />
           </FormField>
+          <FormField label="Purpose" required>
+            <TextInput
+              value={draftPurpose}
+              onChange={setDraftPurpose}
+              placeholder="First message, first follow-up, second follow-up..."
+            />
+          </FormField>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => {
                 setIsDraftingMessage(false);
                 setDraftMessage("");
+                setDraftPurpose("");
                 setError(null);
               }}
               disabled={pendingActionId !== null}
@@ -425,7 +446,11 @@ function QuickTouchpointActions({
             </button>
             <button
               type="submit"
-              disabled={!draftMessage.trim() || pendingActionId !== null}
+              disabled={
+                !draftMessage.trim() ||
+                !draftPurpose.trim() ||
+                pendingActionId !== null
+              }
               className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               {pendingActionId === "message-draft" ? "Saving..." : "Save Draft"}

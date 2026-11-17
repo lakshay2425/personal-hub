@@ -300,7 +300,7 @@ Import is full overwrite of `logEntries`.
 ## `job-search-tracker-db`
 
 **Source:** `features/job-search/db.ts`  
-**Current version:** 11
+**Current version:** 12
 
 ### Migration history (`job-search-tracker-db`)
 
@@ -317,6 +317,7 @@ Import is full overwrite of `logEntries`.
 | 9 | Separate touchpoint response values from touchpoint status and backfill response defaults |
 | 10 | Remove the obsolete lead `type` field |
 | 11 | Add `weeklyTargetSettings` |
+| 12 | Add optional `purpose` to lead touchpoints; existing records default to an empty purpose |
 
 ### `companies`
 
@@ -355,8 +356,8 @@ Import is full overwrite of `logEntries`.
 
 | Page | Route | Channels shown | In-list actions |
 |------|-------|----------------|-----------------|
-| Leads | `/job-search/leads` | All lead channels | Alumni filter, weekly activity, social profile links, copy email, company menu actions |
-| Job Outreach | `/job-search/outreach` | LinkedIn, X | Alumni filter, weekly activity, social profile links, channel quick actions, bulk touchpoint actions |
+| Leads | `/job-search/leads` | All lead channels | Alumni filter, touchpoint filters, social profile links, copy email, company menu actions |
+| Job Outreach | `/job-search/outreach` | LinkedIn, X | Alumni filter, social profile links, channel quick actions, bulk touchpoint actions |
 | Product Outreach | `/product-outreach` | Instagram, LinkedIn, X, Email | Grouped contact cards with interaction timeline; Link, Copy context, Edit, Delete per interaction |
 
 Lead creation supports single and bulk entry. Bulk entry can assign one company to all rows or select a company per row; the company, channel, contact fields, notes, and alumni flag are stored per lead. Form drafts are retained in local storage until a successful save. A name match within the selected company is flagged for confirmation; matching email or LinkedIn/X profile values are reported as duplicates.
@@ -378,10 +379,9 @@ Quick touchpoint actions are channel-specific:
 
 Created touchpoints use today's date and leave the context/template empty. The
 full touchpoint form remains available through Customize, including for
-follow-ups. Multi-select actions apply common sent/reply/acceptance actions to
-eligible leads sharing a channel; company-level selection is available in
-grouped views. Weekly activity shows leads added per day in All leads view and
-sent touchpoints per day in touchpoint view, Monday through Sunday.
+follow-ups, and accepts a custom purpose. Multi-select actions apply common
+sent/reply/acceptance actions to eligible leads sharing a channel; company-level
+selection is available in grouped views.
 
 Company lead actions include deleting all leads for a company and opening the company's available LinkedIn profile URLs in new tabs.
 
@@ -395,6 +395,7 @@ Company lead actions include deleting all leads for a company and opening the co
 | `leadId` | `number` | FK → `leads.id` |
 | `channel` | `"Email" \| "LinkedIn" \| "X" \| "Other"` | Channel for the touchpoint |
 | `type` | `string` | Such as Initial, Follow-up, Connection Request, Message, or Reply |
+| `purpose` | `string \\| undefined` | Optional user-entered purpose, such as First message or First follow-up |
 | `status` | `string` | Such as Draft or Sent |
 | `responseStatus` | `string` | Such as Not responded, Replied, Accepted, or Not accepted |
 | `templateId` | `number \| null` | Optional FK → `templates.id` |

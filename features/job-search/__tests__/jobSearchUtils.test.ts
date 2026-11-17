@@ -295,6 +295,44 @@ describe("lead snooze helpers", () => {
     assert.equal(backup.leads[1].snoozedUntil, "2026-06-20");
     assert.equal(backup.leads[1].snoozeReason, "Waiting for role to open");
   });
+
+  it("preserves touchpoint purposes and defaults missing purposes during import", () => {
+    const backup = validateJobSearchBackup({
+      version: 7,
+      companies: [],
+      leads: [lead(1, 1)],
+      applications: [],
+      activityLogs: [],
+      leadTouchpoints: [
+        {
+          leadId: 1,
+          channel: "LinkedIn",
+          type: "Message Draft",
+          purpose: "First follow-up",
+          status: "Draft",
+          responseStatus: "Not responded",
+          templateId: null,
+          context: "Hello",
+          occurredAt: 1,
+          createdAt: 1,
+        },
+        {
+          leadId: 1,
+          channel: "Email",
+          type: "Message",
+          status: "Draft",
+          responseStatus: "Not responded",
+          templateId: null,
+          context: "Hi",
+          occurredAt: 2,
+          createdAt: 2,
+        },
+      ],
+    });
+
+    assert.equal(backup.leadTouchpoints[0].purpose, "First follow-up");
+    assert.equal(backup.leadTouchpoints[1].purpose, "");
+  });
 });
 
 describe("touchpoint inline actions", () => {

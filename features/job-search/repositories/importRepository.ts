@@ -111,6 +111,7 @@ function legacyColdEmailsToTouchpoints(
       status: separated.status,
       responseStatus: separated.responseStatus,
       templateId: normalizeTemplateRef(coldEmail.templateId),
+      purpose: "",
       context: coldEmail.notes ?? "",
       occurredAt: parseDateToTimestamp(
         coldEmail.sentDate,
@@ -212,6 +213,7 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
           responseStatus: separated.responseStatus,
           templateId: normalizeTemplateRef(touchpoint.templateId),
           context: touchpoint.context ?? "",
+          purpose: touchpoint.purpose ?? "",
         };
       })
     : [];

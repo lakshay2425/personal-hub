@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getDashboardLists, getDashboardStats } from "../repositories/dashboardRepository";
 import type { DashboardFollowUpItem, DashboardStaleOutreachItem, DashboardStats, TimeFilter } from "../types";
 
-const EMPTY_STATS: DashboardStats = { linkedinConnectionNotAccepted: 0, linkedinConnectionNotAcceptedNotSnoozed: 0, linkedinConnectionNotAcceptedSnoozed: 0, linkedinMessagesNoReply: 0, linkedinMessagesReplied: 0, linkedinConnectionAccepted: 0, linkedinConnectionAcceptedNotSnoozed: 0, linkedinConnectionAcceptedSnoozed: 0, emailNoReply: 0, emailReplied: 0, applicationsApplied: 0, interviews: 0, offers: 0 };
+const EMPTY_STATS: DashboardStats = { totalTouchpoints: 0, linkedinTouchpoints: 0, xTouchpoints: 0, emailTouchpoints: 0, linkedinMessageDrafts: 0, emailDrafts: 0, linkedinConnectionNotAccepted: 0, linkedinConnectionNotAcceptedNotSnoozed: 0, linkedinConnectionNotAcceptedSnoozed: 0, linkedinMessagesNoReply: 0, linkedinMessagesReplied: 0, linkedinConnectionAccepted: 0, linkedinConnectionAcceptedNotSnoozed: 0, linkedinConnectionAcceptedSnoozed: 0, emailNoReply: 0, emailReplied: 0, applicationsApplied: 0, interviews: 0, applicationsRejected: 0, offers: 0 };
 
 export function useDashboard(filter: TimeFilter) {
   const [stats, setStats] = useState(EMPTY_STATS);

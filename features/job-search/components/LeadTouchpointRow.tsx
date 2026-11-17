@@ -87,6 +87,15 @@ export function LeadTouchpointRow({
         </div>
       ) : null}
 
+      {touchpoint.purpose?.trim() ? (
+        <div className="mb-2 text-sm text-zinc-700 dark:text-zinc-300">
+          <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            Purpose:{" "}
+          </span>
+          {touchpoint.purpose}
+        </div>
+      ) : null}
+
       {touchpoint.context ? (
         <p className="mb-3 whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
           {touchpoint.context}

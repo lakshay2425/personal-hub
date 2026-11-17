@@ -65,6 +65,64 @@ export function countMatchingLeadsBySnoozeStatus(
   return { notSnoozed, snoozed };
 }
 
+export function getTouchpointDashboardMetrics(
+  touchpoints: LeadTouchpoint[],
+  since: number | null,
+): Pick<
+  DashboardStats,
+  | "totalTouchpoints"
+  | "linkedinTouchpoints"
+  | "xTouchpoints"
+  | "emailTouchpoints"
+  | "linkedinMessageDrafts"
+  | "emailDrafts"
+> {
+  const inRange = (touchpoint: LeadTouchpoint) =>
+    since === null || touchpoint.occurredAt >= since;
+  const filtered = touchpoints.filter(inRange);
+  const count = (predicate: (touchpoint: LeadTouchpoint) => boolean) =>
+    filtered.filter(predicate).length;
+
+  return {
+    totalTouchpoints: filtered.length,
+    linkedinTouchpoints: count((touchpoint) => touchpoint.channel === "LinkedIn"),
+    xTouchpoints: count((touchpoint) => touchpoint.channel === "X"),
+    emailTouchpoints: count((touchpoint) => touchpoint.channel === "Email"),
+    linkedinMessageDrafts: count(
+      (touchpoint) =>
+        touchpoint.channel === "LinkedIn" &&
+        touchpoint.status === "Draft" &&
+        touchpoint.type === "Message Draft",
+    ),
+    emailDrafts: count(
+      (touchpoint) =>
+        touchpoint.channel === "Email" && touchpoint.status === "Draft",
+    ),
+  };
+}
+
+export function getApplicationDashboardMetrics(
+  applications: Array<{ status: string; createdAt: number }>,
+  since: number | null,
+): Pick<
+  DashboardStats,
+  "applicationsApplied" | "interviews" | "applicationsRejected" | "offers"
+> {
+  const inRange = (application: { createdAt: number }) =>
+    since === null || application.createdAt >= since;
+  const count = (status: string) =>
+    applications.filter(
+      (application) => application.status === status && inRange(application),
+    ).length;
+
+  return {
+    applicationsApplied: count("Applied"),
+    interviews: count("Interview"),
+    applicationsRejected: count("Rejected"),
+    offers: count("Offer"),
+  };
+}
+
 export async function getDashboardStats(filter: TimeFilter): Promise<DashboardStats> {
   const since = getTimeFilterStart(filter);
   const database = getDB();
@@ -73,13 +131,13 @@ export async function getDashboardStats(filter: TimeFilter): Promise<DashboardSt
     database.applications.toArray(),
     database.leads.toArray(),
   ]);
-  const inRange = (timestamp: number) => since === null || timestamp >= since;
   const countMatchingLeads = (predicate: (touchpoint: LeadTouchpoint) => boolean) => {
     const matchingLeadIds = new Set(
       touchpoints.filter(predicate).map((touchpoint) => touchpoint.leadId),
     );
     return matchingLeadIds.size;
   };
+  const touchpointMetrics = getTouchpointDashboardMetrics(touchpoints, since);
   const connectionRequestsNotAccepted = countMatchingLeadsBySnoozeStatus(
     leads,
     touchpoints,
@@ -104,8 +162,10 @@ export async function getDashboardStats(filter: TimeFilter): Promise<DashboardSt
         since,
       ),
   );
+  const applicationMetrics = getApplicationDashboardMetrics(applications, since);
 
   return {
+    ...touchpointMetrics,
     linkedinConnectionNotAccepted: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "LinkedIn", ["Connection Request"], "Not accepted", since)),
     linkedinConnectionNotAcceptedNotSnoozed: connectionRequestsNotAccepted.notSnoozed,
     linkedinConnectionNotAcceptedSnoozed: connectionRequestsNotAccepted.snoozed,
@@ -116,9 +176,7 @@ export async function getDashboardStats(filter: TimeFilter): Promise<DashboardSt
     linkedinConnectionAcceptedSnoozed: connectionRequestsAccepted.snoozed,
     emailNoReply: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "Email", EMAIL_NO_REPLY_TYPES, "Not responded", since)),
     emailReplied: countMatchingLeads((touchpoint) => matchesOutreach(touchpoint, "Email", EMAIL_REPLIED_TYPES, "Replied", since)),
-    applicationsApplied: applications.filter((a) => a.status === "Applied" && inRange(a.createdAt)).length,
-    interviews: applications.filter((a) => a.status === "Interview" && inRange(a.createdAt)).length,
-    offers: applications.filter((a) => a.status === "Offer" && inRange(a.createdAt)).length,
+    ...applicationMetrics,
   };
 }
 

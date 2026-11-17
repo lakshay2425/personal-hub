@@ -390,6 +390,26 @@ class JobSearchDatabase extends Dexie {
       listSettings: "id",
       weeklyTargetSettings: "id",
     });
+
+    this.version(12)
+      .stores({
+        companies: "++id, companyName, sector, createdAt",
+        leads: "++id, companyId, name, role, channel, status, createdAt",
+        applications: "++id, companyId, role, portal, status, appliedDate, createdAt",
+        templates: "++id, type, title, createdAt, updatedAt",
+        activityLogs: "++id, entityType, entityId, action, timestamp",
+        productOutreachContacts: "++id, label, createdAt",
+        productOutreachInteractions: "++id, contactId, channel, handle, createdAt",
+        leadTouchpoints:
+          "++id, leadId, channel, status, type, occurredAt, createdAt",
+        listSettings: "id",
+        weeklyTargetSettings: "id",
+      })
+      .upgrade(async (transaction) => {
+        await transaction.table("leadTouchpoints").toCollection().modify((touchpoint) => {
+          if (touchpoint.purpose === undefined) touchpoint.purpose = "";
+        });
+      });
   }
 }
 

@@ -55,8 +55,8 @@ script uses a recursive glob, so the feature remains runnable independently.
 
 ### Job Search — `features/job-search/__tests__/`
 
-Current suites: `bulkTouchpoints.test.ts` and `jobSearchUtils.test.ts`.
-`weeklyLeadActivity.test.ts` covers daily activity counts across a selected week.
+Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`, and
+`jobSearchUtils.test.ts`.
 
 #### Bulk touchpoints
 
@@ -71,6 +71,15 @@ Current suites: `bulkTouchpoints.test.ts` and `jobSearchUtils.test.ts`.
   update lead status.
 - Writer failures, ordered partial writes, one refresh after a batch, empty
   batches, and refresh failures.
+
+#### Dashboard outreach metrics
+
+- Counts total touchpoints and LinkedIn, X, and Email touchpoints by record.
+- Counts LinkedIn message drafts and Email drafts only when they are in the
+  selected time range.
+- Counts Applied, Interview, Rejected, and Offer applications in the selected
+  time range.
+- Counts unique matching leads for LinkedIn connection-request snooze states.
 
 #### Job Search utility functions
 
@@ -92,17 +101,8 @@ Current suites: `bulkTouchpoints.test.ts` and `jobSearchUtils.test.ts`.
 - Splits supported template placeholders and rejects unknown tokens.
 - Groups leads by company, handles missing company records, and filters
   touchpoints by week.
-
-#### Weekly activity
-
-- Displays all seven days from Monday through Sunday, including days with no
-  activity.
-- Counts leads by their local creation date and excludes records outside the
-  selected week.
-- Counts only touchpoints with `Sent` status using the touchpoint occurrence
-  date.
-- Switches the metric between lead counts and sent-touchpoint counts when the
-  selected view changes.
+- Preserves touchpoint purposes during backup import and defaults missing
+  purposes to an empty string.
 
 ### Logger — `features/logger/__tests__/logger.test.ts`
 

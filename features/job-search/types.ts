@@ -86,6 +86,7 @@ export interface LeadTouchpoint {
   leadId: number;
   channel: LeadChannel;
   type: TouchpointType;
+  purpose?: string;
   status: TouchpointStatus;
   responseStatus: TouchpointResponseStatus;
   templateId: number | null;
@@ -184,6 +185,12 @@ export type TimeFilter =
   | "all";
 
 export interface DashboardStats {
+  totalTouchpoints: number;
+  linkedinTouchpoints: number;
+  xTouchpoints: number;
+  emailTouchpoints: number;
+  linkedinMessageDrafts: number;
+  emailDrafts: number;
   linkedinConnectionNotAccepted: number;
   linkedinConnectionNotAcceptedNotSnoozed: number;
   linkedinConnectionNotAcceptedSnoozed: number;
@@ -196,6 +203,7 @@ export interface DashboardStats {
   emailReplied: number;
   applicationsApplied: number;
   interviews: number;
+  applicationsRejected: number;
   offers: number;
 }
 

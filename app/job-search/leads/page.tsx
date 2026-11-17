@@ -21,9 +21,7 @@ import {
 } from "@/features/job-search/components/forms/LeadTouchpointFormModal";
 import { LoadingState } from "@/features/job-search/components/LoadingState";
 import { PageHeader } from "@/features/job-search/components/PageHeader";
-import { StatsCard } from "@/features/job-search/components/StatsCard";
 import { WeekFilter } from "@/features/job-search/components/WeekFilter";
-import { WeeklyLeadActivity } from "@/features/job-search/components/WeeklyLeadActivity";
 import {
   ACCEPTANCE_RESPONSE_STATUSES,
   DEFAULT_LEAD_CHANNEL,
@@ -44,8 +42,6 @@ import { useLeads } from "@/features/job-search/hooks/useLeads";
 import { useSnoozePresets } from "@/features/job-search/hooks/useSnoozePresets";
 import { useTemplates } from "@/features/job-search/hooks/useTemplates";
 import {
-  formatWeekRange,
-  getCurrentWeekStart,
   getTodayDateString,
   isTimestampInWeek,
 } from "@/features/job-search/lib/dateUtils";
@@ -72,10 +68,7 @@ import {
 } from "@/features/job-search/lib/bulkTouchpoints";
 import type { TouchpointQuickUpdate } from "@/features/job-search/lib/touchpointInlineActions";
 import { buildTemplateMap } from "@/features/job-search/lib/templateUtils";
-import {
-  countTouchpointsInWeek,
-  matchesLeadTouchpointQuery,
-} from "@/features/job-search/repositories/leadTouchpointsRepository";
+import { matchesLeadTouchpointQuery } from "@/features/job-search/repositories/leadTouchpointsRepository";
 import type { LeadInput } from "@/features/job-search/repositories/leadsRepository";
 import type {
   Company,
@@ -211,7 +204,6 @@ function LeadsPageContent() {
   const [touchpointStatusFilter, setTouchpointStatusFilter] = useState(searchParams.get("touchpointStatus") ?? "");
   const [touchpointResponseFilter, setTouchpointResponseFilter] = useState(searchParams.get("touchpointResponse") ?? "");
   const [weekFilter, setWeekFilter] = useState<string | null>(null);
-  const [activityWeekStart, setActivityWeekStart] = useState<string | null>(null);
   const [, forceDateRefresh] = useState(0);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<number>>(
@@ -268,13 +260,6 @@ function LeadsPageContent() {
     : touchpointChannelFilter === "LinkedIn"
       ? [...LINKEDIN_RESPONSE_STATUSES, ...customResponseStatuses]
       : [...new Set([...(listSettings?.responseStatuses ?? []), ...LINKEDIN_RESPONSE_STATUSES])];
-
-  const currentWeekStart = getCurrentWeekStart();
-
-  const outreachThisWeek = useMemo(
-    () => countTouchpointsInWeek(leadsWithTouchpoints, currentWeekStart),
-    [leadsWithTouchpoints, currentWeekStart],
-  );
 
   const handleSnooze = async (
     lead: LeadWithTouchpoints,
@@ -903,30 +888,6 @@ function LeadsPageContent() {
             </button>
           </div>
         }
-      />
-
-      <section className="mb-6">
-        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Outreach This Week
-          </h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {formatWeekRange(currentWeekStart)}
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard label="Total Touchpoints" value={outreachThisWeek.total} />
-          <StatsCard label="LinkedIn" value={outreachThisWeek.linkedIn} />
-          <StatsCard label="X" value={outreachThisWeek.x} />
-          <StatsCard label="Email" value={outreachThisWeek.email} />
-        </div>
-      </section>
-
-      <WeeklyLeadActivity
-        leads={leadsWithTouchpoints}
-        weekStart={activityWeekStart ?? currentWeekStart}
-        viewMode={viewMode}
-        onWeekChange={setActivityWeekStart}
       />
 
       <div className="mb-4 flex flex-wrap gap-2">
