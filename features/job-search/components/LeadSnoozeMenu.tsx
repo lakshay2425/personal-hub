@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 
 import type { SnoozePreset } from "../types";
 import { localDateKey } from "../lib/outreachQueue";
+import { validateFollowUpDelayDays } from "../lib/followUpScheduling";
+import { Modal } from "@/components/ui/Modal";
 
 interface LeadSnoozeMenuProps {
   leadName: string;
@@ -16,6 +18,8 @@ interface LeadSnoozeMenuProps {
   outreachDate?: string;
   onScheduleOutreach?: (date: string) => void;
   onRemoveOutreach?: () => void;
+  followUpDelayDays?: number;
+  onChangeFollowUpDelay?: (days: number | undefined) => Promise<void> | void;
 }
 
 export function LeadSnoozeMenu({
@@ -28,10 +32,16 @@ export function LeadSnoozeMenu({
   outreachDate,
   onScheduleOutreach,
   onRemoveOutreach,
+  followUpDelayDays,
+  onChangeFollowUpDelay,
 }: LeadSnoozeMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isChoosingOutreachDate, setIsChoosingOutreachDate] = useState(false);
   const [selectedOutreachDate, setSelectedOutreachDate] = useState("");
+  const [isFollowUpDelayOpen, setIsFollowUpDelayOpen] = useState(false);
+  const [followUpDelayValue, setFollowUpDelayValue] = useState("");
+  const [followUpDelayError, setFollowUpDelayError] = useState("");
+  const [isSavingFollowUpDelay, setIsSavingFollowUpDelay] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,6 +67,27 @@ export function LeadSnoozeMenu({
   const runAction = (action: () => void) => {
     setIsOpen(false);
     action();
+  };
+
+  const saveFollowUpDelay = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const delay = followUpDelayValue.trim() ? Number(followUpDelayValue) : undefined;
+    const error = validateFollowUpDelayDays(delay);
+    if (error) {
+      setFollowUpDelayError(error);
+      return;
+    }
+    if (!onChangeFollowUpDelay) return;
+    setIsSavingFollowUpDelay(true);
+    setFollowUpDelayError("");
+    try {
+      await onChangeFollowUpDelay(delay);
+      setIsFollowUpDelayOpen(false);
+    } catch {
+      setFollowUpDelayError("Could not save this follow-up delay.");
+    } finally {
+      setIsSavingFollowUpDelay(false);
+    }
   };
 
   return (
@@ -122,8 +153,37 @@ export function LeadSnoozeMenu({
               </button>
             )
           ) : null}
+          {onChangeFollowUpDelay ? (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setFollowUpDelayValue(followUpDelayDays == null ? "" : String(followUpDelayDays));
+                setFollowUpDelayError("");
+                setIsOpen(false);
+                setIsFollowUpDelayOpen(true);
+              }}
+              className="w-full px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Change follow-up delay…
+            </button>
+          ) : null}
         </div>
       ) : null}
+      <Modal isOpen={isFollowUpDelayOpen} onClose={() => setIsFollowUpDelayOpen(false)} title={`Follow-up delay for ${leadName}`} size="sm">
+        <form onSubmit={(event) => void saveFollowUpDelay(event)}>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Delay after initial message (days)
+            <input type="number" min="1" max="365" step="1" value={followUpDelayValue} onChange={(event) => { setFollowUpDelayValue(event.target.value); setFollowUpDelayError(""); }} placeholder="Use global default" aria-invalid={Boolean(followUpDelayError)} className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50" />
+          </label>
+          <p className="mt-2 text-xs text-zinc-500">Leave blank to use the default delay from Settings. Enter a whole number from 1 to 365.</p>
+          {followUpDelayError ? <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">{followUpDelayError}</p> : null}
+          <div className="mt-5 flex justify-end gap-2">
+            <button type="button" onClick={() => setIsFollowUpDelayOpen(false)} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600">Cancel</button>
+            <button type="submit" disabled={isSavingFollowUpDelay} className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900">{isSavingFollowUpDelay ? "Saving…" : "Save delay"}</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

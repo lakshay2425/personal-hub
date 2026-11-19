@@ -118,6 +118,9 @@ Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`,
 - Change the global follow-up delay in Settings, then set one lead override;
   verify only that lead uses the override and follow-up dates appear on the
   dashboard calendar.
+- Open a lead's three-dot menu, change its follow-up delay in the modal, and
+  confirm the value updates without opening the lead form; clear it to restore
+  the global default.
 - Collapse and expand individual day groups on the Outreach Queue page.
 
 #### Job Search utility functions

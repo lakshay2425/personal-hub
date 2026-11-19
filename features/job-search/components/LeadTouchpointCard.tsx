@@ -30,6 +30,7 @@ interface LeadTouchpointCardProps {
   onUnsnooze: () => void;
   onScheduleOutreach: (date: string) => void;
   onRemoveOutreach: () => void;
+  onChangeFollowUpDelay: (days: number | undefined) => Promise<void> | void;
   onEditLead: () => void;
   onDeleteLead: () => void;
   onAddTouchpoint: () => void;
@@ -57,6 +58,7 @@ export function LeadTouchpointCard({
   onUnsnooze,
   onScheduleOutreach,
   onRemoveOutreach,
+  onChangeFollowUpDelay,
   onEditLead,
   onDeleteLead,
   onAddTouchpoint,
@@ -123,6 +125,8 @@ export function LeadTouchpointCard({
             outreachDate={lead.nextFollowUpDate}
             onScheduleOutreach={onScheduleOutreach}
             onRemoveOutreach={onRemoveOutreach}
+            followUpDelayDays={lead.followUpDelayDays}
+            onChangeFollowUpDelay={onChangeFollowUpDelay}
           />
         </div>
       </div>

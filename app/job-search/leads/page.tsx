@@ -413,12 +413,23 @@ function LeadsPageContent() {
     }
   };
 
+  const changeLeadFollowUpDelay = async (lead: LeadWithTouchpoints, days: number | undefined) => {
+    try {
+      await editLead(lead.id, { followUpDelayDays: days });
+      toast.success(days === undefined ? "Using the default follow-up delay" : `Follow-up delay set to ${days} days`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save this follow-up delay");
+      throw error;
+    }
+  };
+
   const getLeadActions = (lead: LeadWithTouchpoints) => ({
     outreachDate: lead.nextFollowUpDate,
     onScheduleOutreach: (date: string) => void scheduleOutreach(lead, date),
     onRemoveOutreach: () => {
       void editLead(lead.id, { nextFollowUpDate: "" }).then(refresh);
     },
+    onChangeFollowUpDelay: (days: number | undefined) => changeLeadFollowUpDelay(lead, days),
     onSnooze: () => {
       setDetailLead(null);
       setSnoozingLead(lead);
@@ -491,6 +502,8 @@ function LeadsPageContent() {
                 outreachDate={lead.nextFollowUpDate}
                 onScheduleOutreach={(date) => void scheduleOutreach(lead, date).then(refresh)}
                 onRemoveOutreach={() => void editLead(lead.id, { nextFollowUpDate: "" }).then(refresh)}
+                followUpDelayDays={lead.followUpDelayDays}
+                onChangeFollowUpDelay={(days) => changeLeadFollowUpDelay(lead, days)}
                 onClick={() => openLeadDetail(lead)}
               />
             </div>

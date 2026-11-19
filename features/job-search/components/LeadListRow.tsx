@@ -19,6 +19,8 @@ interface LeadListRowProps {
   outreachDate?: string;
   onScheduleOutreach?: (date: string) => void;
   onRemoveOutreach?: () => void;
+  followUpDelayDays?: number;
+  onChangeFollowUpDelay?: (days: number | undefined) => Promise<void> | void;
 }
 
 export function LeadListRow({
@@ -32,6 +34,8 @@ export function LeadListRow({
   outreachDate,
   onScheduleOutreach,
   onRemoveOutreach,
+  followUpDelayDays,
+  onChangeFollowUpDelay,
 }: LeadListRowProps) {
   const touchpointCount = lead.touchpoints.length;
   const isSnoozed = isLeadSnoozed(lead);
@@ -77,6 +81,8 @@ export function LeadListRow({
           outreachDate={outreachDate}
           onScheduleOutreach={onScheduleOutreach}
           onRemoveOutreach={onRemoveOutreach}
+          followUpDelayDays={followUpDelayDays}
+          onChangeFollowUpDelay={onChangeFollowUpDelay}
         />
       </div>
     </div>
