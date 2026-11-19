@@ -66,6 +66,7 @@ function isLeadFormValues(value: unknown): value is LeadFormValues {
     typeof record.channel === "string" &&
     typeof record.notes === "string" &&
     typeof record.isAlumni === "boolean"
+    && (record.nextFollowUpDate === undefined || typeof record.nextFollowUpDate === "string")
   );
 }
 
@@ -105,6 +106,7 @@ function LeadFormFields({
           channel: lead?.channel ?? defaultChannel,
           notes: lead?.notes ?? "",
           isAlumni: lead?.isAlumni === true,
+          nextFollowUpDate: lead?.nextFollowUpDate ?? "",
         },
       };
     },

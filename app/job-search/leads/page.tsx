@@ -399,6 +399,13 @@ function LeadsPageContent() {
   };
 
   const getLeadActions = (lead: LeadWithTouchpoints) => ({
+    outreachDate: lead.nextFollowUpDate,
+    onScheduleOutreach: (date: string) => {
+      void editLead(lead.id, { nextFollowUpDate: date }).then(refresh);
+    },
+    onRemoveOutreach: () => {
+      void editLead(lead.id, { nextFollowUpDate: "" }).then(refresh);
+    },
     onSnooze: () => {
       setDetailLead(null);
       setSnoozingLead(lead);
@@ -468,6 +475,9 @@ function LeadsPageContent() {
                 onSnooze={() => setSnoozingLead(lead)}
                 onSnoozeDefault={() => void handleDefaultSnooze(lead)}
                 onUnsnooze={() => void handleUnsnooze(lead)}
+                outreachDate={lead.nextFollowUpDate}
+                onScheduleOutreach={(date) => void editLead(lead.id, { nextFollowUpDate: date }).then(refresh)}
+                onRemoveOutreach={() => void editLead(lead.id, { nextFollowUpDate: "" }).then(refresh)}
                 onClick={() => openLeadDetail(lead)}
               />
             </div>

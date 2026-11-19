@@ -15,6 +15,7 @@ export type LeadFormValues = Pick<
   | "channel"
   | "notes"
   | "isAlumni"
+  | "nextFollowUpDate"
 >;
 
 interface LeadFieldsProps {

@@ -55,8 +55,8 @@ script uses a recursive glob, so the feature remains runnable independently.
 
 ### Job Search — `features/job-search/__tests__/`
 
-Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`, and
-`jobSearchUtils.test.ts`.
+Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`,
+`jobSearchUtils.test.ts`, and `outreachQueue.test.ts`.
 
 #### Bulk touchpoints
 
@@ -80,6 +80,26 @@ Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`, and
 - Counts Applied, Interview, Rejected, and Offer applications in the selected
   time range.
 - Counts unique matching leads for LinkedIn connection-request snooze states.
+
+#### Dated outreach queue
+
+- Groups scheduled leads into missed, today, tomorrow, and individual future
+  date sections.
+- Sorts future dates chronologically and keeps leads with the same date
+  together.
+- Excludes leads without a scheduled outreach date and returns no sections
+  when the queue is empty.
+
+#### Manual outreach and dashboard checks
+
+- From a lead's three-dot menu, add it to outreach with the default tomorrow
+  date or select another date; confirm it appears in the matching queue section.
+- Change the date from the same menu and confirm the lead moves sections;
+  remove it and confirm it no longer appears in the queue.
+- Confirm the dashboard follow-up calendar opens on the current week, shows
+  scheduled leads on the correct weekdays, and marks past days as missed.
+- Use the dashboard calendar week controls and confirm links open the selected
+  lead; verify other views do not display the dashboard calendar.
 
 #### Job Search utility functions
 

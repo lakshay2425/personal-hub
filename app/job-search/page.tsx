@@ -11,6 +11,7 @@ import { useDashboard } from "@/features/job-search/hooks/useDashboard";
 import type { TimeFilter } from "@/features/job-search/types";
 import { getWeeklyGoalProgress, type WeeklyGoalProgress } from "@/features/job-search/repositories/weeklyTargetsRepository";
 import { formatWeekRange } from "@/features/job-search/lib/dateUtils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const sectionClass = "mb-10";
 
@@ -38,6 +39,12 @@ export default function DashboardPage() {
   const { stats, followUps, staleOutreach, isLoading } = useDashboard(filter);
   const [weeklyGoals, setWeeklyGoals] = useState<WeeklyGoalProgress[]>([]);
   const [weekStart, setWeekStart] = useState("");
+  const [followUpWeek, setFollowUpWeek] = useState(() => {
+    const day = new Date();
+    day.setDate(day.getDate() - ((day.getDay() + 6) % 7));
+    day.setHours(0, 0, 0, 0);
+    return day;
+  });
   useEffect(() => {
     let active = true;
     void getWeeklyGoalProgress().then(({ goals, weekStart: start }) => {
@@ -124,8 +131,28 @@ export default function DashboardPage() {
       </div>
     </DashboardSection>
 
-    <DashboardSection title="Follow-ups Due Today" className={sectionClass}>
-      {followUps.length === 0 ? <EmptyState title="No follow-ups due today." description="You have no outreach scheduled for today." /> : <DashboardList items={followUps.map((item) => ({ ...item, detail: `${item.channel} · ${item.type}` }))} />}
+    <DashboardSection title="Follow-up calendar" className={sectionClass}>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{followUpWeek.toLocaleDateString(undefined, { month: "long", day: "numeric" })} – {new Date(followUpWeek.getTime() + 6 * 86400000).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}</div>
+        <div className="flex gap-1">
+          <button aria-label="Previous week" onClick={() => setFollowUpWeek(new Date(followUpWeek.getTime() - 7 * 86400000))} className="rounded-lg border border-zinc-300 p-2 dark:border-zinc-700"><ChevronLeft className="h-4 w-4" /></button>
+          <button onClick={() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); d.setHours(0,0,0,0); setFollowUpWeek(d); }} className="rounded-lg border border-zinc-300 px-3 text-sm dark:border-zinc-700">This week</button>
+          <button aria-label="Next week" onClick={() => setFollowUpWeek(new Date(followUpWeek.getTime() + 7 * 86400000))} className="rounded-lg border border-zinc-300 p-2 dark:border-zinc-700"><ChevronRight className="h-4 w-4" /></button>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-7">
+        {Array.from({ length: 7 }, (_, index) => {
+          const day = new Date(followUpWeek.getTime() + index * 86400000);
+          const dateKey = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,"0")}-${String(day.getDate()).padStart(2,"0")}`;
+          const items = followUps.filter((item) => item.date === dateKey);
+          const today = new Date(); today.setHours(0,0,0,0);
+          const overdue = day < today;
+          return <div key={dateKey} className={`min-h-32 rounded-xl border p-3 ${overdue ? "border-amber-300 bg-amber-50/60 dark:border-amber-900 dark:bg-amber-950/20" : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"}`}>
+            <div className="mb-2 text-xs font-semibold uppercase text-zinc-500">{day.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}{overdue ? " · Missed" : ""}</div>
+            {items.length ? <div className="space-y-1">{items.map((item) => <Link key={item.id} href={item.href} className="block rounded-md bg-blue-50 px-2 py-1.5 text-xs text-blue-900 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-200 dark:hover:bg-blue-900/60"><span className="block font-medium">{item.name}</span><span>{item.companyName} · {item.channel}</span></Link>)}</div> : <p className="text-xs text-zinc-400">No follow-ups</p>}
+          </div>;
+        })}
+      </div>
     </DashboardSection>
 
     <DashboardSection title="Stale Outreach">

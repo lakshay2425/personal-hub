@@ -28,6 +28,8 @@ interface LeadTouchpointCardProps {
   onSnooze: () => void;
   onSnoozeDefault: () => void;
   onUnsnooze: () => void;
+  onScheduleOutreach: (date: string) => void;
+  onRemoveOutreach: () => void;
   onEditLead: () => void;
   onDeleteLead: () => void;
   onAddTouchpoint: () => void;
@@ -53,6 +55,8 @@ export function LeadTouchpointCard({
   onSnooze,
   onSnoozeDefault,
   onUnsnooze,
+  onScheduleOutreach,
+  onRemoveOutreach,
   onEditLead,
   onDeleteLead,
   onAddTouchpoint,
@@ -116,6 +120,9 @@ export function LeadTouchpointCard({
             onSnooze={onSnooze}
             onSnoozeDefault={onSnoozeDefault}
             onUnsnooze={onUnsnooze}
+            outreachDate={lead.nextFollowUpDate}
+            onScheduleOutreach={onScheduleOutreach}
+            onRemoveOutreach={onRemoveOutreach}
           />
         </div>
       </div>

@@ -186,16 +186,14 @@ export async function getDashboardLists(): Promise<{ followUps: DashboardFollowU
   const companyNames = new Map(companies.map((company) => [company.id!, company.companyName]));
   const latest = latestTouchpoints(touchpoints);
   const today = startOfDay(new Date());
-  const todayString = today.toISOString().slice(0, 10);
   const followUps: DashboardFollowUpItem[] = [];
   const staleOutreach: DashboardStaleOutreachItem[] = [];
 
   for (const lead of leads) {
     if (!lead.id) continue;
-    const raw = lead as Lead & { nextFollowUpDate?: string; firstFollowUpDate?: string; secondFollowUpDate?: string };
-    const followUpDate = raw.nextFollowUpDate ?? raw.firstFollowUpDate ?? raw.secondFollowUpDate;
+    const followUpDate = lead.nextFollowUpDate;
     const companyName = companyNames.get(lead.companyId) ?? "Unknown company";
-    if (followUpDate === todayString && (lead.channel === "LinkedIn" || lead.channel === "Email")) followUps.push({ id: lead.id, name: lead.name, companyName, channel: lead.channel, type: lead.channel === "Email" ? "Cold Email" : "Lead", href: `/job-search/leads?leadId=${lead.id}` });
+    if (followUpDate && (lead.channel === "LinkedIn" || lead.channel === "Email")) followUps.push({ id: lead.id, name: lead.name, companyName, channel: lead.channel, type: lead.channel === "Email" ? "Cold Email" : "Lead", href: `/job-search/leads?leadId=${lead.id}`, date: followUpDate });
 
     const touchpoint = latest.get(lead.id);
     if (!touchpoint || !["LinkedIn", "Email"].includes(lead.channel) || isReplied(touchpoint) || (lead.status !== "Contacted" && touchpoint.status !== "Sent")) continue;

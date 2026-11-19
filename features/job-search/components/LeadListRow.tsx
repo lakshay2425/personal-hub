@@ -16,6 +16,9 @@ interface LeadListRowProps {
   onSnooze: () => void;
   onSnoozeDefault: () => void;
   onUnsnooze: () => void;
+  outreachDate?: string;
+  onScheduleOutreach?: (date: string) => void;
+  onRemoveOutreach?: () => void;
 }
 
 export function LeadListRow({
@@ -26,6 +29,9 @@ export function LeadListRow({
   onSnooze,
   onSnoozeDefault,
   onUnsnooze,
+  outreachDate,
+  onScheduleOutreach,
+  onRemoveOutreach,
 }: LeadListRowProps) {
   const touchpointCount = lead.touchpoints.length;
   const isSnoozed = isLeadSnoozed(lead);
@@ -68,6 +74,9 @@ export function LeadListRow({
           onSnooze={onSnooze}
           onSnoozeDefault={onSnoozeDefault}
           onUnsnooze={onUnsnooze}
+          outreachDate={outreachDate}
+          onScheduleOutreach={onScheduleOutreach}
+          onRemoveOutreach={onRemoveOutreach}
         />
       </div>
     </div>

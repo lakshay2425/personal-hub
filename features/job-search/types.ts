@@ -72,6 +72,7 @@ export interface Lead {
   isAlumni: boolean;
   snoozedUntil?: string;
   snoozeReason?: string;
+  nextFollowUpDate?: string;
   createdAt: number;
 }
 
@@ -214,6 +215,7 @@ export interface DashboardFollowUpItem {
   channel: "LinkedIn" | "Email";
   type: "Lead" | "Cold Email";
   href: string;
+  date: string;
 }
 
 export interface DashboardStaleOutreachItem {
