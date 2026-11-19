@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { DEFAULT_FOLLOW_UP_DELAY_DAYS } from "../constants";
-import { getScheduledFollowUps, validateFollowUpDelayDays, validateOutreachDate } from "../lib/followUpScheduling";
+import {
+  getFirstFollowUpDate,
+  getScheduledFollowUps,
+  resolveFollowUpDelayDays,
+  validateFollowUpDelayDays,
+  validateOutreachDate,
+} from "../lib/followUpScheduling";
 import type { Lead, LeadTouchpoint } from "../types";
 
 const lead = (id: number, followUpDelayDays?: number): Lead => ({
@@ -22,25 +28,66 @@ describe("follow-up scheduling", () => {
   });
 
   it("uses the global default delay after a sent initial message", () => {
-    assert.deepEqual(getScheduledFollowUps([lead(1)], [touchpoint()], 3), [
+    const initial = touchpoint();
+    const scheduledLead = {
+      ...lead(1),
+      scheduledFirstFollowUpDate: getFirstFollowUpDate(initial.occurredAt, DEFAULT_FOLLOW_UP_DELAY_DAYS),
+      scheduledFirstFollowUpTouchpointId: initial.id,
+    };
+    assert.deepEqual(getScheduledFollowUps([scheduledLead], [initial]), [
       { leadId: 1, date: "2026-11-22", channel: "LinkedIn", touchpointId: 10 },
     ]);
   });
 
-  it("uses a valid lead override without changing other leads", () => {
-    const schedules = getScheduledFollowUps([lead(1, 5), lead(2)], [touchpoint({ id: 10, leadId: 1 }), touchpoint({ id: 11, leadId: 2 })], 3);
-    assert.deepEqual(schedules.map((item) => item.date), ["2026-11-24", "2026-11-22"]);
+  it("gives the lead override precedence over the global delay", () => {
+    assert.equal(resolveFollowUpDelayDays(lead(1, 5), 3), 5);
+    assert.equal(resolveFollowUpDelayDays(lead(2), 3), 3);
   });
 
   it("does not schedule drafts, connection requests, replied messages, or leads with a sent follow-up", () => {
     const initial = touchpoint();
-    const cases: Array<[Lead[], LeadTouchpoint[]]> = [
-      [[lead(1)], [{ ...initial, status: "Draft" }]],
-      [[lead(1)], [{ ...initial, type: "Connection Request" }]],
-      [[lead(1)], [{ ...initial, responseStatus: "Replied" }]],
-      [[lead(1)], [initial, touchpoint({ id: 11, type: "Follow-up", occurredAt: initial.occurredAt + 1 })]],
+    const cases: LeadTouchpoint[][] = [
+      [{ ...initial, status: "Draft" }],
+      [{ ...initial, type: "Connection Request" }],
+      [{ ...initial, responseStatus: "Replied" }],
+      [initial, touchpoint({ id: 11, type: "Follow-up", occurredAt: initial.occurredAt + 1 })],
     ];
-    for (const [leads, touchpoints] of cases) assert.deepEqual(getScheduledFollowUps(leads, touchpoints, 3), []);
+    for (const touchpoints of cases) {
+      const scheduledLead = {
+        ...lead(1),
+        scheduledFirstFollowUpDate: "2026-11-22",
+        scheduledFirstFollowUpTouchpointId: initial.id,
+      };
+      assert.deepEqual(getScheduledFollowUps([scheduledLead], touchpoints), []);
+    }
+  });
+
+  it("does not show historical sent messages that have no saved follow-up date", () => {
+    assert.deepEqual(getScheduledFollowUps([lead(1)], [touchpoint()]), []);
+  });
+
+  it("keeps an already-scheduled date unchanged if the global default later changes", () => {
+    const initial = touchpoint();
+    const scheduledLead = {
+      ...lead(1),
+      scheduledFirstFollowUpDate: "2026-11-22",
+      scheduledFirstFollowUpTouchpointId: initial.id,
+    };
+    assert.equal(getScheduledFollowUps([scheduledLead], [initial])[0]?.date, "2026-11-22");
+  });
+
+  it("uses local calendar dates at 1 AM IST rather than the previous UTC date", () => {
+    const previousTimezone = process.env.TZ;
+    process.env.TZ = "Asia/Kolkata";
+    try {
+      const sentAt = new Date("2026-11-19T01:00:00+05:30");
+      assert.equal(sentAt.getHours(), 1);
+      assert.equal(getFirstFollowUpDate(sentAt.getTime(), 3), "2026-11-22");
+      assert.equal(validateOutreachDate("2026-11-19", sentAt), null);
+    } finally {
+      if (previousTimezone === undefined) delete process.env.TZ;
+      else process.env.TZ = previousTimezone;
+    }
   });
 
   it("rejects invalid and past new-conversation dates but accepts today and future dates", () => {

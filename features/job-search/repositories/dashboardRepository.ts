@@ -2,7 +2,6 @@ import { getDB } from "../db";
 import { getTimeFilterStart, getTodayDateString } from "../lib/dateUtils";
 import { getScheduledFollowUps } from "../lib/followUpScheduling";
 import { isLeadSnoozed } from "../lib/snoozeUtils";
-import { getListSettings } from "./listSettingsRepository";
 import type { DashboardCalendarItem, DashboardStats, Lead, LeadTouchpoint, TimeFilter } from "../types";
 
 const LINKEDIN_MESSAGES = ["Message", "Follow-up"];
@@ -165,7 +164,7 @@ export async function getDashboardStats(filter: TimeFilter): Promise<DashboardSt
 
 export async function getDashboardCalendarItems(): Promise<DashboardCalendarItem[]> {
   const database = getDB();
-  const [leads, touchpoints, companies, settings] = await Promise.all([database.leads.toArray(), database.leadTouchpoints.toArray(), database.companies.toArray(), getListSettings()]);
+  const [leads, touchpoints, companies] = await Promise.all([database.leads.toArray(), database.leadTouchpoints.toArray(), database.companies.toArray()]);
   const companyNames = new Map(companies.map((company) => [company.id!, company.companyName]));
   const items: DashboardCalendarItem[] = [];
   for (const lead of leads) {
@@ -176,7 +175,7 @@ export async function getDashboardCalendarItems(): Promise<DashboardCalendarItem
     }
   }
   const leadsById = new Map(leads.map((lead) => [lead.id, lead]));
-  for (const scheduled of getScheduledFollowUps(leads, touchpoints, settings.followUpDelayDays)) {
+  for (const scheduled of getScheduledFollowUps(leads, touchpoints)) {
     const lead = leadsById.get(scheduled.leadId);
     if (!lead?.id) continue;
     items.push({ id: lead.id, name: lead.name, companyName: companyNames.get(lead.companyId) ?? "Unknown company", channel: scheduled.channel, kind: "followUp", href: `/job-search/leads?leadId=${lead.id}`, date: scheduled.date });

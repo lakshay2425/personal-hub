@@ -90,17 +90,25 @@ Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`,
   together.
 - Excludes leads without a scheduled outreach date and returns no sections
   when the queue is empty.
+- Uses local date-only comparisons for Today/Tomorrow counts, including a
+  simulated 1 AM IST boundary.
 
 #### Follow-up scheduling
 
 - Uses the three-day global default and allows a lead-specific delay to take
   precedence for that lead only.
 - Calculates the due date after sent initial LinkedIn, Email, or X messages.
+- Calculates follow-up delays using local calendar dates at 1 AM IST.
+- Keeps already-scheduled follow-up dates unchanged when the global delay
+  changes, and does not invent follow-ups for historical messages without a
+  saved schedule.
 - Does not schedule drafts, connection requests, replied messages, or a
   follow-up that has already been sent.
 - Accepts lead delay overrides only as whole numbers from 1 to 365.
 - Rejects malformed and past dates for new-conversation scheduling while
   accepting today and future dates.
+- Imports older backups without queue dates or delay overrides as unscheduled
+  leads; malformed date-only fields are cleared.
 
 #### Manual outreach and dashboard checks
 

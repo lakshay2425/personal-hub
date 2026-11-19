@@ -52,4 +52,23 @@ describe("dated outreach queue", () => {
   it("returns no queue sections when no lead has a scheduled date", () => {
     assert.deepEqual(getOutreachQueueGroups([lead(1, "")], now), []);
   });
+
+  it("counts Today and Tomorrow using IST local dates at 1 AM", () => {
+    const previousTz = process.env.TZ;
+    process.env.TZ = "Asia/Kolkata";
+    try {
+      const istNow = new Date("2026-11-19T01:00:00+05:30");
+      const groups = getOutreachQueueGroups([
+        lead(8, "2026-11-19"),
+        lead(9, "2026-11-20"),
+      ], istNow);
+
+      assert.equal(istNow.getHours(), 1);
+      assert.equal(groups.find((group) => group.title === "Today")?.leads.length, 1);
+      assert.equal(groups.find((group) => group.title === "Tomorrow")?.leads.length, 1);
+    } finally {
+      if (previousTz === undefined) delete process.env.TZ;
+      else process.env.TZ = previousTz;
+    }
+  });
 });

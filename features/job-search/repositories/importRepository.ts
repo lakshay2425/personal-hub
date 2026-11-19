@@ -56,6 +56,15 @@ function normalizeTemplateRef(value: unknown): number | null {
   return typeof value === "number" ? value : null;
 }
 
+function normalizeDateOnly(value: unknown): string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "";
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(year, month - 1, day);
+  return parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day
+    ? value
+    : "";
+}
+
 function parseDateToTimestamp(dateStr: string, fallback: number): number {
   if (!dateStr?.trim()) return fallback;
   const parsed = new Date(dateStr);
@@ -184,6 +193,11 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       status: normalizeLegacyLeadStatus(lead.status ?? DEFAULT_NEW_LEAD_STATUS),
       xProfile: lead.xProfile ?? "",
       isAlumni: lead.isAlumni === true,
+      nextFollowUpDate: normalizeDateOnly(lead.nextFollowUpDate),
+      scheduledFirstFollowUpDate: normalizeDateOnly(lead.scheduledFirstFollowUpDate),
+      scheduledFirstFollowUpTouchpointId: Number.isInteger(lead.scheduledFirstFollowUpTouchpointId)
+        ? lead.scheduledFirstFollowUpTouchpointId
+        : undefined,
       followUpDelayDays: Number.isInteger(lead.followUpDelayDays) && (lead.followUpDelayDays ?? 0) >= 1 && (lead.followUpDelayDays ?? 0) <= 365
         ? lead.followUpDelayDays
         : undefined,

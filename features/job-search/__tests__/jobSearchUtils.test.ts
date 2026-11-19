@@ -296,6 +296,21 @@ describe("lead snooze helpers", () => {
     assert.equal(backup.leads[1].snoozeReason, "Waiting for role to open");
   });
 
+  it("imports older leads without outreach schedule fields as unscheduled", () => {
+    const backup = validateJobSearchBackup({
+      version: 7,
+      companies: [],
+      leads: [lead(1, 1)],
+      applications: [],
+      activityLogs: [],
+    });
+
+    assert.equal(backup.leads[0].nextFollowUpDate, "");
+    assert.equal(backup.leads[0].scheduledFirstFollowUpDate, "");
+    assert.equal(backup.leads[0].scheduledFirstFollowUpTouchpointId, undefined);
+    assert.equal(backup.leads[0].followUpDelayDays, undefined);
+  });
+
   it("preserves touchpoint purposes and defaults missing purposes during import", () => {
     const backup = validateJobSearchBackup({
       version: 7,

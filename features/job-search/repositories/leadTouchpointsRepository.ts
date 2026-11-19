@@ -7,7 +7,13 @@ import {
 import { getDB } from "../db";
 import { logActivity } from "../lib/activityLog";
 import { isTimestampInWeek } from "../lib/dateUtils";
-import { isInitialSentMessage } from "../lib/followUpScheduling";
+import {
+  getFirstFollowUpDate,
+  isCompletedFollowUpTouchpoint,
+  isInitialSentMessage,
+  isReplied,
+  resolveFollowUpDelayDays,
+} from "../lib/followUpScheduling";
 import {
   ensureListOption,
   getListSettings,
@@ -139,8 +145,31 @@ export async function addTouchpoint(
     createdAt: now,
   });
 
-  if (isInitialSentMessage({ ...input, id: id as number, leadId, channel, type, status, responseStatus, templateId: input.templateId ?? null, context: input.context.trim(), createdAt: now })) {
-    await database.leads.update(leadId, { nextFollowUpDate: "" });
+  const savedTouchpoint: LeadTouchpoint = {
+    ...input,
+    id: id as number,
+    leadId,
+    channel,
+    type,
+    status,
+    responseStatus,
+    templateId: input.templateId ?? null,
+    context: input.context.trim(),
+    createdAt: now,
+  };
+  if (isInitialSentMessage(savedTouchpoint) && !isReplied(savedTouchpoint)) {
+    const settings = await getListSettings();
+    const delay = resolveFollowUpDelayDays(lead, settings.followUpDelayDays);
+    await database.leads.update(leadId, {
+      nextFollowUpDate: "",
+      scheduledFirstFollowUpDate: getFirstFollowUpDate(savedTouchpoint.occurredAt, delay),
+      scheduledFirstFollowUpTouchpointId: id as number,
+    });
+  } else if (isCompletedFollowUpTouchpoint(savedTouchpoint)) {
+    await database.leads.update(leadId, {
+      scheduledFirstFollowUpDate: "",
+      scheduledFirstFollowUpTouchpointId: undefined,
+    });
   }
 
   if (options.updateLeadStatus !== false) {
@@ -217,8 +246,28 @@ export async function updateTouchpoint(
     status,
     responseStatus,
   };
-  if (isInitialSentMessage(updatedTouchpoint)) {
-    await database.leads.update(existing.leadId, { nextFollowUpDate: "" });
+  if (isInitialSentMessage(updatedTouchpoint) && !isReplied(updatedTouchpoint)) {
+    const lead = await database.leads.get(existing.leadId);
+    if (lead) {
+      const settings = await getListSettings();
+      const delay = resolveFollowUpDelayDays(lead, settings.followUpDelayDays);
+      await database.leads.update(existing.leadId, {
+        nextFollowUpDate: "",
+        scheduledFirstFollowUpDate: getFirstFollowUpDate(updatedTouchpoint.occurredAt, delay),
+        scheduledFirstFollowUpTouchpointId: id,
+      });
+    }
+  } else {
+    const lead = await database.leads.get(existing.leadId);
+    if (
+      isCompletedFollowUpTouchpoint(updatedTouchpoint) ||
+      lead?.scheduledFirstFollowUpTouchpointId === id
+    ) {
+      await database.leads.update(existing.leadId, {
+        scheduledFirstFollowUpDate: "",
+        scheduledFirstFollowUpTouchpointId: undefined,
+      });
+    }
   }
 
   if (options.updateLeadStatus !== false) {

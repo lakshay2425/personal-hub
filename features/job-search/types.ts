@@ -74,6 +74,8 @@ export interface Lead {
   snoozeReason?: string;
   nextFollowUpDate?: string;
   followUpDelayDays?: number;
+  scheduledFirstFollowUpDate?: string;
+  scheduledFirstFollowUpTouchpointId?: number;
   createdAt: number;
 }
 

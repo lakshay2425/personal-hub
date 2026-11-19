@@ -1,10 +1,15 @@
 import { DEFAULT_LEAD_CHANNEL } from "../constants";
-import { validateFollowUpDelayDays } from "../lib/followUpScheduling";
+import {
+  getFirstFollowUpDate,
+  isPendingFirstFollowUp,
+  resolveFollowUpDelayDays,
+  validateFollowUpDelayDays,
+} from "../lib/followUpScheduling";
 import { getDB } from "../db";
 import { logActivity } from "../lib/activityLog";
 import { deleteLeadWithLogs, deleteLeadsWithLogs } from "../lib/cascade";
 import { getUniqueStringValues } from "../lib/uniqueValues";
-import { ensureListOption } from "./listSettingsRepository";
+import { ensureListOption, getListSettings } from "./listSettingsRepository";
 import type { Lead } from "../types";
 
 export type LeadInput = Omit<Lead, "id" | "createdAt">;
@@ -217,12 +222,29 @@ export async function updateLead(
   const delayError = validateFollowUpDelayDays(data.followUpDelayDays);
   if (delayError) throw new Error(delayError);
   const database = getDB();
+  const updates = { ...data };
+
+  if (Object.prototype.hasOwnProperty.call(data, "followUpDelayDays")) {
+    const existingLead = await database.leads.get(id);
+    if (existingLead?.scheduledFirstFollowUpTouchpointId) {
+      const touchpoints = await database.leadTouchpoints.where("leadId").equals(id).toArray();
+      if (isPendingFirstFollowUp(existingLead, touchpoints)) {
+        const initial = touchpoints.find((touchpoint) => touchpoint.id === existingLead.scheduledFirstFollowUpTouchpointId)!;
+        const settings = await getListSettings();
+        const delay = resolveFollowUpDelayDays({ ...existingLead, ...data }, settings.followUpDelayDays);
+        updates.scheduledFirstFollowUpDate = getFirstFollowUpDate(initial.occurredAt, delay);
+      } else {
+        updates.scheduledFirstFollowUpDate = "";
+        updates.scheduledFirstFollowUpTouchpointId = undefined;
+      }
+    }
+  }
 
   if (data.status !== undefined) {
     await ensureListOption("leadStatuses", data.status);
   }
 
-  await database.leads.update(id, data);
+  await database.leads.update(id, updates);
   await logActivity("lead", id, "Lead Updated");
 }
 
