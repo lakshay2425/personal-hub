@@ -69,6 +69,7 @@ import {
 import type { TouchpointQuickUpdate } from "@/features/job-search/lib/touchpointInlineActions";
 import { buildTemplateMap } from "@/features/job-search/lib/templateUtils";
 import { matchesLeadTouchpointQuery } from "@/features/job-search/repositories/leadTouchpointsRepository";
+import { validateOutreachDate } from "@/features/job-search/lib/followUpScheduling";
 import type { LeadInput } from "@/features/job-search/repositories/leadsRepository";
 import type {
   Company,
@@ -398,11 +399,23 @@ function LeadsPageContent() {
     setDetailLead(lead);
   };
 
+  const scheduleOutreach = async (lead: LeadWithTouchpoints, date: string) => {
+    const validationError = validateOutreachDate(date);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    try {
+      await editLead(lead.id, { nextFollowUpDate: date });
+      toast.success(`New conversation scheduled for ${date}`);
+    } catch {
+      toast.error("Could not schedule this outreach");
+    }
+  };
+
   const getLeadActions = (lead: LeadWithTouchpoints) => ({
     outreachDate: lead.nextFollowUpDate,
-    onScheduleOutreach: (date: string) => {
-      void editLead(lead.id, { nextFollowUpDate: date }).then(refresh);
-    },
+    onScheduleOutreach: (date: string) => void scheduleOutreach(lead, date),
     onRemoveOutreach: () => {
       void editLead(lead.id, { nextFollowUpDate: "" }).then(refresh);
     },
@@ -476,7 +489,7 @@ function LeadsPageContent() {
                 onSnoozeDefault={() => void handleDefaultSnooze(lead)}
                 onUnsnooze={() => void handleUnsnooze(lead)}
                 outreachDate={lead.nextFollowUpDate}
-                onScheduleOutreach={(date) => void editLead(lead.id, { nextFollowUpDate: date }).then(refresh)}
+                onScheduleOutreach={(date) => void scheduleOutreach(lead, date).then(refresh)}
                 onRemoveOutreach={() => void editLead(lead.id, { nextFollowUpDate: "" }).then(refresh)}
                 onClick={() => openLeadDetail(lead)}
               />

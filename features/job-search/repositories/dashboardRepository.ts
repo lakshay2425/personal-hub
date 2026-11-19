@@ -1,22 +1,13 @@
-import { differenceInCalendarDays, startOfDay } from "date-fns";
-
 import { getDB } from "../db";
 import { getTimeFilterStart, getTodayDateString } from "../lib/dateUtils";
+import { getScheduledFollowUps } from "../lib/followUpScheduling";
 import { isLeadSnoozed } from "../lib/snoozeUtils";
-import type { DashboardFollowUpItem, DashboardStaleOutreachItem, DashboardStats, Lead, LeadTouchpoint, TimeFilter } from "../types";
+import { getListSettings } from "./listSettingsRepository";
+import type { DashboardCalendarItem, DashboardStats, Lead, LeadTouchpoint, TimeFilter } from "../types";
 
 const LINKEDIN_MESSAGES = ["Message", "Follow-up"];
 const EMAIL_NO_REPLY_TYPES = ["Message", "First Follow-up", "Second Follow-up"];
 const EMAIL_REPLIED_TYPES = ["Message", "First Follow-up", "Second Follow-up"];
-
-function latestTouchpoints(touchpoints: LeadTouchpoint[]) {
-  const latest = new Map<number, LeadTouchpoint>();
-  for (const touchpoint of touchpoints) {
-    const current = latest.get(touchpoint.leadId);
-    if (!current || touchpoint.occurredAt > current.occurredAt) latest.set(touchpoint.leadId, touchpoint);
-  }
-  return latest;
-}
 
 function matchesOutreach(
   touchpoint: LeadTouchpoint,
@@ -30,14 +21,6 @@ function matchesOutreach(
     touchpoint.status === "Sent" &&
     touchpoint.responseStatus === responseStatus &&
     (since === null || touchpoint.occurredAt >= since);
-}
-
-function isReplied(touchpoint?: LeadTouchpoint) {
-  return Boolean(
-    touchpoint &&
-      (["Replied", "Positive Response"].includes(touchpoint.responseStatus) ||
-        ["Replied", "Positive Response"].includes(touchpoint.status)),
-  );
 }
 
 export function countMatchingLeadsBySnoozeStatus(
@@ -180,28 +163,23 @@ export async function getDashboardStats(filter: TimeFilter): Promise<DashboardSt
   };
 }
 
-export async function getDashboardLists(): Promise<{ followUps: DashboardFollowUpItem[]; staleOutreach: DashboardStaleOutreachItem[] }> {
+export async function getDashboardCalendarItems(): Promise<DashboardCalendarItem[]> {
   const database = getDB();
-  const [leads, touchpoints, companies] = await Promise.all([database.leads.toArray(), database.leadTouchpoints.toArray(), database.companies.toArray()]);
+  const [leads, touchpoints, companies, settings] = await Promise.all([database.leads.toArray(), database.leadTouchpoints.toArray(), database.companies.toArray(), getListSettings()]);
   const companyNames = new Map(companies.map((company) => [company.id!, company.companyName]));
-  const latest = latestTouchpoints(touchpoints);
-  const today = startOfDay(new Date());
-  const followUps: DashboardFollowUpItem[] = [];
-  const staleOutreach: DashboardStaleOutreachItem[] = [];
-
+  const items: DashboardCalendarItem[] = [];
   for (const lead of leads) {
     if (!lead.id) continue;
-    const followUpDate = lead.nextFollowUpDate;
     const companyName = companyNames.get(lead.companyId) ?? "Unknown company";
-    if (followUpDate && (lead.channel === "LinkedIn" || lead.channel === "Email")) followUps.push({ id: lead.id, name: lead.name, companyName, channel: lead.channel, type: lead.channel === "Email" ? "Cold Email" : "Lead", href: `/job-search/leads?leadId=${lead.id}`, date: followUpDate });
-
-    const touchpoint = latest.get(lead.id);
-    if (!touchpoint || !["LinkedIn", "Email"].includes(lead.channel) || isReplied(touchpoint) || (lead.status !== "Contacted" && touchpoint.status !== "Sent")) continue;
-    const days = differenceInCalendarDays(today, new Date(touchpoint.occurredAt));
-    if (days >= 7) {
-      const channel = lead.channel === "Email" ? "Email" : "LinkedIn";
-      staleOutreach.push({ id: lead.id, name: lead.name, companyName, channel, daysSinceLastTouchpoint: days, href: `/job-search/leads?leadId=${lead.id}` });
+    if (lead.nextFollowUpDate && ["Email", "LinkedIn", "X"].includes(lead.channel)) {
+      items.push({ id: lead.id, name: lead.name, companyName, channel: lead.channel, kind: "newConversation", href: `/job-search/leads?leadId=${lead.id}`, date: lead.nextFollowUpDate });
     }
   }
-  return { followUps, staleOutreach };
+  const leadsById = new Map(leads.map((lead) => [lead.id, lead]));
+  for (const scheduled of getScheduledFollowUps(leads, touchpoints, settings.followUpDelayDays)) {
+    const lead = leadsById.get(scheduled.leadId);
+    if (!lead?.id) continue;
+    items.push({ id: lead.id, name: lead.name, companyName: companyNames.get(lead.companyId) ?? "Unknown company", channel: scheduled.channel, kind: "followUp", href: `/job-search/leads?leadId=${lead.id}`, date: scheduled.date });
+  }
+  return items.sort((a, b) => a.date.localeCompare(b.date) || (a.kind === b.kind ? 0 : a.kind === "followUp" ? -1 : 1));
 }

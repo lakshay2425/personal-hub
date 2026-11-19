@@ -16,6 +16,7 @@ export type LeadFormValues = Pick<
   | "notes"
   | "isAlumni"
   | "nextFollowUpDate"
+  | "followUpDelayDays"
 >;
 
 interface LeadFieldsProps {
@@ -107,6 +108,19 @@ export function LeadFields({
           }))}
           required
         />
+      </FormField>
+      <FormField label="Follow-up delay override (days)">
+        <input
+          type="number"
+          min="1"
+          max="365"
+          step="1"
+          value={value.followUpDelayDays ?? ""}
+          onChange={(event) => update("followUpDelayDays", event.target.value ? Number(event.target.value) : undefined)}
+          placeholder="Use default"
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+        />
+        <p className="mt-1 text-xs text-zinc-500">Leave blank to use the default from Settings.</p>
       </FormField>
       <label className="flex items-center gap-2 self-end pb-2 text-sm text-zinc-700 dark:text-zinc-300">
         <input

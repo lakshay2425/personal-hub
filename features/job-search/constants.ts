@@ -9,6 +9,7 @@ import type {
 export const DEFAULT_NEW_LEAD_STATUS = "New";
 export const DEFAULT_CONTACTED_LEAD_STATUS = "Contacted";
 export const DEFAULT_TOUCHPOINT_STATUS = "Draft";
+export const DEFAULT_FOLLOW_UP_DELAY_DAYS = 3;
 export const DEFAULT_RESPONSE_STATUS = "Not responded";
 export const LEGACY_REPLIED_TOUCHPOINT_STATUS = "Replied";
 

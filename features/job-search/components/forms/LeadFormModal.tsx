@@ -67,6 +67,7 @@ function isLeadFormValues(value: unknown): value is LeadFormValues {
     typeof record.notes === "string" &&
     typeof record.isAlumni === "boolean"
     && (record.nextFollowUpDate === undefined || typeof record.nextFollowUpDate === "string")
+    && (record.followUpDelayDays === undefined || (Number.isInteger(record.followUpDelayDays) && Number(record.followUpDelayDays) >= 1 && Number(record.followUpDelayDays) <= 365))
   );
 }
 
@@ -107,6 +108,7 @@ function LeadFormFields({
           notes: lead?.notes ?? "",
           isAlumni: lead?.isAlumni === true,
           nextFollowUpDate: lead?.nextFollowUpDate ?? "",
+          followUpDelayDays: lead?.followUpDelayDays,
         },
       };
     },

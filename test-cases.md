@@ -56,7 +56,8 @@ script uses a recursive glob, so the feature remains runnable independently.
 ### Job Search — `features/job-search/__tests__/`
 
 Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`,
-`jobSearchUtils.test.ts`, and `outreachQueue.test.ts`.
+`followUpScheduling.test.ts`, `jobSearchUtils.test.ts`, and
+`outreachQueue.test.ts`.
 
 #### Bulk touchpoints
 
@@ -90,6 +91,17 @@ Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`,
 - Excludes leads without a scheduled outreach date and returns no sections
   when the queue is empty.
 
+#### Follow-up scheduling
+
+- Uses the three-day global default and allows a lead-specific delay to take
+  precedence for that lead only.
+- Calculates the due date after sent initial LinkedIn, Email, or X messages.
+- Does not schedule drafts, connection requests, replied messages, or a
+  follow-up that has already been sent.
+- Accepts lead delay overrides only as whole numbers from 1 to 365.
+- Rejects malformed and past dates for new-conversation scheduling while
+  accepting today and future dates.
+
 #### Manual outreach and dashboard checks
 
 - From a lead's three-dot menu, add it to outreach with the default tomorrow
@@ -100,6 +112,13 @@ Current suites: `bulkTouchpoints.test.ts`, `dashboardStats.test.ts`,
   scheduled leads on the correct weekdays, and marks past days as missed.
 - Use the dashboard calendar week controls and confirm links open the selected
   lead; verify other views do not display the dashboard calendar.
+- Filter the calendar to follow-ups or new conversations and confirm the two
+  card types remain distinct, with follow-ups visually marked high priority.
+- Confirm the stale outreach section is absent from the dashboard.
+- Change the global follow-up delay in Settings, then set one lead override;
+  verify only that lead uses the override and follow-up dates appear on the
+  dashboard calendar.
+- Collapse and expand individual day groups on the Outreach Queue page.
 
 #### Job Search utility functions
 

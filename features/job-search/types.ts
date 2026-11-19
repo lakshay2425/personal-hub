@@ -73,6 +73,7 @@ export interface Lead {
   snoozedUntil?: string;
   snoozeReason?: string;
   nextFollowUpDate?: string;
+  followUpDelayDays?: number;
   createdAt: number;
 }
 
@@ -110,6 +111,7 @@ export interface JobSearchListSettings {
   responseStatuses: string[];
   touchpointTypes: string[];
   contactedTriggerStatuses: string[];
+  followUpDelayDays: number;
 }
 
 export interface Application {
@@ -208,23 +210,14 @@ export interface DashboardStats {
   offers: number;
 }
 
-export interface DashboardFollowUpItem {
+export interface DashboardCalendarItem {
   id: number;
   name: string;
   companyName: string;
-  channel: "LinkedIn" | "Email";
-  type: "Lead" | "Cold Email";
+  channel: LeadChannel;
+  kind: "followUp" | "newConversation";
   href: string;
   date: string;
-}
-
-export interface DashboardStaleOutreachItem {
-  id: number;
-  name: string;
-  companyName: string;
-  channel: "LinkedIn" | "Email";
-  daysSinceLastTouchpoint: number;
-  href: string;
 }
 
 /** @deprecated Used only for import/migration from legacy backups */

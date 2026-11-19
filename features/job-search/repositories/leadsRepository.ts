@@ -1,4 +1,5 @@
 import { DEFAULT_LEAD_CHANNEL } from "../constants";
+import { validateFollowUpDelayDays } from "../lib/followUpScheduling";
 import { getDB } from "../db";
 import { logActivity } from "../lib/activityLog";
 import { deleteLeadWithLogs, deleteLeadsWithLogs } from "../lib/cascade";
@@ -130,6 +131,8 @@ export async function getLeadsByCompanyId(companyId: number): Promise<Lead[]> {
 export async function createLead(
   data: LeadInput,
 ): Promise<number> {
+  const delayError = validateFollowUpDelayDays(data.followUpDelayDays);
+  if (delayError) throw new Error(delayError);
   const database = getDB();
   const channel = data.channel ?? DEFAULT_LEAD_CHANNEL;
   const status = data.status.trim();
@@ -154,6 +157,10 @@ export async function createLeads(
 ): Promise<number[]> {
   if (data.length === 0) {
     throw new Error("At least one lead is required");
+  }
+  for (const lead of data) {
+    const delayError = validateFollowUpDelayDays(lead.followUpDelayDays);
+    if (delayError) throw new Error(delayError);
   }
 
   const database = getDB();
@@ -207,6 +214,8 @@ export async function updateLead(
   id: number,
   data: Partial<Omit<Lead, "id" | "createdAt">>,
 ): Promise<void> {
+  const delayError = validateFollowUpDelayDays(data.followUpDelayDays);
+  if (delayError) throw new Error(delayError);
   const database = getDB();
 
   if (data.status !== undefined) {

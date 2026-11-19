@@ -4,6 +4,7 @@ import { MoreVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import type { SnoozePreset } from "../types";
+import { localDateKey } from "../lib/outreachQueue";
 
 interface LeadSnoozeMenuProps {
   leadName: string;
@@ -112,7 +113,7 @@ export function LeadSnoozeMenu({
             ) : isChoosingOutreachDate ? (
               <div className="border-t border-zinc-200 p-3 dark:border-zinc-700">
                 <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-300">Reach out on</label>
-                <input type="date" value={selectedOutreachDate} onChange={(event) => setSelectedOutreachDate(event.target.value)} className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50" />
+                <input type="date" min={localDateKey(new Date())} value={selectedOutreachDate} onChange={(event) => setSelectedOutreachDate(event.target.value)} className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50" />
                 <button type="button" disabled={!selectedOutreachDate} onClick={() => runAction(() => onScheduleOutreach(selectedOutreachDate))} className="mt-2 w-full rounded-md bg-zinc-900 px-2 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900">Add to outreach</button>
               </div>
             ) : (

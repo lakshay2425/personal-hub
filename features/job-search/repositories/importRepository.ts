@@ -184,6 +184,9 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       status: normalizeLegacyLeadStatus(lead.status ?? DEFAULT_NEW_LEAD_STATUS),
       xProfile: lead.xProfile ?? "",
       isAlumni: lead.isAlumni === true,
+      followUpDelayDays: Number.isInteger(lead.followUpDelayDays) && (lead.followUpDelayDays ?? 0) >= 1 && (lead.followUpDelayDays ?? 0) <= 365
+        ? lead.followUpDelayDays
+        : undefined,
     });
   });
 

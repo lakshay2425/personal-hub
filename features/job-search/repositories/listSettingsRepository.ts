@@ -6,6 +6,7 @@ import {
   DEFAULT_RESPONSE_STATUSES,
   DEFAULT_TOUCHPOINT_STATUSES,
   DEFAULT_TOUCHPOINT_TYPES,
+  DEFAULT_FOLLOW_UP_DELAY_DAYS,
   LEGACY_REPLIED_TOUCHPOINT_STATUS,
   LIST_SETTINGS_ID,
   type ListSettingsField,
@@ -23,15 +24,20 @@ export function createDefaultListSettings(): JobSearchListSettings {
     responseStatuses: [...DEFAULT_RESPONSE_STATUSES],
     touchpointTypes: [...DEFAULT_TOUCHPOINT_TYPES],
     contactedTriggerStatuses: [...DEFAULT_CONTACTED_TRIGGER_STATUSES],
+    followUpDelayDays: DEFAULT_FOLLOW_UP_DELAY_DAYS,
   };
 }
 
 export function withResponseStatusDefaults(
   settings: JobSearchListSettings,
 ): JobSearchListSettings {
+  const followUpDelayDays = Number.isInteger(settings.followUpDelayDays) && settings.followUpDelayDays >= 1 && settings.followUpDelayDays <= 365
+    ? settings.followUpDelayDays
+    : DEFAULT_FOLLOW_UP_DELAY_DAYS;
   if (settings.responseStatuses?.length) {
     return {
       ...settings,
+      followUpDelayDays,
       responseStatuses: dedupeStrings(settings.responseStatuses),
     };
   }
@@ -49,6 +55,7 @@ export function withResponseStatusDefaults(
 
   return {
     ...settings,
+    followUpDelayDays,
     touchpointStatuses: touchpointStatuses.length
       ? touchpointStatuses
       : [...DEFAULT_TOUCHPOINT_STATUSES],
@@ -93,6 +100,7 @@ export async function saveListSettings(
     ),
     touchpointTypes: dedupeStrings(settings.touchpointTypes),
     contactedTriggerStatuses: dedupeStrings(settings.contactedTriggerStatuses),
+    followUpDelayDays: normalizeFollowUpDelay(settings.followUpDelayDays),
   };
 
   if (!normalized.leadStatuses.includes(normalized.newLeadStatus)) {
@@ -110,6 +118,13 @@ export async function saveListSettings(
 
   await database.listSettings.put(normalized);
   return normalized;
+}
+
+function normalizeFollowUpDelay(value: number): number {
+  if (!Number.isInteger(value) || value < 1 || value > 365) {
+    throw new Error("Follow-up delay must be a whole number from 1 to 365 days");
+  }
+  return value;
 }
 
 export async function ensureListOption(

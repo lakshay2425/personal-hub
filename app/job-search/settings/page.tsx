@@ -4,6 +4,7 @@ import { PageHeader } from "@/features/job-search/components/PageHeader";
 import { LeadListSettingsSection } from "@/features/job-search/components/LeadListSettingsSection";
 import { SnoozePresetsSettingsSection } from "@/features/job-search/components/SnoozePresetsSettingsSection";
 import { WeeklyTargetsSettingsSection } from "@/features/job-search/components/WeeklyTargetsSettingsSection";
+import { FollowUpSettingsSection } from "@/features/job-search/components/FollowUpSettingsSection";
 import { useJobSearchPreferences } from "@/features/job-search/hooks/useJobSearchPreferences";
 import { exportJobSearchData } from "@/features/job-search/repositories/exportRepository";
 import {
@@ -57,6 +58,7 @@ export default function JobSearchSettingsPage() {
       <LeadListSettingsSection />
       <SnoozePresetsSettingsSection />
       <WeeklyTargetsSettingsSection />
+      <FollowUpSettingsSection />
 
       <DataBackupSection
         title="Job search data"

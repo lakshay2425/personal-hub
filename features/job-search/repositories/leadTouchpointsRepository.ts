@@ -7,6 +7,7 @@ import {
 import { getDB } from "../db";
 import { logActivity } from "../lib/activityLog";
 import { isTimestampInWeek } from "../lib/dateUtils";
+import { isInitialSentMessage } from "../lib/followUpScheduling";
 import {
   ensureListOption,
   getListSettings,
@@ -138,6 +139,10 @@ export async function addTouchpoint(
     createdAt: now,
   });
 
+  if (isInitialSentMessage({ ...input, id: id as number, leadId, channel, type, status, responseStatus, templateId: input.templateId ?? null, context: input.context.trim(), createdAt: now })) {
+    await database.leads.update(leadId, { nextFollowUpDate: "" });
+  }
+
   if (options.updateLeadStatus !== false) {
     await evaluateLeadStatus(leadId);
   }
@@ -202,6 +207,19 @@ export async function updateTouchpoint(
         ? partial.occurredAt
         : existing.occurredAt,
   });
+
+  const updatedTouchpoint: LeadTouchpoint = {
+    ...existing,
+    ...partial,
+    id,
+    channel: partial.channel !== undefined ? normalizeChannel(partial.channel) : existing.channel,
+    type,
+    status,
+    responseStatus,
+  };
+  if (isInitialSentMessage(updatedTouchpoint)) {
+    await database.leads.update(existing.leadId, { nextFollowUpDate: "" });
+  }
 
   if (options.updateLeadStatus !== false) {
     await evaluateLeadStatus(existing.leadId);
