@@ -248,6 +248,26 @@ export async function updateLead(
   await logActivity("lead", id, "Lead Updated");
 }
 
+export async function scheduleLeadsForOutreach(
+  ids: number[],
+  date: string,
+): Promise<void> {
+  if (ids.length === 0) return;
+
+  const database = getDB();
+  await database.transaction(
+    "rw",
+    database.leads,
+    database.activityLogs,
+    async () => {
+      for (const id of ids) {
+        await database.leads.update(id, { nextFollowUpDate: date });
+        await logActivity("lead", id, "Outreach Scheduled");
+      }
+    },
+  );
+}
+
 export async function deleteLead(id: number): Promise<void> {
   await deleteLeadWithLogs(id);
 }

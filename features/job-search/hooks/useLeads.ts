@@ -8,6 +8,7 @@ import {
   deleteLead,
   deleteLeads,
   getAllLeads,
+  scheduleLeadsForOutreach,
   updateLead,
 } from "../repositories/leadsRepository";
 import type { Lead } from "../types";
@@ -69,6 +70,14 @@ export function useLeads() {
     [refresh],
   );
 
+  const scheduleLeads = useCallback(
+    async (ids: number[], date: string) => {
+      await scheduleLeadsForOutreach(ids, date);
+      await refresh();
+    },
+    [refresh],
+  );
+
   const removeLead = useCallback(
     async (id: number) => {
       await deleteLead(id);
@@ -91,6 +100,7 @@ export function useLeads() {
     addLead,
     addLeads,
     editLead,
+    scheduleLeads,
     removeLead,
     removeLeads,
     refresh,
