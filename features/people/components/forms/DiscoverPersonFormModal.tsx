@@ -43,7 +43,6 @@ function DiscoverPersonFormFields({
   );
   const [notes, setNotes] = useState(person?.notes ?? "");
   const [urlError, setUrlError] = useState<string | null>(null);
-  const [whySavedError, setWhySavedError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,13 +53,6 @@ function DiscoverPersonFormFields({
     const trimmedWhySaved = whySaved.trim();
 
     let hasError = false;
-
-    if (!trimmedWhySaved) {
-      setWhySavedError("Why you saved them is required");
-      hasError = true;
-    } else {
-      setWhySavedError(null);
-    }
 
     if (!isValidProfileUrl(trimmedUrl)) {
       setUrlError("Profile URL must start with http:// or https://");
@@ -124,21 +116,15 @@ function DiscoverPersonFormFields({
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">{urlError}</p>
         ) : null}
       </FormField>
-      <FormField label="Why saved" required>
+      <FormField label="Why saved">
         <TextArea
           value={whySaved}
           onChange={(value) => {
             setWhySaved(value);
-            if (whySavedError) setWhySavedError(null);
           }}
-          placeholder="Why you want to review their content"
+          placeholder="Optional context for saving them"
           rows={2}
         />
-        {whySavedError ? (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-            {whySavedError}
-          </p>
-        ) : null}
       </FormField>
       <FormField label="Status" required>
         <SelectInput
