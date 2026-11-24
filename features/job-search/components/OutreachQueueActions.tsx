@@ -65,7 +65,11 @@ export function OutreachDateModal({
   onSaved,
   leads,
   scheduleLeads,
-}: OutreachQueueActionsProps & { isOpen: boolean; onClose: () => void; onSaved?: () => void }) {
+}: Pick<OutreachQueueActionsProps, "leads" | "scheduleLeads"> & {
+  isOpen: boolean;
+  onClose: () => void;
+  onSaved?: () => void;
+}) {
   const [date, setDate] = useState(() => {
     const today = getTodayDateString();
     const currentDate = leads.length === 1 ? leads[0]?.nextFollowUpDate : undefined;
