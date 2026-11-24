@@ -41,27 +41,84 @@ export function OutreachLeadDateEditor({
   scheduleLeads: OutreachQueueActionsProps["scheduleLeads"];
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [date, setDate] = useState(lead.nextFollowUpDate ?? "");
-
-  const save = async () => {
-    if (!lead.id || !(await saveSchedule(scheduleLeads, [lead.id], date))) return;
-    setIsEditing(false);
-    toast.success("Outreach date updated");
-  };
 
   return (
     <div className="shrink-0">
-      <button type="button" onClick={() => { setDate(lead.nextFollowUpDate ?? ""); setIsEditing(true); }} className="rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
+      <button type="button" onClick={() => setIsEditing(true)} className="rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">
         Change date
       </button>
       {isEditing ? (
-        <div className="mt-2 flex flex-wrap items-end gap-2">
-          <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Outreach date<input type="date" min={getTodayDateString()} value={date} onChange={(event) => setDate(event.target.value)} className="mt-1 block rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50" /></label>
-          <button type="button" disabled={!date} onClick={() => void save()} className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900">Save</button>
-          <button type="button" onClick={() => setIsEditing(false)} className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600">Cancel</button>
-        </div>
+        <OutreachDateModal
+          isOpen
+          onClose={() => setIsEditing(false)}
+          leads={[lead]}
+          scheduleLeads={scheduleLeads}
+        />
       ) : null}
     </div>
+  );
+}
+
+export function OutreachDateModal({
+  isOpen,
+  onClose,
+  onSaved,
+  leads,
+  scheduleLeads,
+}: OutreachQueueActionsProps & { isOpen: boolean; onClose: () => void; onSaved?: () => void }) {
+  const [date, setDate] = useState(() => {
+    const today = getTodayDateString();
+    const currentDate = leads.length === 1 ? leads[0]?.nextFollowUpDate : undefined;
+    return currentDate && currentDate >= today ? currentDate : today;
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    const ids = leads.flatMap((lead) => (lead.id ? [lead.id] : []));
+    if (ids.length === 0 || isSaving) return;
+
+    setIsSaving(true);
+    const saved = await saveSchedule(scheduleLeads, ids, date);
+    setIsSaving(false);
+    if (!saved) return;
+    onClose();
+    onSaved?.();
+    toast.success(ids.length === 1 ? "Outreach date updated" : `${ids.length} leads rescheduled`);
+  };
+
+  const names = leads.slice(0, 3).map((lead) => lead.name);
+  const remainingCount = leads.length - names.length;
+  const isSingleLead = leads.length === 1;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={isSingleLead ? "Change outreach date" : "Reschedule leads"} size="sm">
+      <form onSubmit={(event) => void submit(event)} className="space-y-5">
+        <div>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {isSingleLead ? "Choose a new date to reach out to this lead." : `Choose a new outreach date for ${leads.length} selected leads.`}
+          </p>
+          <p className="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            {names.join(", ")}{remainingCount > 0 ? ` and ${remainingCount} more` : ""}
+          </p>
+        </div>
+        <label className="block text-sm font-medium text-zinc-800 dark:text-zinc-200">
+          Outreach date
+          <input
+            type="date"
+            min={getTodayDateString()}
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+            className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
+            required
+          />
+        </label>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800">Cancel</button>
+          <button type="submit" disabled={isSaving || !date} className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900">{isSaving ? "Saving..." : isSingleLead ? "Save date" : "Reschedule leads"}</button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
