@@ -191,6 +191,7 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       ...leadWithoutFollowUps,
       channel,
       status: normalizeLegacyLeadStatus(lead.status ?? DEFAULT_NEW_LEAD_STATUS),
+      contactNumber: typeof lead.contactNumber === "string" ? lead.contactNumber : "",
       xProfile: lead.xProfile ?? "",
       isAlumni: lead.isAlumni === true,
       nextFollowUpDate: normalizeDateOnly(lead.nextFollowUpDate),

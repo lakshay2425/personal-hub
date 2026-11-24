@@ -61,6 +61,7 @@ function isLeadFormValues(value: unknown): value is LeadFormValues {
     typeof record.name === "string" &&
     typeof record.role === "string" &&
     typeof record.email === "string" &&
+    (record.contactNumber === undefined || typeof record.contactNumber === "string") &&
     typeof record.linkedin === "string" &&
     typeof record.xProfile === "string" &&
     typeof record.channel === "string" &&
@@ -102,6 +103,7 @@ function LeadFormFields({
           name: lead?.name ?? "",
           role: lead?.role ?? "",
           email: lead?.email ?? "",
+          contactNumber: lead?.contactNumber ?? "",
           linkedin: initialLead?.linkedin ?? "",
           xProfile: initialLead?.xProfile ?? "",
           channel: lead?.channel ?? defaultChannel,

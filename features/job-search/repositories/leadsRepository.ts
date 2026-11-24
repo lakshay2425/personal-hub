@@ -29,7 +29,11 @@ export class DuplicateLeadError extends Error {
 }
 
 function withAlumniDefault(lead: Lead): Lead {
-  return { ...lead, isAlumni: lead.isAlumni === true };
+  return {
+    ...lead,
+    contactNumber: lead.contactNumber ?? "",
+    isAlumni: lead.isAlumni === true,
+  };
 }
 
 function normalizeName(value: string): string {
@@ -147,6 +151,7 @@ export async function createLead(
   const id = await database.leads.add({
     ...data,
     channel,
+    contactNumber: data.contactNumber?.trim() ?? "",
     isAlumni: data.isAlumni === true,
     linkedin: data.linkedin ?? "",
     xProfile: data.xProfile ?? "",
@@ -174,6 +179,7 @@ export async function createLeads(
     name: lead.name.trim(),
     role: lead.role.trim(),
     email: lead.email.trim(),
+    contactNumber: lead.contactNumber?.trim() ?? "",
     linkedin: lead.linkedin.trim(),
     xProfile: lead.xProfile.trim(),
     notes: lead.notes.trim(),
@@ -223,6 +229,10 @@ export async function updateLead(
   if (delayError) throw new Error(delayError);
   const database = getDB();
   const updates = { ...data };
+
+  if (data.contactNumber !== undefined) {
+    updates.contactNumber = data.contactNumber.trim();
+  }
 
   if (Object.prototype.hasOwnProperty.call(data, "followUpDelayDays")) {
     const existingLead = await database.leads.get(id);

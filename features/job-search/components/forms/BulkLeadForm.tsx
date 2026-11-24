@@ -54,6 +54,7 @@ function emptyValues(): LeadFormValues {
     name: "",
     role: "",
     email: "",
+    contactNumber: "",
     linkedin: "",
     xProfile: "",
     channel: DEFAULT_LEAD_CHANNEL,
@@ -90,6 +91,7 @@ function isLeadDraftRow(value: unknown): value is BulkLeadRow {
     typeof values.name === "string" &&
     typeof values.role === "string" &&
     typeof values.email === "string" &&
+    (values.contactNumber === undefined || typeof values.contactNumber === "string") &&
     typeof values.linkedin === "string" &&
     typeof values.xProfile === "string" &&
     typeof values.channel === "string" &&
@@ -123,6 +125,7 @@ function hasLeadValues(values: LeadFormValues): boolean {
     values.name.trim() ||
       values.role.trim() ||
       values.email.trim() ||
+      values.contactNumber?.trim() ||
       values.linkedin.trim() ||
       values.xProfile.trim() ||
       values.notes.trim() ||
@@ -246,6 +249,7 @@ export function BulkLeadForm({
         name: row.values.name.trim(),
         role,
         email: row.values.email.trim(),
+        contactNumber: row.values.contactNumber?.trim() ?? "",
         linkedin: row.values.linkedin.trim(),
         xProfile: row.values.xProfile.trim(),
         notes: row.values.notes.trim(),

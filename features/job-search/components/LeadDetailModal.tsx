@@ -100,6 +100,19 @@ export function LeadDetailModal({
                 </div>
               </div>
             ) : null}
+            {lead.contactNumber?.trim() ? (
+              <div>
+                <span className="text-zinc-500 dark:text-zinc-400">Contact number</span>
+                <p className="mt-0.5">
+                  <a
+                    href={`tel:${lead.contactNumber.replace(/[^\d+*#,;]/g, "")}`}
+                    className="text-zinc-900 hover:underline dark:text-zinc-50"
+                  >
+                    {lead.contactNumber}
+                  </a>
+                </p>
+              </div>
+            ) : null}
             {profiles.linkedin || profiles.xProfile ? (
               <div>
                 <span className="text-zinc-500 dark:text-zinc-400">

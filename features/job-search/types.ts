@@ -64,6 +64,7 @@ export interface Lead {
   name: string;
   role: string;
   email: string;
+  contactNumber?: string;
   linkedin: string;
   xProfile: string;
   channel: LeadChannel;

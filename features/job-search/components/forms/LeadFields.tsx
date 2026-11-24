@@ -10,6 +10,7 @@ export type LeadFormValues = Pick<
   | "name"
   | "role"
   | "email"
+  | "contactNumber"
   | "linkedin"
   | "xProfile"
   | "channel"
@@ -80,6 +81,14 @@ export function LeadFields({
           onChange={(next) => update("email", next)}
           placeholder="john@example.com"
           type="email"
+        />
+      </FormField>
+      <FormField label="Contact number">
+        <TextInput
+          value={value.contactNumber ?? ""}
+          onChange={(next) => update("contactNumber", next)}
+          placeholder="+1 555 123 4567"
+          type="tel"
         />
       </FormField>
       <FormField label="LinkedIn Profile">
