@@ -11,6 +11,7 @@ import {
 } from "./constants";
 import { createDefaultListSettings } from "./repositories/listSettingsRepository";
 import type {
+  Achievement,
   ActivityLog,
   Application,
   Company,
@@ -58,6 +59,7 @@ function normalizeLegacyLeadStatus(status: string): string {
 }
 
 class JobSearchDatabase extends Dexie {
+  achievements!: EntityTable<Achievement, "id">;
   companies!: EntityTable<Company, "id">;
   leads!: EntityTable<Lead, "id">;
   applications!: EntityTable<Application, "id">;
@@ -426,6 +428,7 @@ class JobSearchDatabase extends Dexie {
       await transaction.table("leads").toCollection().modify((lead) => {
         if (lead.nextFollowUpDate === undefined) lead.nextFollowUpDate = "";
       });
+    });
 
     this.version(14)
       .stores({
@@ -445,6 +448,19 @@ class JobSearchDatabase extends Dexie {
           if (lead.scheduledFirstFollowUpDate === undefined) lead.scheduledFirstFollowUpDate = "";
         });
       });
+
+    this.version(15).stores({
+      companies: "++id, companyName, sector, createdAt",
+      leads: "++id, companyId, name, role, channel, status, nextFollowUpDate, scheduledFirstFollowUpDate, createdAt",
+      applications: "++id, companyId, role, portal, status, appliedDate, createdAt",
+      templates: "++id, type, title, createdAt, updatedAt",
+      achievements: "++id, title, createdAt, updatedAt",
+      activityLogs: "++id, entityType, entityId, action, timestamp",
+      productOutreachContacts: "++id, label, createdAt",
+      productOutreachInteractions: "++id, contactId, channel, handle, createdAt",
+      leadTouchpoints: "++id, leadId, channel, status, type, occurredAt, createdAt",
+      listSettings: "id",
+      weeklyTargetSettings: "id",
     });
   }
 }

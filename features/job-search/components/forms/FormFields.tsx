@@ -70,11 +70,13 @@ export function TextArea({
   placeholder,
   rows = 3,
   voice = true,
+  required,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   rows?: number;
+  required?: boolean;
   /** Enable voice-to-text. Defaults to true. */
   voice?: boolean;
 }) {
@@ -86,6 +88,7 @@ export function TextArea({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows}
+          required={required}
           className={voice ? `${inputClass} pr-10` : inputClass}
         />
         {voice && <MicButton value={value} onChange={onChange} align="top" />}

@@ -122,3 +122,18 @@ export async function deleteTemplateWithLogs(
     },
   );
 }
+
+export async function deleteAchievementWithLogs(
+  achievementId: number,
+): Promise<void> {
+  const database = getDB();
+  await database.transaction(
+    "rw",
+    [database.achievements, database.activityLogs],
+    async () => {
+      await deleteActivityLogsForEntity("achievement", achievementId);
+      await database.achievements.delete(achievementId);
+      await logActivity("achievement", achievementId, "Achievement Deleted");
+    },
+  );
+}

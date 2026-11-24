@@ -28,7 +28,8 @@ export type EntityType =
   | "lead"
   | "application"
   | "coldEmail"
-  | "template";
+  | "template"
+  | "achievement";
 
 export interface Company {
   id?: number;
@@ -136,6 +137,15 @@ export interface Template {
   subject: string;
   body: string;
   notes: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Achievement {
+  id?: number;
+  title: string;
+  conciseVersion: string;
+  detailedVersion: string;
   createdAt: number;
   updatedAt: number;
 }

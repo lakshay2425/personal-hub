@@ -17,6 +17,7 @@ import {
   withResponseStatusDefaults,
 } from "./listSettingsRepository";
 import type {
+  Achievement,
   ActivityLog,
   Application,
   Company,
@@ -39,12 +40,13 @@ const CORE_ARRAYS = [
 ] as const;
 
 export type JobSearchBackupPayload = {
-  version: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   companies: Company[];
   leads: Lead[];
   applications: Application[];
   leadTouchpoints: LeadTouchpoint[];
   templates: Template[];
+  achievements: Achievement[];
   activityLogs: ActivityLog[];
   productOutreachContacts: ProductOutreachContact[];
   productOutreachInteractions: ProductOutreachInteraction[];
@@ -148,7 +150,8 @@ function assertCoreBackupShape(data: unknown): Record<string, unknown[]> {
     version !== 4 &&
     version !== 5 &&
     version !== 6 &&
-    version !== 7
+    version !== 7 &&
+    version !== 8
   ) {
     throw new InvalidBackupError();
   }
@@ -169,6 +172,16 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
   const record = data as Record<string, unknown>;
   const templates = Array.isArray(record.templates)
     ? (record.templates as Template[])
+    : [];
+  const achievements = Array.isArray(record.achievements)
+    ? (record.achievements as Achievement[]).filter((achievement) =>
+        achievement &&
+        typeof achievement.title === "string" &&
+        typeof achievement.conciseVersion === "string" &&
+        typeof achievement.detailedVersion === "string" &&
+        typeof achievement.createdAt === "number" &&
+        typeof achievement.updatedAt === "number",
+      )
     : [];
 
   const normalizedLeads = (arrays.leads as Lead[]).map((lead) => {
@@ -267,12 +280,13 @@ export function validateJobSearchBackup(data: unknown): JobSearchBackupPayload {
       : [createDefaultWeeklyTargetSettings()];
 
   return {
-    version: 7,
+    version: 8,
     companies: arrays.companies as Company[],
     leads: leadsWithStatus,
     applications: arrays.applications as Application[],
     leadTouchpoints: migratedTouchpoints,
     templates,
+    achievements,
     activityLogs: arrays.activityLogs as ActivityLog[],
     productOutreachContacts: Array.isArray(record.productOutreachContacts)
       ? (record.productOutreachContacts as ProductOutreachContact[])
@@ -307,6 +321,7 @@ export async function importJobSearchData(
       db.applications,
       db.leadTouchpoints,
       db.templates,
+      db.achievements,
       db.activityLogs,
       db.productOutreachContacts,
       db.productOutreachInteractions,
@@ -320,6 +335,7 @@ export async function importJobSearchData(
         db.applications.clear(),
         db.leadTouchpoints.clear(),
         db.templates.clear(),
+        db.achievements.clear(),
         db.activityLogs.clear(),
         db.productOutreachContacts.clear(),
         db.productOutreachInteractions.clear(),
@@ -333,6 +349,7 @@ export async function importJobSearchData(
         db.applications.bulkPut(payload.applications),
         db.leadTouchpoints.bulkPut(payload.leadTouchpoints),
         db.templates.bulkPut(payload.templates),
+        db.achievements.bulkPut(payload.achievements),
         db.activityLogs.bulkPut(payload.activityLogs),
         db.productOutreachContacts.bulkPut(payload.productOutreachContacts),
         db.productOutreachInteractions.bulkPut(

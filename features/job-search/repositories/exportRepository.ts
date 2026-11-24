@@ -8,6 +8,7 @@ export async function exportJobSearchData() {
     applications,
     leadTouchpoints,
     templates,
+    achievements,
     activityLogs,
     productOutreachContacts,
     productOutreachInteractions,
@@ -19,6 +20,7 @@ export async function exportJobSearchData() {
     db.applications.toArray(),
     db.leadTouchpoints.toArray(),
     db.templates.toArray(),
+    db.achievements.toArray(),
     db.activityLogs.toArray(),
     db.productOutreachContacts.toArray(),
     db.productOutreachInteractions.toArray(),
@@ -27,7 +29,7 @@ export async function exportJobSearchData() {
   ]);
 
   return {
-    version: 7,
+    version: 8,
     exportedAt: new Date().toISOString(),
     companies,
     leads: leads.map((lead) => ({
@@ -37,6 +39,7 @@ export async function exportJobSearchData() {
     applications,
     leadTouchpoints,
     templates,
+    achievements,
     activityLogs,
     productOutreachContacts,
     productOutreachInteractions,

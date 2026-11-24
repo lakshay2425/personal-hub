@@ -262,6 +262,7 @@ export const NAV_ITEMS = [
   { href: "/job-search/companies", label: "Companies", exact: false },
   { href: "/job-search/leads", label: "Leads", exact: false },
   { href: "/job-search/outreach", label: "Outreach list", exact: false },
+  { href: "/job-search/achievements", label: "Achievements", exact: false },
   { href: "/job-search/applications", label: "Applications", exact: false },
   { href: "/job-search/templates", label: "Templates", exact: false },
   { href: "/job-search/settings", label: "Settings", exact: false },
