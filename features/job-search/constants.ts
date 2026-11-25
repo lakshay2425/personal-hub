@@ -42,6 +42,12 @@ export const LINKEDIN_TOUCHPOINT_TYPES = [
   "Reply",
 ];
 
+export const LINKEDIN_MESSAGE_PURPOSES = [
+  "First message",
+  "First follow-up",
+  "Second follow-up",
+];
+
 export const EMAIL_TOUCHPOINT_TYPES = [
   "Message",
   "First Follow-up",

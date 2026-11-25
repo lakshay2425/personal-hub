@@ -13,6 +13,7 @@ import {
   EMAIL_TOUCHPOINT_TYPES,
   LEAD_CHANNELS,
   LINKEDIN_RESPONSE_STATUSES,
+  LINKEDIN_MESSAGE_PURPOSES,
   LINKEDIN_TOUCHPOINT_TYPES,
   QUICK_TOUCHPOINT_ACTIONS,
 } from "../../constants";
@@ -148,6 +149,12 @@ function LeadTouchpointFormFields({
     : channel === "LinkedIn"
       ? [...LINKEDIN_RESPONSE_STATUSES, ...customResponses]
       : responseStatusOptions;
+  const messagePurposeOptions = [
+    ...new Set([
+      ...LINKEDIN_MESSAGE_PURPOSES,
+      ...(purpose.trim() ? [purpose.trim()] : []),
+    ]),
+  ];
 
   const changeChannel = (nextChannel: LeadTouchpoint["channel"]) => {
     setChannel(nextChannel);
@@ -210,11 +217,24 @@ function LeadTouchpointFormFields({
           />
         </FormField>
         <FormField label="Purpose">
-          <TextInput
-            value={purpose}
-            onChange={setPurpose}
-            placeholder="First message, first follow-up..."
-          />
+          {channel === "LinkedIn" && ["Message", "Follow-up"].includes(type) ? (
+            <SelectInput
+              value={purpose}
+              onChange={setPurpose}
+              placeholder="Choose purpose..."
+              options={messagePurposeOptions.map((option) => ({
+                value: option,
+                label: option,
+              }))}
+              required={mode === "addTouchpoint"}
+            />
+          ) : (
+            <TextInput
+              value={purpose}
+              onChange={setPurpose}
+              placeholder="First message, first follow-up..."
+            />
+          )}
         </FormField>
         <FormField label="Status" required>
           <CreatableSelectInput
@@ -303,6 +323,10 @@ function QuickTouchpointActions({
   const [isDraftingMessage, setIsDraftingMessage] = useState(false);
   const [draftMessage, setDraftMessage] = useState("");
   const [draftPurpose, setDraftPurpose] = useState("");
+  const [messagePurposeActionId, setMessagePurposeActionId] = useState<
+    string | null
+  >(null);
+  const [selectedMessagePurpose, setSelectedMessagePurpose] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const actions = QUICK_TOUCHPOINT_ACTIONS[channel] ?? [];
@@ -343,6 +367,7 @@ function QuickTouchpointActions({
   const applyAction = async (
     actionId: string,
     touchpoint?: LeadTouchpoint,
+    purpose = "",
   ) => {
     const action = actions.find((candidate) => candidate.id === actionId);
     if (!action || pendingActionId) return;
@@ -394,8 +419,13 @@ function QuickTouchpointActions({
       } else {
         await onQuickAction({
           kind: "create",
-          input: createQuickTouchpointInput(channel, action),
+          input: {
+            ...createQuickTouchpointInput(channel, action),
+            purpose,
+          },
         });
+        setMessagePurposeActionId(null);
+        setSelectedMessagePurpose("");
       }
     } catch (actionError) {
       setError(
@@ -462,13 +492,64 @@ function QuickTouchpointActions({
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Quick actions for {channel}
           </p>
+          {messagePurposeActionId ? (
+            <div className="space-y-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+              <FormField label="Purpose" required>
+                <SelectInput
+                  value={selectedMessagePurpose}
+                  onChange={setSelectedMessagePurpose}
+                  placeholder="Choose purpose..."
+                  options={LINKEDIN_MESSAGE_PURPOSES.map((purpose) => ({
+                    value: purpose,
+                    label: purpose,
+                  }))}
+                />
+              </FormField>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMessagePurposeActionId(null);
+                    setSelectedMessagePurpose("");
+                  }}
+                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 dark:border-zinc-600 dark:text-zinc-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!selectedMessagePurpose || pendingActionId !== null}
+                  onClick={() =>
+                    void applyAction(
+                      messagePurposeActionId,
+                      undefined,
+                      selectedMessagePurpose,
+                    )
+                  }
+                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
+                >
+                  {pendingActionId === messagePurposeActionId ? "Saving..." : "Save Touchpoint"}
+                </button>
+              </div>
+            </div>
+          ) : null}
           <div className="grid gap-2 sm:grid-cols-2">
             {actions.map((action) => (
               <button
                 key={action.id}
                 type="button"
                 disabled={pendingActionId !== null}
-                onClick={() => void applyAction(action.id)}
+                onClick={() => {
+                  if (
+                    channel === "LinkedIn" &&
+                    action.id === "linkedin-message-sent"
+                  ) {
+                    setSelectedMessagePurpose("");
+                    setMessagePurposeActionId(action.id);
+                  } else {
+                    void applyAction(action.id);
+                  }
+                }}
                 className="rounded-lg border border-zinc-300 px-3 py-2 text-left text-sm font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
                 {pendingActionId === action.id ? "Saving..." : action.label}
