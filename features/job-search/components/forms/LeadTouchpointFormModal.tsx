@@ -149,13 +149,6 @@ function LeadTouchpointFormFields({
     : channel === "LinkedIn"
       ? [...LINKEDIN_RESPONSE_STATUSES, ...customResponses]
       : responseStatusOptions;
-  const messagePurposeOptions = [
-    ...new Set([
-      ...LINKEDIN_MESSAGE_PURPOSES,
-      ...(purpose.trim() ? [purpose.trim()] : []),
-    ]),
-  ];
-
   const changeChannel = (nextChannel: LeadTouchpoint["channel"]) => {
     setChannel(nextChannel);
     const nextTypes = nextChannel === "Email"
@@ -218,14 +211,13 @@ function LeadTouchpointFormFields({
         </FormField>
         <FormField label="Purpose">
           {channel === "LinkedIn" && ["Message", "Follow-up"].includes(type) ? (
-            <SelectInput
+            <CreatableSelectInput
               value={purpose}
               onChange={setPurpose}
               placeholder="Choose purpose..."
-              options={messagePurposeOptions.map((option) => ({
-                value: option,
-                label: option,
-              }))}
+              options={LINKEDIN_MESSAGE_PURPOSES}
+              createLabel="Add custom purpose..."
+              newValuePlaceholder="Enter a custom purpose"
               required={mode === "addTouchpoint"}
             />
           ) : (
@@ -495,14 +487,13 @@ function QuickTouchpointActions({
           {messagePurposeActionId ? (
             <div className="space-y-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
               <FormField label="Purpose" required>
-                <SelectInput
+                <CreatableSelectInput
                   value={selectedMessagePurpose}
                   onChange={setSelectedMessagePurpose}
                   placeholder="Choose purpose..."
-                  options={LINKEDIN_MESSAGE_PURPOSES.map((purpose) => ({
-                    value: purpose,
-                    label: purpose,
-                  }))}
+                  options={LINKEDIN_MESSAGE_PURPOSES}
+                  createLabel="Add custom purpose..."
+                  newValuePlaceholder="Enter a custom purpose"
                 />
               </FormField>
               <div className="flex justify-end gap-2">

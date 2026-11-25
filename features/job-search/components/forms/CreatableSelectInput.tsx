@@ -14,6 +14,7 @@ interface CreatableSelectInputProps {
   createLabel?: string;
   newValuePlaceholder?: string;
   voice?: boolean;
+  required?: boolean;
 }
 
 export function CreatableSelectInput({
@@ -24,6 +25,7 @@ export function CreatableSelectInput({
   createLabel = "Add new...",
   newValuePlaceholder = "Enter a new value",
   voice = true,
+  required = false,
 }: CreatableSelectInputProps) {
   const [isCreating, setIsCreating] = useState(false);
 
@@ -44,6 +46,7 @@ export function CreatableSelectInput({
               value={value}
               onChange={(event) => onChange(event.target.value)}
               placeholder={newValuePlaceholder}
+              required={required}
               autoFocus
               className={voice ? `${inputClass} pr-10` : inputClass}
             />
@@ -67,6 +70,7 @@ export function CreatableSelectInput({
   return (
     <select
       value={value}
+      required={required}
       onChange={(event) => {
         if (event.target.value === "__create_new__") {
           onChange("");
