@@ -446,10 +446,13 @@ function QuickTouchpointActions({
             />
           </FormField>
           <FormField label="Purpose" required>
-            <TextInput
+            <CreatableSelectInput
               value={draftPurpose}
               onChange={setDraftPurpose}
-              placeholder="First message, first follow-up, second follow-up..."
+              placeholder="Choose purpose..."
+              options={LINKEDIN_MESSAGE_PURPOSES}
+              createLabel="Add custom purpose..."
+              newValuePlaceholder="Enter a custom purpose"
             />
           </FormField>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
